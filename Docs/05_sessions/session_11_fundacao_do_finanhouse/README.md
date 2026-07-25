@@ -43,7 +43,9 @@ O MySQL do Finanhouse **já existe** na Clever Cloud (não é um banco a ser cri
 - Nenhuma migration deve ser aplicada, nenhum seed executado em produção, e nenhum `DROP`/`TRUNCATE`/`ALTER`/`DELETE`/`UPDATE`/`INSERT`/`CREATE TABLE`/sincronização automática de schema (ORM push) antes do inventário.
 - Credenciais do banco nunca entram no Git, logs, documentação ou saída pública.
 
-**Inventário realizado em 2026-07-25 (`bloco_02_inventario_seguro_do_banco_existente`):** conexão somente leitura confirmada (MySQL 8.4.2-2), banco configurado corresponde ao banco ativo. Resultado: **o banco existe mas está estruturalmente vazio** (0 tabelas). Ver `database/current-schema/` para o inventário sanitizado completo. A escolha entre ORM (ex.: Drizzle + mysql2) e driver puro (mysql2) segue como **decisão pendente**, registrada em `Docs/02_architecture/decisoes_tecnicas.md` (proposta técnica já documentada no feedback do Bloco 02, aguardando aprovação do proprietário).
+**Inventário realizado em 2026-07-25 (`bloco_02_inventario_seguro_do_banco_existente`):** conexão somente leitura confirmada (MySQL 8.4.2-2), banco configurado corresponde ao banco ativo. Resultado: **o banco existe mas está estruturalmente vazio** (0 tabelas). Ver `database/current-schema/` para o inventário sanitizado completo.
+
+**Persistência decidida em 2026-07-25 (`bloco_03_modelagem_inicial_do_dominio_financeiro`):** proprietário aprovou **Drizzle ORM + mysql2** (ADR-001, `Docs/02_architecture/adr_001_persistencia_drizzle_mysql2.md`). Schema inicial de 6 tabelas modelado (`apps/api/src/db/schema/`), com foreign keys **compostas** garantindo no banco que período e categoria de uma movimentação pertencem ao mesmo household. Migration gerada e revisada (`database/migrations/0000_initial_financial_domain.sql`) — **não aplicada**, banco real permanece vazio. Vocabulário de status corrigido para `planned`/`pending`/`realized`/`cancelled` (neutro entre receita e despesa). Pendências ativas: verificação de TLS/SSL entre Vercel e Clever Cloud (P2); consistência de `responsible_member_id` com o household, que o MySQL não permite proteger via FK composta com `SET NULL` (P2); vulnerabilidades moderadas na cadeia de desenvolvimento do `drizzle-kit`, zero em produção (P3).
 
 ## 3. Escopo
 
@@ -89,7 +91,7 @@ Divisões operacionais do fluxo de trabalho (não confundir com blocos oficiais 
 | 02 | Inicialização oficial do DDAE | Concluído |
 | 03 | Estrutura do monorepo | Concluído |
 | 04 | React (Vite/TS) e API Node.js | Concluído |
-| 05 | Banco de dados, assets e documentação | Pendente |
+| 05 | Banco de dados, assets e documentação | Em andamento (inventário e modelagem concluídos; assets/logo pendente) |
 | 06 | Validações | Em andamento |
 
 Blocos oficiais DDAE desta sessão (`05_blocks/`):
@@ -98,14 +100,16 @@ Blocos oficiais DDAE desta sessão (`05_blocks/`):
 |---|---|---|
 | `bloco_01_bootstrap_tecnico_do_monorepo` | Bootstrap técnico do monorepo | Concluído |
 | `bloco_02_inventario_seguro_do_banco_existente` | Inventário seguro do banco existente | Concluído |
+| `bloco_03_modelagem_inicial_do_dominio_financeiro` | Modelagem inicial do domínio financeiro | Concluído (migration gerada, não aplicada) |
 
 ## 8. Riscos
 
 - Divergência entre a estrutura oficial gerada pelo `ddae-engine` e a estrutura do monorepo criada manualmente, se não forem mantidas em pastas separadas (mitigado: `Docs/` é exclusivo da governança DDAE, o monorepo vive fora dela).
 - Logo oficial do Finanhouse pode não estar disponível localmente ainda, impactando `assets/brand/`.
-- Credenciais reais do MySQL (Clever Cloud) não devem vazar para `.env.example` nem para o Git — mitigado por `.gitignore` (confirmado em cada execução do inventário).
+- Credenciais reais do MySQL (Clever Cloud) não devem vazar para `.env.example` nem para o Git — mitigado por `.gitignore` (confirmado em cada execução do inventário e da modelagem).
 - ~~Banco MySQL já existente ser tratado erroneamente como vazio~~ — **resolvido**: inventário confirmou que o banco realmente está vazio (não era uma suposição), então não há risco de colisão com dados reais.
-- Ausência total de schema significa que a primeira migration real definirá a base de todo o domínio financeiro — vale revisão cuidadosa antes de aplicar (ver feedback do Bloco 02).
+- **TLS/SSL entre a futura aplicação (Vercel) e o MySQL da Clever Cloud não verificado** — a inspeção do Bloco 02 usou `DATABASE_SSL=false` apenas para ler metadados; produção precisa de transporte seguro confirmado antes de qualquer dado real. Registrado como pendência P2 (ver ADR-001).
+- Ausência total de schema significa que a primeira migration real definirá a base de todo o domínio financeiro — mitigado por revisão manual do SQL gerado (Bloco 03) antes de qualquer aplicação futura.
 
 ## 9. Dependências
 

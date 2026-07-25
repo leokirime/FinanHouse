@@ -4,8 +4,9 @@ Scripts de inspeção **somente leitura** do MySQL existente na Clever Cloud: te
 
 ## Arquivos
 
-- `inspect-database.ts` — script principal. Carrega credenciais de `apps/api/.env.local`, valida presença das variáveis (sem imprimir valores), conecta com timeout curto e executa apenas a allowlist fixa de consultas abaixo.
+- `inspect-database.ts` — script principal. Carrega credenciais de `apps/api/.env.local`, valida presença e formato das variáveis (sem imprimir valores), conecta com timeout curto e executa apenas a allowlist fixa de consultas abaixo.
 - `write-inventory-docs.ts` — formata o resultado da inspeção e escreve os documentos sanitizados em `database/current-schema/`.
+- `package.json` — declara `mysql2` explicitamente como dependência deste workspace (`database/inspection` está listado em `workspaces` na raiz). Não depende de hoisting incidental via `apps/api`.
 
 ## Como rodar
 

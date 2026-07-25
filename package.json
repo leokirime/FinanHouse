@@ -5,7 +5,8 @@
   "description": "Controle financeiro doméstico do Finanhouse — monorepo.",
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "database/inspection"
   ],
   "scripts": {
     "dev:web": "npm run dev --workspace=web",

@@ -15,6 +15,7 @@ build/
 *.p12
 *.pfx
 *.sql
+!database/migrations/*.sql
 *.dump
 
 # Logs
