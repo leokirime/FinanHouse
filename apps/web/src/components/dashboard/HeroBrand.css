@@ -1,0 +1,108 @@
+.fh-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  align-items: center;
+  gap: var(--fh-space-6);
+  padding: var(--fh-space-6);
+}
+
+.fh-hero__brand-surface {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--fh-brand-surface);
+  border: 1px solid var(--fh-brand-surface-border);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow-md);
+  padding: var(--fh-space-6);
+}
+
+.fh-hero__logo {
+  width: 100%;
+  max-width: 640px;
+  height: auto;
+  object-fit: contain;
+}
+
+.fh-hero__info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--fh-space-4);
+}
+
+.fh-hero__info h2 {
+  font-size: 20px;
+  margin-bottom: var(--fh-space-1);
+}
+
+.fh-hero__status {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-3);
+  flex-wrap: wrap;
+}
+
+.fh-badge[data-tone='open'] {
+  color: var(--fh-income);
+  border-color: rgba(79, 209, 165, 0.35);
+}
+
+.fh-badge[data-tone='review'] {
+  color: var(--fh-warning);
+  border-color: rgba(245, 185, 92, 0.35);
+}
+
+.fh-badge[data-tone='closed'] {
+  color: var(--fh-text-secondary);
+}
+
+.fh-hero__review-cta {
+  background: transparent;
+  border: 1px solid var(--fh-purple-border);
+  color: var(--fh-purple-strong);
+  border-radius: var(--fh-radius-md);
+  padding: var(--fh-space-2) var(--fh-space-4);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fh-hero__review-cta:disabled {
+  color: var(--fh-text-muted);
+  border-color: var(--fh-border-strong);
+  cursor: not-allowed;
+}
+
+@media (max-width: 1023px) {
+  .fh-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .fh-hero__brand-surface {
+    padding: var(--fh-space-5);
+  }
+
+  .fh-hero__logo {
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 480px) {
+  .fh-hero {
+    padding: var(--fh-space-4);
+    gap: var(--fh-space-4);
+  }
+
+  .fh-hero__brand-surface {
+    padding: var(--fh-space-4);
+  }
+
+  .fh-hero__logo {
+    max-width: 100%;
+  }
+
+  .fh-hero__status {
+    justify-content: space-between;
+    width: 100%;
+  }
+}

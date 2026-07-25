@@ -49,13 +49,22 @@ Como `apps/web` agora importa `@finanhouse/domain`, ele depende do mesmo build r
 
 ## 6. Protótipo Visual vs. Persistência Real — o que este bloco NÃO faz
 
-- **Não afirma que os dados estão salvos.** Os CTAs "Nova movimentação" e "Revisar mês" são inertes (`aria-disabled`, sem `onClick` funcional) — clicar neles não persiste nada e não deve produzir nenhuma mensagem de sucesso.
+- **Não afirma que os dados estão salvos.** Os CTAs "Nova movimentação" e "Revisar mês" usam o atributo HTML `disabled` nativo (não apenas `aria-disabled`) — clicar neles não faz nada, não persiste nada e não produz nenhuma mensagem de sucesso.
 - **Não conecta ao MySQL.** Nenhum arquivo de `apps/web` importa `mysql2`, `drizzle-orm`, `.env*` ou qualquer caminho de `apps/api/src/db/`.
 - **Não implementa autenticação** — o dashboard é acessível sem login, por ser um protótipo interno.
 - Quando a persistência real for liberada (pós-TLS, Bloco 04), a substituição esperada é trocar `dashboard-fixtures.ts` por dados vindos de repositórios reais **através do mesmo formato de entrada** que `buildDashboardViewModel()` já espera (`Category[]`, `MonthlyPeriod[]`, `FinancialEntry[]`) — a função do view-model e os componentes não precisam mudar.
 
-## 7. O Que Ainda Não Existe
+## 7. Logo Oficial no Hero
+
+A logo oficial (`assets/images/finanhouse-logo-hero.png`) foi adicionada ao repositório e integrada ao `HeroBrand` (`apps/web/src/components/dashboard/HeroBrand.tsx`), que substituiu o antigo `PeriodOverview` (mesma responsabilidade de "hero da competência", agora também com a marca).
+
+- **Import via mecanismo de assets do Vite** — `import finanhouseLogoHero from '../../../../../assets/images/finanhouse-logo-hero.png'` (caminho relativo até a raiz do monorepo; o arquivo vive em `assets/`, fora de `apps/web`, mas dentro da raiz do workspace). Nenhuma configuração adicional de `server.fs.allow` foi necessária: o Vite detecta automaticamente a raiz do workspace (via `package-lock.json`/`.git` na raiz do monorepo) e já permite servir arquivos dali tanto em dev (`/@fs/...`) quanto no build de produção (o asset é copiado para `dist/assets/` com hash de conteúdo).
+- **Superfície de contraste**: como o wordmark da imagem tem uma parte em tom escuro, o hero renderiza a logo dentro de um cartão com fundo claro dedicado (`--fh-brand-surface`/`--fh-brand-surface-border`) — o fundo geral do dashboard continua preto; a superfície clara existe só atrás da imagem, sem recolorir o arquivo.
+- **Sidebar inalterada**: `Brand.tsx` continua em modo tipográfico — a imagem do hero é uma composição larga com slogan, não uma marca compacta, e não foi recortada nem redesenhada para caber ali.
+- **Observação sobre o arquivo original** (não corrigida — o arquivo não foi alterado): o slogan embutido na imagem aparenta um erro de digitação ("equiiibrio"). Registrado como pendência P4 em `Docs/07_design_system/identidade_visual.md`.
+
+## 8. O Que Ainda Não Existe
 
 - Páginas para "Movimentações", "Comparativo", "Planejamento", "Histórico", "Configurações" (apenas itens de navegação não funcionais).
 - Qualquer chamada HTTP real a `apps/api` a partir do frontend.
-- Logo oficial (ver `Docs/07_design_system/identidade_visual.md`, seção 8).
+- Versão compacta oficial da logo para a sidebar (ver `Docs/07_design_system/identidade_visual.md`, seção 8).

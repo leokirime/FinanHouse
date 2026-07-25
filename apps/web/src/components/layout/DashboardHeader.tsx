@@ -20,7 +20,7 @@ export function DashboardHeader({ areaTitle, periodLabel, statusLabel }: Dashboa
         <span className="fh-header__profile fh-text-secondary" aria-label="Perfil doméstico ativo (apenas visual)">
           Casa Finanhouse
         </span>
-        <button type="button" className="fh-header__cta" aria-disabled="true">
+        <button type="button" className="fh-header__cta" disabled>
           Nova movimentação
         </button>
       </div>

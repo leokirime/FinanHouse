@@ -30,3 +30,5 @@ src/
 ```
 
 Status: dashboard visual com dados simulados (Bloco `bloco_06_dashboard_visual_com_dados_simulados`). Consome `@finanhouse/domain` (workspace, compilado) para os cálculos financeiros exibidos — sem conexão com o MySQL, API real ou persistência. Ver `Docs/02_architecture/arquitetura_visual_dashboard.md` para a arquitetura completa e `Docs/07_design_system/` para tokens/componentes/acessibilidade/responsividade.
+
+A logo oficial do Finanhouse (`assets/images/finanhouse-logo-hero.png`, fora deste workspace) é importada pelo `HeroBrand` via mecanismo de assets do Vite — não copiar o arquivo para dentro de `apps/web`. A sidebar continua em modo tipográfico (`Brand.tsx`) até existir uma versão compacta oficial.

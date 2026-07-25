@@ -37,10 +37,14 @@ describe('App', () => {
     expect(screen.getAllByText(/seguro do carro/).length).toBeGreaterThan(0)
   })
 
-  it('renderiza a marca em modo tipográfico (sem logo oficial ainda)', () => {
+  it('mantém a sidebar em modo tipográfico e mostra a logo oficial no hero', () => {
     render(<App />)
+    // Sidebar continua sem imagem (modo tipográfico) — nenhuma versão compacta oficial existe ainda.
     expect(screen.getByText('Finanhouse')).toBeTruthy()
     expect(screen.queryByRole('img', { name: 'Finanhouse' })).toBeNull()
+    // Hero renderiza a logo oficial completa (imagem real, não texto/ícone inventado).
+    const heroImage = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
+    expect(heroImage.tagName).toBe('IMG')
   })
 
   it('nunca renderiza NaN ou Infinity em nenhum valor', () => {

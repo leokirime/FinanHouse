@@ -6,6 +6,8 @@
 
 Construída a primeira interface visual navegável do Finanhouse: um dashboard de "Visão geral" com identidade preta/roxa, consumindo dados **inteiramente sintéticos** processados pelas funções reais de `@finanhouse/domain` (`calculateMonthlySummary`, `compareMonthlyPeriods`). O app shell tem sidebar (apenas "Visão geral" funcional, demais itens marcados como indisponíveis) e cabeçalho com a competência/status atuais. O dashboard mostra status da competência, 4 indicadores principais, evolução financeira (SVG puro), distribuição de despesas por categoria, movimentações recentes e pendências próximas — todos derivados da mesma coleção de fixtures através de uma única camada de view-model. `apps/web` passou a depender de `@finanhouse/domain` (workspace compilado) como dependência real de produção. 31 novos testes automatizados (165 no total do monorepo), todos passando. Nenhuma conexão com o banco, nenhum dado real, nenhuma persistência, nenhuma autenticação — consistente com o escopo do bloco.
 
+**Correção pós-revisão (mesma branch, mesma data):** a logo oficial (`assets/images/finanhouse-logo-hero.png`) foi adicionada ao repositório (renomeada de `finanhouse-logo-hero.png.png` com autorização explícita do proprietário) e integrada ao hero via o novo componente `HeroBrand` (substitui `PeriodOverview`), com superfície clara dedicada para preservar a legibilidade do wordmark escuro. `apps/web/index.html` corrigido para `lang="pt-BR"`. Todos os controles "apenas visuais" (CTAs e itens de navegação futuros) passaram a usar o atributo HTML `disabled` nativo em vez de somente `aria-disabled`. 13 testes novos adicionados nesta correção (índice HTML, `HeroBrand`, `DashboardHeader`) — **178 testes no total do monorepo**. Nenhuma mudança na direção visual, nos cálculos financeiros ou no escopo de dados simulados.
+
 ## 2. Objetivo do Bloco
 
 Construir a primeira interface visual navegável do Finanhouse, utilizando dados sintéticos e cálculos derivados do pacote de domínio, sem banco de dados, API real ou persistência.
@@ -24,6 +26,13 @@ Construir a primeira interface visual navegável do Finanhouse, utilizando dados
 - 31 testes automatizados novos (Vitest + Testing Library).
 - Documentação: `Docs/02_architecture/arquitetura_visual_dashboard.md`, `Docs/07_design_system/*` (identidade visual, tokens, componentes, responsividade, acessibilidade — preenchidos pela primeira vez), `apps/web/README.md` atualizado.
 
+**Correção pós-revisão:**
+
+- `assets/images/finanhouse-logo-hero.png` — logo oficial (PNG 1536×1024, com transparência), integrada ao hero.
+- `HeroBrand` (`apps/web/src/components/dashboard/HeroBrand.tsx`) substitui `PeriodOverview`: mesma responsabilidade (competência, status, CTA "Revisar mês"), agora com a logo oficial dentro de uma superfície clara dedicada (`--fh-brand-surface`).
+- `apps/web/index.html` corrigido para `lang="pt-BR"` (estava `lang="en"`, herdado do template Vite).
+- Todos os controles "apenas visuais" (CTA "Nova movimentação", CTA "Revisar mês", itens de navegação futuros da `Sidebar`) passaram a usar o atributo HTML `disabled` nativo, não apenas `aria-disabled`.
+
 ## 4. Arquivos Criados
 
 - `apps/web/src/styles/{tokens,global,utilities}.css`
@@ -32,11 +41,18 @@ Construir a primeira interface visual navegável do Finanhouse, utilizando dados
 - `apps/web/src/view-models/{dashboard-view-model,dashboard-view-model.test}.ts`
 - `apps/web/src/components/brand/{Brand.tsx,Brand.css,Brand.test.tsx}`
 - `apps/web/src/components/layout/{AppShell,Sidebar,DashboardHeader}.{tsx,css}`, `Sidebar.test.tsx`
-- `apps/web/src/components/dashboard/{PeriodOverview,SummaryCard,FinancialEvolutionChart,CategoryBreakdown,RecentEntries,UpcomingEntries}.{tsx,css}`, `RecentEntries.test.tsx`, `UpcomingEntries.test.tsx`
+- `apps/web/src/components/dashboard/{SummaryCard,FinancialEvolutionChart,CategoryBreakdown,RecentEntries,UpcomingEntries}.{tsx,css}`, `RecentEntries.test.tsx`, `UpcomingEntries.test.tsx`
 - `apps/web/src/pages/{DashboardPage.tsx,DashboardPage.css}`
 - `apps/web/src/test-setup.ts`
 - `Docs/02_architecture/arquitetura_visual_dashboard.md`
 - `Docs/05_sessions/session_11_fundacao_do_finanhouse/{05_blocks,06_prompts,08_feedbacks}/*bloco_06*`
+
+**Correção pós-revisão:**
+
+- `assets/images/finanhouse-logo-hero.png` (renomeado de `finanhouse-logo-hero.png.png`, mesmo conteúdo/bytes)
+- `apps/web/src/components/dashboard/{HeroBrand.tsx,HeroBrand.css,HeroBrand.test.tsx}`
+- `apps/web/src/components/layout/DashboardHeader.test.tsx`
+- `apps/web/index.test.ts`
 
 ## 5. Arquivos Alterados
 
@@ -50,9 +66,19 @@ Construir a primeira interface visual navegável do Finanhouse, utilizando dados
 - `Docs/07_design_system/{identidade_visual,tokens_design,componentes_ui,responsividade,acessibilidade}.md` — preenchidos pela primeira vez
 - `Docs/05_sessions/session_11_fundacao_do_finanhouse/README.md` — entrada do Bloco 06 e atualização do status do Bloco 05 (mesclado à `main`)
 
+**Correção pós-revisão:**
+
+- `apps/web/index.html` — `lang="en"` → `lang="pt-BR"`
+- `apps/web/src/pages/DashboardPage.tsx` — usa `HeroBrand` no lugar de `PeriodOverview`
+- `apps/web/src/styles/tokens.css` — tokens `--fh-brand-surface`/`--fh-brand-surface-border`
+- `apps/web/src/components/layout/{Sidebar,DashboardHeader}.tsx` e respectivos `.css` — controles "apenas visuais" com `disabled` nativo
+- `apps/web/src/components/layout/Sidebar.test.tsx`, `apps/web/src/App.test.tsx` — asserções atualizadas para `disabled` nativo e para a logo no hero
+- `Docs/02_architecture/arquitetura_visual_dashboard.md`, `Docs/07_design_system/{identidade_visual,tokens_design,componentes_ui}.md` — atualizados com a logo/hero e os controles `disabled`
+
 ## 6. Arquivos Removidos
 
 - `apps/web/src/App.css`, `apps/web/src/index.css` — estilos do template padrão do Vite, substituídos por `styles/global.css`/`styles/utilities.css`.
+- **Correção pós-revisão:** `apps/web/src/components/dashboard/{PeriodOverview.tsx,PeriodOverview.css}` — responsabilidade absorvida por `HeroBrand`, para não duplicar competência/status em dois componentes.
 
 ## 7. Comandos Executados
 
@@ -73,6 +99,19 @@ npm ci && npm run build && npm run verify:runtime && npm run test
 npm run lint && npm run typecheck
 npx drizzle-kit check (em apps/api) && npx ddae-engine validate && npx ddae-engine audit
 npm audit --omit=dev && npm audit
+
+# Correção pós-revisão (mesma branch, mesma data)
+file assets/images/finanhouse-logo-hero.png.png   (confirmar PNG válido antes de qualquer ação)
+# PowerShell + System.Drawing: amostrar alpha em 6 pontos — cantos com A=0 (transparência real confirmada)
+mv assets/images/finanhouse-logo-hero.png.png assets/images/finanhouse-logo-hero.png   (autorizado explicitamente pelo usuário)
+node -e "..."   (calcular e confirmar o caminho relativo correto até o asset a partir de components/dashboard/)
+npx tsc -b && npx vite build   (apps/web — confirmar que o Vite processa o asset externo sem configuração extra)
+npx vite --port 5180 && curl .../@fs/... (apps/web — confirmar que o dev server também serve o asset externo, sem fs.allow extra)
+npx vitest run   (apps/web, repetido a cada arquivo novo/alterado)
+npm run clean && npm run build && npm run verify:runtime
+npm run lint && npm run typecheck && npm run test
+npx ddae-engine validate && npx ddae-engine audit
+npm audit --omit=dev && npm audit
 ```
 
 ## 8. Testes Realizados
@@ -89,17 +128,37 @@ npm audit --omit=dev && npm audit
 
 Manual (não automatizado): `vite build` + `vite preview` servidos via HTTP (200 no HTML e no CSS gerado) — ver seção 15. **Inspeção visual em navegador real não foi realizada neste ambiente** (sem ferramenta de captura de tela disponível) — fica para o checkpoint visual anunciado pelo proprietário antes do merge.
 
+**Correção pós-revisão** — 13 testes novos:
+
+- `index.test.ts` (4): `lang="pt-BR"` presente, `lang="en"` ausente, título "Finanhouse", charset UTF-8.
+- `components/dashboard/HeroBrand.test.tsx` (6): imagem oficial renderizada como `<img>` com o alt exato "Finanhouse — Casa, evolução e equilíbrio", ausência de `background-image` CSS, slogan não duplicado como texto separado, competência/status exibidos a partir do `overview` recebido, CTA "Revisar mês" com `disabled` nativo, `src` sem URL externa/base64.
+- `components/layout/DashboardHeader.test.tsx` (3, novo): título/competência/status exibidos, CTA "Nova movimentação" com `disabled` nativo, clique no CTA desabilitado não produz nenhum texto de "salvo".
+- `components/layout/Sidebar.test.tsx` (reescrito, ainda 3): "Visão geral" habilitada com `aria-current="page"`; demais itens com `.disabled === true` (propriedade do elemento, não apenas atributo ARIA) e sem `aria-current`.
+- `App.test.tsx` (reescrito, ainda 7): substituída a asserção que checava ausência de logo por uma que confirma a logo oficial no hero (`getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })`) mantendo a confirmação de que a sidebar segue tipográfica.
+
 ## 9. Validações Executadas
 
 - `npm run clean && npm run build` — OK (ordem `domain → api → web` respeitada).
 - `npm run verify:runtime` — OK, incluindo teste negativo (sem `dist/`, sai com código 1).
-- `npm ci && npm run build && npm run verify:runtime && npm run test` — OK, 165/165 testes passando.
+- `npm ci && npm run build && npm run verify:runtime && npm run test` — OK, 165/165 testes passando (antes da correção pós-revisão).
 - `npm run lint` — OK, 0 avisos (api, web, domain).
 - `npm run typecheck` — OK, 0 erros (com `pretypecheck` reconstruindo o domain).
 - `npx drizzle-kit check` (em `apps/api`) — "Everything's fine" (checagem estática dos snapshots, sem conexão ao banco).
 - `ddae-engine validate` — OK, 0 erros/avisos.
 - `ddae-engine audit` — OK, 9 warnings (7 gates pendentes + P2 Bloco 03 + P2 Bloco 04), 0 erros — **nenhuma P2 nova no Bloco 06**.
 - `npm audit --omit=dev` — 0 vulnerabilidades.
+
+**Correção pós-revisão** (repetido do zero após adicionar a logo/`HeroBrand`/`lang`/`disabled`):
+
+- `npm ci && npm run clean && npm run build` — OK; asset da logo bundlado corretamente em `dist/assets/finanhouse-logo-hero-*.png` (hash de conteúdo).
+- `npm run verify:runtime` — OK (inalterado — não toca no domain/API).
+- `npm run lint` / `npm run typecheck` — OK, 0 avisos/erros.
+- `npm run test` — OK, **178/178** (34 api + 45 web + 99 domain).
+- `ddae-engine validate` — OK, 0 erros/avisos.
+- `ddae-engine audit` — OK, 9 warnings (mesmos de sempre — 7 gates + P2 Bloco 03 + P2 Bloco 04), 0 erros.
+- `npm audit --omit=dev` — 0 vulnerabilidades.
+- `npm audit` — 4 moderadas, mesma cadeia de desenvolvimento do `drizzle-kit`, inalterada — `npm audit fix --force` **não** executado.
+- Busca estática confirmando ausência de URL externa (`http://`/`https://`), `data:image` (base64) e caminho absoluto do Windows em `apps/web/src` (fora dos próprios testes, que citam os padrões como strings de verificação).
 - `npm audit` — 4 moderadas, cadeia de desenvolvimento do `drizzle-kit`/`esbuild`, já documentadas como P3 desde o Bloco 03; `npm audit fix --force` **não** executado.
 - Busca estática (`grep`) confirmando ausência de `mysql2`, `drizzle-orm` e `.env` em `apps/web/src` — ver seção 15.
 
@@ -114,11 +173,23 @@ Manual (não automatizado): `vite build` + `vite preview` servidos via HTTP (200
 - **Todos os textos de datas usam `timeZone: 'UTC'` explícito** — ver Problemas Encontrados (bug de fuso horário).
 - **Logo oficial ausente**: `Brand.tsx` aceita `logoSrc` opcional e cai para o texto "Finanhouse" — nenhum ícone substituto foi inventado.
 
+**Correção pós-revisão:**
+
+- **`PeriodOverview` renomeado/absorvido em `HeroBrand`, em vez de manter os dois** — a logo oficial adiciona uma responsabilidade nova ("marca") ao que já era o "hero da competência"; manter ambos lado a lado duplicaria competência/status/CTA de revisão em dois componentes. `PeriodOverview.tsx`/`.css` foram removidos.
+- **`Brand.tsx` não foi reaproveitado para o hero** — seu modo `logoSrc` foi desenhado para uma marca compacta (altura fixa de 32px, `alt="Finanhouse"` genérico), incompatível com a composição larga do hero (560–680px, `alt` específico com o slogan). `HeroBrand.tsx` renderiza seu próprio `<img>`, como pedido explicitamente na revisão. `Brand.tsx` permanece dedicado à sidebar (modo tipográfico).
+- **Import do asset via caminho relativo simples, sem configuração de `server.fs.allow`** — o arquivo vive em `assets/images/` (raiz do monorepo), fora de `apps/web`. Testado e confirmado que o Vite detecta automaticamente a raiz do workspace (via `package-lock.json`/`.git` na raiz) tanto no build de produção quanto no dev server (`/@fs/...`), então nenhuma configuração adicional foi necessária.
+- **Controles "apenas visuais" migrados de `aria-disabled` para `disabled` nativo** — um `<button disabled>` já comunica o estado corretamente à árvore de acessibilidade e ao teclado (fica fora do fluxo de tab, não dispara clique); `aria-disabled` sozinho não impede interação real, apenas sinaliza.
+
 ## 11. Problemas Encontrados
 
 - **Bug de fuso horário na formatação de datas**: `Intl.DateTimeFormat('pt-BR', { month: 'long', ... })` sem `timeZone: 'UTC'` formatava `2026-07-01` (meia-noite UTC) como "junho de 2026" em vez de "julho de 2026", porque o formatador usa o fuso horário local do ambiente de execução por padrão (que pode estar atrás de UTC). Identificado pelo teste `dashboard-view-model.test.ts` ("descreve a competência atual como em revisão"), que falhou logo na primeira execução.
 - **DOM não limpo entre testes no mesmo arquivo**: `vitest.config.ts` não tinha `setupFiles`, então o autocleanup do Testing Library (que depende de um `afterEach` global) nunca era registrado. Isso causava `getByText`/`getByRole` falhando com "multiple elements found" em arquivos com mais de um teste que chama `render()`. Só apareceu neste bloco porque os testes de `apps/web` anteriores (Bloco 01) tinham só 1 teste por arquivo.
 - **Teste `App.test.tsx` assumindo que toda pendência é despesa**: a movimentação de freelance pendente (receita) também aparece em "Pendências próximas" (tem `dueDate`) — a asserção inicial esperava sinal negativo em todas as pendências, o que é incorreto para receitas. Corrigido para verificar o sinal por tipo (`entryType`), não por posição na lista.
+
+**Correção pós-revisão:**
+
+- **Arquivo da logo com extensão duplicada**: o arquivo entregue estava em `assets/images/finanhouse-logo-hero.png.png` (não `finanhouse-logo-hero.png`, caminho esperado pela instrução). Conforme a regra explícita de não renomear sem autorização e não inventar/adivinhar, a execução foi pausada e o proprietário foi consultado antes de qualquer ação — autorizou a renomeação, que foi feita preservando os bytes originais do arquivo (mesmo tamanho antes/depois, apenas `mv`, sem reprocessar a imagem).
+- **Possível erro de digitação no slogan da imagem oficial** ("equiiibrio" em vez de "equilíbrio", com um ponto solto próximo): identificado ao inspecionar visualmente o arquivo. Não corrigido (o arquivo original não deve ser alterado) — apenas registrado como pendência (seção 13) para o proprietário decidir.
 
 ## 12. Correções Aplicadas Durante o Bloco
 
@@ -126,6 +197,14 @@ Manual (não automatizado): `vite build` + `vite preview` servidos via HTTP (200
 - Criação de `apps/web/src/test-setup.ts` (chama `cleanup()` do Testing Library em `afterEach`) e registro em `vitest.config.ts` (`setupFiles`).
 - Reescrita das asserções de `toHaveAttribute`/`not.toHaveAttribute` (que exigiriam `jest-dom`) para `getAttribute`/`hasAttribute` nativos.
 - Correção da asserção de sinal em `App.test.tsx` para considerar o tipo da movimentação (receita vs. despesa), não a posição na lista.
+
+**Correção pós-revisão:**
+
+- Renomeação de `assets/images/finanhouse-logo-hero.png.png` para `assets/images/finanhouse-logo-hero.png` (autorizada pelo proprietário), sem alterar o conteúdo do arquivo.
+- `apps/web/index.html`: `lang="en"` → `lang="pt-BR"`.
+- Substituição de `PeriodOverview` por `HeroBrand` em `DashboardPage.tsx`.
+- `Sidebar`/`DashboardHeader`/`HeroBrand`: `aria-disabled` → `disabled` nativo nos controles não funcionais; estilos `:disabled` adicionados para feedback visual claro.
+- `Sidebar.test.tsx`/`App.test.tsx`: asserções atualizadas para checar a propriedade `disabled` do elemento e a presença da logo oficial no hero.
 
 ## 13. Pendências
 
@@ -139,7 +218,8 @@ _Nenhuma pendência P2 nova neste bloco._ A persistência real (repositórios Dr
 
 ### P3 — Melhoria Recomendada
 
-- Logo oficial do Finanhouse ainda não está em `assets/brand/` — `Brand.tsx` usa modo tipográfico temporário (ver `Docs/07_design_system/identidade_visual.md`, seção 8).
+- ~~Logo oficial do Finanhouse ainda não está no repositório~~ — **resolvido nesta correção**: `assets/images/finanhouse-logo-hero.png` adicionado e integrado ao hero (`HeroBrand`).
+- Ainda não existe um arquivo oficial **compacto** (ícone/wordmark curto) para a `Sidebar` — `Brand.tsx` continua em modo tipográfico até que esse arquivo específico seja fornecido (ver `Docs/07_design_system/identidade_visual.md`, seção 8).
 - Contraste de cores não foi medido numericamente (só verificado visualmente) — ver `Docs/07_design_system/acessibilidade.md`.
 - Fluxos do dashboard não foram testados com leitor de tela real (NVDA/VoiceOver) — só com a estrutura semântica/ARIA esperada.
 - Inspeção visual em navegador real (1440/1024/768/390px) não foi realizada neste ambiente (sem ferramenta de captura de tela) — fica para o checkpoint visual do proprietário antes do merge.
@@ -148,6 +228,7 @@ _Nenhuma pendência P2 nova neste bloco._ A persistência real (repositórios Dr
 ### P4 — Opcional
 
 - Páginas "Movimentações", "Comparativo", "Planejamento", "Histórico", "Configurações" continuam apenas como itens de navegação não funcionais.
+- O slogan embutido em `assets/images/finanhouse-logo-hero.png` aparenta ter um erro de digitação ("equiiibrio"). Arquivo não alterado (fora de escopo); proprietário decide se substitui o asset.
 
 ## 14. Riscos Restantes
 
@@ -190,6 +271,38 @@ $ npm audit --omit=dev
 found 0 vulnerabilities
 ```
 
+**Correção pós-revisão:**
+
+```
+$ file assets/images/finanhouse-logo-hero.png.png
+PNG image data, 1536 x 1024, 8-bit/color RGBA, non-interlaced
+
+$ (PowerShell + System.Drawing) amostra de alpha em 6 pontos
+(5,5): A=0 · (1531,5): A=0 · (5,1019): A=0 · (1531,1019): A=0 · (768,5): A=0 · (768,512): A=254
+→ cantos totalmente transparentes, transparência real confirmada (não é um artefato de visualização)
+
+$ mv assets/images/finanhouse-logo-hero.png.png assets/images/finanhouse-logo-hero.png
+(mesmo tamanho em bytes antes/depois: 2.124.147 — conteúdo preservado)
+
+$ npx vite build (apps/web)
+dist/assets/finanhouse-logo-hero-Uom1GOC8.png  2,124.14 kB   (asset externo processado normalmente, sem config extra)
+
+$ npx vite --port 5180 (dev) && curl .../@fs/C:/Users/leoki/FinanHouse/assets/images/finanhouse-logo-hero.png
+200   (dev server serve o asset fora de apps/web sem configuração de fs.allow)
+
+$ npm run test (resumo pós npm ci, após a correção)
+api: Test Files 6 passed (6) · Tests 34 passed (34)
+web: Test Files 10 passed (10) · Tests 45 passed (45)
+domain: Test Files 5 passed (5) · Tests 99 passed (99)
+Total: 178/178
+
+$ grep -rE "http://|https://|data:image|C:\\\\" apps/web/src
+(nenhum resultado fora dos próprios testes, que citam os padrões como strings de verificação)
+
+$ npx ddae-engine audit
+Status: OK · Warnings: 9 (7 gates + P2 Bloco 03 + P2 Bloco 04) · Errors: 0
+```
+
 ## 16. Resultado Final
 
 - [x] Bloco concluído conforme escopo
@@ -204,6 +317,12 @@ Checkpoint visual do proprietário (revisão de hierarquia, identidade roxa/pret
 
 ```
 feat(web): construir dashboard visual com dados simulados
+```
+
+**Correção pós-revisão (commit separado):**
+
+```
+fix(web): integrar logo oficial e corrigir semântica visual
 ```
 
 _Lembrete: este commit não é executado automaticamente — exige confirmação explícita do usuário._

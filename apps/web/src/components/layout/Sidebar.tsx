@@ -30,7 +30,7 @@ export function Sidebar() {
                 type="button"
                 className="fh-sidebar__nav-item"
                 aria-current={item.available ? 'page' : undefined}
-                aria-disabled={!item.available}
+                disabled={!item.available}
               >
                 <span>{item.label}</span>
                 {!item.available && <span className="fh-badge fh-sidebar__soon">em breve</span>}

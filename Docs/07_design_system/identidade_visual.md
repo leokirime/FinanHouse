@@ -10,13 +10,17 @@ Definir a identidade visual de forma específica o suficiente para que qualquer 
 
 ## 2. Logo
 
-**Status atual (Bloco 06): logo oficial ainda não existe em `assets/brand/`.** Enquanto isso, todo componente que precisar exibir a marca usa `apps/web/src/components/brand/Brand.tsx` em **modo tipográfico** — apenas o texto "Finanhouse" estilizado (gradiente texto de `--fh-text` para `--fh-purple-strong`), sem ícone ou marca substituta inventada.
+**A logo oficial foi adicionada ao repositório e integrada ao hero.** Arquivo: `assets/images/finanhouse-logo-hero.png` (PNG, 1536×1024, com canal alfa/transparência) — composição horizontal completa (ícone de casa + wordmark "Finanhouse" + slogan "Casa, evolução e equilíbrio"), destinada especificamente ao hero do dashboard (`apps/web/src/components/dashboard/HeroBrand.tsx`).
 
-`Brand.tsx` já está preparado para a logo oficial: aceita uma prop `logoSrc` opcional; quando um arquivo existir em `assets/brand/` e for referenciado por essa prop, o componente passa a renderizar a imagem (`<img>`) em vez do texto, sem que nenhum outro componente precise mudar. Até lá:
+**Ainda não existe um arquivo oficial compacto específico para a sidebar.** Por isso `apps/web/src/components/brand/Brand.tsx` (usado na `Sidebar`) continua em **modo tipográfico** — apenas o texto "Finanhouse" estilizado (gradiente texto de `--fh-text` para `--fh-purple-strong`). A imagem do hero é uma composição larga com slogan, não recortável em um ícone compacto sem redesenhar a marca — o que não foi autorizado.
 
-- Não gerar ícone/glifo substituto.
-- Não redesenhar ou aproximar uma logo "provisória".
-- Área de proteção mínima e variações (claro/escuro, ícone/completo) ficam **pendentes de definição** junto com a logo real — ver seção 8.
+Regras aplicadas:
+
+- A imagem oficial nunca é distorcida, recolorida, cortada ou usada como plano de fundo CSS — sempre um `<img>` semântico com `object-fit: contain`, preservando a proporção original.
+- Como o wordmark tem uma parte escura, o hero usa uma superfície clara dedicada (`--fh-brand-surface`/`--fh-brand-surface-border`, ver `tokens_design.md`) atrás da logo, para preservar a legibilidade sem recolorir a imagem.
+- Não foi gerado ícone/glifo substituto para a sidebar; não foi criada uma segunda versão da logo.
+- Observação registrada (não corrigida — arquivo original não foi alterado): o slogan embutido na imagem aparenta ter um erro de digitação ("equiiibrio" em vez de "equilíbrio"). Ver seção 8.
+- Área de proteção mínima e uma variação compacta (ícone/completo) para a sidebar seguem **pendentes de definição** — dependem de um arquivo oficial específico para esse uso, ainda não fornecido.
 
 ## 3. Cores
 
@@ -52,7 +56,7 @@ Sofisticado, minimalista e contemporâneo — organização, estabilidade, evolu
 ## 6. Regras Obrigatórias
 
 - [x] Nenhuma cor fora da paleta definida em `tokens_design.md` é usada em componentes novos.
-- [ ] Logo nunca é distorcido, recolorido fora das variações aprovadas, ou usado abaixo da área de proteção mínima — **pendente até a logo oficial existir** (ver seção 8).
+- [x] Logo nunca é distorcida, recolorida ou cortada — usada apenas via `<img>` com `object-fit: contain`, sem filtros CSS. Área de proteção mínima formal ainda não definida (ver seção 8).
 - [x] Verde/vermelho usados apenas como destaque pontual (receita/despesa), nunca como cor dominante da interface.
 
 ## 7. Perguntas Orientadoras
@@ -61,4 +65,6 @@ Sofisticado, minimalista e contemporâneo — organização, estabilidade, evolu
 
 ## 8. Decisões Pendentes
 
-- P3 — Logo oficial do Finanhouse ainda não está em `assets/brand/`. Quando disponível: adicionar o arquivo, definir variações (claro/escuro, ícone/completo) e área de proteção mínima, e passar `logoSrc` para `Brand.tsx` (nenhuma outra mudança de componente deve ser necessária).
+- P3 — Ainda não existe um arquivo oficial compacto (ícone ou wordmark curto) para uso na `Sidebar`; `Brand.tsx` permanece em modo tipográfico até que esse arquivo específico seja fornecido.
+- P3 — Área de proteção mínima e variações formais (claro/escuro) da logo ainda não foram definidas pelo proprietário.
+- P4 — O slogan embutido em `assets/images/finanhouse-logo-hero.png` aparenta conter um erro de digitação ("equiiibrio"). O arquivo não foi alterado (fora de escopo modificar o asset); registrar para o proprietário decidir se substitui o arquivo.

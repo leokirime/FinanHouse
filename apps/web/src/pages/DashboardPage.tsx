@@ -1,6 +1,6 @@
 import { CategoryBreakdown } from '../components/dashboard/CategoryBreakdown.tsx'
 import { FinancialEvolutionChart } from '../components/dashboard/FinancialEvolutionChart.tsx'
-import { PeriodOverview } from '../components/dashboard/PeriodOverview.tsx'
+import { HeroBrand } from '../components/dashboard/HeroBrand.tsx'
 import { RecentEntries } from '../components/dashboard/RecentEntries.tsx'
 import { SummaryCard } from '../components/dashboard/SummaryCard.tsx'
 import { UpcomingEntries } from '../components/dashboard/UpcomingEntries.tsx'
@@ -12,7 +12,7 @@ export function DashboardPage() {
 
   return (
     <div className="fh-dashboard-page">
-      <PeriodOverview overview={viewModel.periodOverview} />
+      <HeroBrand overview={viewModel.periodOverview} />
 
       <div className="fh-grid fh-dashboard-page__indicators">
         {viewModel.indicators.map((indicator) => (

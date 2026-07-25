@@ -39,7 +39,7 @@
   transition: background-color var(--fh-transition-fast), color var(--fh-transition-fast);
 }
 
-.fh-sidebar__nav-item:hover:not([aria-disabled='true']) {
+.fh-sidebar__nav-item:hover:not(:disabled) {
   background: var(--fh-surface);
   color: var(--fh-text);
 }
@@ -51,9 +51,9 @@
   box-shadow: var(--fh-shadow-purple);
 }
 
-.fh-sidebar__nav-item[aria-disabled='true'] {
+.fh-sidebar__nav-item:disabled {
   color: var(--fh-text-muted);
-  cursor: default;
+  cursor: not-allowed;
 }
 
 .fh-sidebar__soon {

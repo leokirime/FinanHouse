@@ -43,8 +43,15 @@
   transition: transform var(--fh-transition-fast), box-shadow var(--fh-transition-fast);
 }
 
-.fh-header__cta:hover {
+.fh-header__cta:hover:not(:disabled) {
   transform: translateY(-1px);
+}
+
+.fh-header__cta:disabled {
+  background: var(--fh-surface-elevated);
+  color: var(--fh-text-muted);
+  box-shadow: none;
+  cursor: not-allowed;
 }
 
 @media (max-width: 768px) {
