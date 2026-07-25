@@ -8,14 +8,14 @@
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
 
-### DT-01 — _Título da decisão_
+### DT-01 — Persistência: Drizzle ORM + mysql2
 
-- **Data:** _..._
-- **Contexto:** Por que esta decisão precisou ser tomada agora?
-- **Decisão:** O que foi decidido, em uma frase direta.
-- **Alternativas consideradas:** O que mais foi avaliado e por que foi descartado.
-- **Consequências:** O que essa decisão torna mais fácil, mais difícil, ou impossível depois.
-- **Status:** Vigente / Superada por DT-_NN_
+- **Data:** 2026-07-25
+- **Contexto:** O MySQL do Finanhouse existe na Clever Cloud mas está confirmado vazio (Bloco 02). Era preciso decidir a camada de acesso a dados antes de modelar o schema.
+- **Decisão:** Drizzle ORM (schema tipado + geração de migrations) sobre `mysql2` (driver real). Ver ADR completo em `Docs/02_architecture/adr_001_persistencia_drizzle_mysql2.md`.
+- **Alternativas consideradas:** `mysql2` puro (mais simples, mas migrations e tipagem manuais); Prisma/TypeORM/Sequelize/Knex (mais peso/complexidade do que o projeto precisa).
+- **Consequências:** Schema TypeScript vira fonte de verdade; migrations são geradas e revisadas, nunca aplicadas via `drizzle-kit push`; aplicação de migration exige autorização explícita.
+- **Status:** Vigente
 
 ## 2. Perguntas Orientadoras
 
@@ -38,4 +38,5 @@ _..._
 
 Decisões que precisam ser tomadas mas ainda não foram.
 
-- **Biblioteca de acesso ao MySQL e estratégia de migrations** (ex.: Drizzle + mysql2, mysql2 puro, ou outra solução): ainda não aprovada. O inventário somente leitura do MySQL existente na Clever Cloud foi concluído em 2026-07-25 (`bloco_02_inventario_seguro_do_banco_existente`) e confirmou que **o banco está vazio** (0 tabelas) — portanto não há risco de colisão com schema legado. Uma proposta técnica comparativa (`mysql2` direto vs. Drizzle + `mysql2`) foi registrada no feedback do Bloco 02 (`Docs/05_sessions/session_11_fundacao_do_finanhouse/08_feedbacks/feedback_bloco_02_inventario_seguro_do_banco_existente.md`, seção 10), mas a decisão final ainda depende de aprovação explícita do proprietário. A escolha não deve ser justificada por o projeto ser online ou local — ORM é uma camada de acesso a dados, não uma forma de hospedagem.
+- **Verificação de TLS/SSL entre a futura aplicação (Vercel) e o MySQL da Clever Cloud** — a inspeção do Bloco 02 usou `DATABASE_SSL=false` apenas para ler metadados; produção precisa de transporte seguro confirmado antes da primeira migration real e antes de qualquer dado real. Ver ADR-001 (`Docs/02_architecture/adr_001_persistencia_drizzle_mysql2.md`) e `Docs/03_contracts/contrato_banco_dados.md`.
+- **Aplicação da migration inicial gerada no Bloco 03** — depende de revisão e autorização explícita do proprietário; não é automática mesmo após o schema estar modelado.

@@ -130,8 +130,7 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- Decisão final entre `mysql2` direto e Drizzle + `mysql2` (ou outra alternativa) permanece pendente de aprovação do proprietário — proposta registrada na seção 10, ainda não implementada.
-- Modelagem do schema (tabelas de usuários, movimentações, categorias, competências, recorrências, planejamento, histórico) precisa ser desenhada do zero em sessão futura, já que o banco está confirmado vazio.
+_Resolvida em 2026-07-25 pelo Bloco 03 (`bloco_03_modelagem_inicial_do_dominio_financeiro`)._ As duas pendências originalmente registradas aqui — decisão entre `mysql2` direto e Drizzle+mysql2, e modelagem do schema do zero — foram encerradas: o proprietário aprovou Drizzle ORM + mysql2 (ADR-001, `Docs/02_architecture/adr_001_persistencia_drizzle_mysql2.md`; DT-01 em `Docs/02_architecture/decisoes_tecnicas.md`; RD-01 em `Docs/04_governance/registro_decisoes.md`), e as 6 tabelas da fundação do domínio financeiro foram modeladas em `apps/api/src/db/schema/`, com migration gerada e revisada (ainda não aplicada). Pendências novas e ainda ativas (verificação de TLS, autorização para aplicar a migration) estão registradas no feedback do Bloco 03, não aqui.
 
 ### P3 — Melhoria Recomendada
 
