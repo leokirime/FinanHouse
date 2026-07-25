@@ -4,11 +4,11 @@ import { HeroBrand } from '../components/dashboard/HeroBrand.tsx'
 import { RecentEntries } from '../components/dashboard/RecentEntries.tsx'
 import { SummaryCard } from '../components/dashboard/SummaryCard.tsx'
 import { UpcomingEntries } from '../components/dashboard/UpcomingEntries.tsx'
-import { buildDashboardViewModel } from '../view-models/dashboard-view-model.ts'
+import { useDashboardViewModel } from '../hooks/use-dashboard-view-model.ts'
 import './DashboardPage.css'
 
 export function DashboardPage() {
-  const viewModel = buildDashboardViewModel()
+  const viewModel = useDashboardViewModel()
 
   return (
     <div className="fh-dashboard-page">

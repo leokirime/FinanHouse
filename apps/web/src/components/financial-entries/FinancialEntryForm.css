@@ -1,0 +1,97 @@
+.fh-entry-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-4);
+  padding: var(--fh-space-5);
+}
+
+.fh-entry-form__hint {
+  font-size: 13px;
+  margin: calc(var(--fh-space-4) * -1) 0 0;
+}
+
+.fh-entry-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--fh-space-4);
+}
+
+.fh-entry-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-1);
+}
+
+.fh-entry-form__field label {
+  font-size: 13px;
+  color: var(--fh-text-secondary);
+}
+
+.fh-entry-form__field input,
+.fh-entry-form__field select,
+.fh-entry-form__field textarea {
+  background: var(--fh-bg-elevated);
+  border: 1px solid var(--fh-border-strong);
+  border-radius: var(--fh-radius-sm);
+  color: var(--fh-text);
+  font-size: 14px;
+  padding: var(--fh-space-2) var(--fh-space-3);
+  font-family: inherit;
+}
+
+.fh-entry-form__field input[aria-invalid='true'],
+.fh-entry-form__field select[aria-invalid='true'] {
+  border-color: var(--fh-expense);
+}
+
+.fh-entry-form__field-error {
+  color: var(--fh-expense);
+  font-size: 12px;
+}
+
+.fh-entry-form__error {
+  background: rgba(242, 113, 138, 0.12);
+  border: 1px solid rgba(242, 113, 138, 0.4);
+  color: var(--fh-text);
+  border-radius: var(--fh-radius-sm);
+  padding: var(--fh-space-3);
+  font-size: 13px;
+}
+
+.fh-entry-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--fh-space-3);
+  margin-top: var(--fh-space-2);
+}
+
+.fh-entry-form__primary,
+.fh-entry-form__secondary {
+  border-radius: var(--fh-radius-md);
+  padding: var(--fh-space-2) var(--fh-space-5);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fh-entry-form__primary {
+  background: var(--fh-purple);
+  color: #0a0710;
+  border: none;
+}
+
+.fh-entry-form__primary--danger {
+  background: var(--fh-expense);
+  color: #1a0508;
+}
+
+.fh-entry-form__secondary {
+  background: transparent;
+  border: 1px solid var(--fh-border-strong);
+  color: var(--fh-text-secondary);
+}
+
+@media (max-width: 480px) {
+  .fh-entry-form__row {
+    grid-template-columns: 1fr;
+  }
+}

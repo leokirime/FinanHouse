@@ -1,16 +1,31 @@
-import type { Category, FinancialEntry, MonthlyPeriod } from '@finanhouse/domain'
+import type { Category, FinancialEntry, HouseholdMember, MonthlyPeriod } from '@finanhouse/domain'
 
 /**
- * Dados inteiramente FICTÍCIOS para o protótipo visual do dashboard (Bloco 06).
- * Nenhum valor aqui representa dados reais do proprietário do Finanhouse.
- * Fonte única: todos os componentes derivam destes arrays via
- * `view-models/dashboard-view-model.ts` — nenhum componente deve escrever
- * um valor monetário próprio.
+ * Dados inteiramente FICTÍCIOS usados como **estado inicial** do modo
+ * demonstrativo (`state/`, Bloco 07) — a mesma fonte que alimentava o
+ * dashboard estático do Bloco 06. Nenhum valor aqui representa dados reais
+ * do proprietário do Finanhouse. Fonte única: `state/FinanceDemoProvider.tsx`
+ * lê estes arrays uma única vez, na inicialização — nenhum componente de UI
+ * deve importar este módulo diretamente.
  */
 export const FIXTURE_HOUSEHOLD_ID = 1
 
 export const FIXTURE_CURRENT_PERIOD_ID = 7
 export const FIXTURE_PREVIOUS_PERIOD_ID = 6
+
+export const MEMBER_RESPONSIBLE_A = 1
+export const MEMBER_RESPONSIBLE_B = 2
+
+/** `HouseholdMember` não tem campo de nome (é só uma referência a `userId`) — este rótulo é só para exibição no protótipo, não faz parte do domínio. */
+export const fixtureMemberLabels: Record<number, string> = {
+  [MEMBER_RESPONSIBLE_A]: 'Responsável A',
+  [MEMBER_RESPONSIBLE_B]: 'Responsável B (inativo)',
+}
+
+export const fixtureHouseholdMembers: HouseholdMember[] = [
+  { id: MEMBER_RESPONSIBLE_A, householdId: FIXTURE_HOUSEHOLD_ID, userId: 1, role: 'owner', status: 'active' },
+  { id: MEMBER_RESPONSIBLE_B, householdId: FIXTURE_HOUSEHOLD_ID, userId: 2, role: 'member', status: 'inactive' },
+]
 
 export const CATEGORY_SALARY = 1
 export const CATEGORY_FREELANCE = 2
@@ -55,7 +70,10 @@ export const fixtureMonthlyPeriods: MonthlyPeriod[] = [
   { id: 4, householdId: FIXTURE_HOUSEHOLD_ID, referenceMonth: '2026-04-01', status: 'closed', closedAt: '2026-05-05', closedByUserId: 1 },
   { id: 5, householdId: FIXTURE_HOUSEHOLD_ID, referenceMonth: '2026-05-01', status: 'closed', closedAt: '2026-06-05', closedByUserId: 1 },
   { id: FIXTURE_PREVIOUS_PERIOD_ID, householdId: FIXTURE_HOUSEHOLD_ID, referenceMonth: '2026-06-01', status: 'closed', closedAt: '2026-07-05', closedByUserId: 1 },
-  { id: FIXTURE_CURRENT_PERIOD_ID, householdId: FIXTURE_HOUSEHOLD_ID, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null },
+  // Aberta (não "review"): o Bloco 07 precisa criar/editar movimentações na
+  // competência atual, e o domínio bloqueia isso fora de "open" por design
+  // (ver assertPeriodAllowsEntryChanges em financial-entry-rules.ts).
+  { id: FIXTURE_CURRENT_PERIOD_ID, householdId: FIXTURE_HOUSEHOLD_ID, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null },
 ]
 
 let nextEntryId = 1

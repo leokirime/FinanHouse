@@ -8,20 +8,30 @@
 
 Inventariar os componentes de UI reutilizáveis disponíveis, para evitar duplicação e inconsistência visual.
 
-## 2. Inventário de Componentes (Bloco 06)
+## 2. Inventário de Componentes (Bloco 06 + Bloco 07)
 
 | Componente | Onde vive no código | Variantes | Estados suportados |
 |---|---|---|---|
 | `Brand` | `apps/web/src/components/brand/Brand.tsx` | Completo / compacto (`FH`); tipográfico / com logo (`logoSrc`) | Default — usado apenas em modo tipográfico (sidebar); nenhum arquivo compacto oficial existe ainda |
 | `HeroBrand` | `apps/web/src/components/dashboard/HeroBrand.tsx` | — | `open` / `review` / `closed` (via `data-tone`); CTA "Revisar mês" com `disabled` nativo |
 | `AppShell` | `apps/web/src/components/layout/AppShell.tsx` | — | Default |
-| `Sidebar` | `apps/web/src/components/layout/Sidebar.tsx` | — | Item ativo (`aria-current="page"`, habilitado) / indisponível (`disabled` nativo) |
-| `DashboardHeader` | `apps/web/src/components/layout/DashboardHeader.tsx` | — | CTA "Nova movimentação" com `disabled` nativo |
+| `RootLayout` | `apps/web/src/components/layout/RootLayout.tsx` | — | Novo (Bloco 07) — monta `AppShell`/`DashboardHeader` uma vez para todas as rotas via `<Outlet />` |
+| `Sidebar` | `apps/web/src/components/layout/Sidebar.tsx` | — | Item ativo = link real com `aria-current="page"` (Bloco 07: "Visão geral" e "Movimentações"); indisponível = `<button disabled>` |
+| `DashboardHeader` | `apps/web/src/components/layout/DashboardHeader.tsx` | — | CTA "Nova movimentação" com `disabled` nativo; título da área muda por rota |
 | `SummaryCard` | `apps/web/src/components/dashboard/SummaryCard.tsx` | 4 indicadores (`realizedIncome`/`realizedExpense`/`realizedBalance`/`projectedBalance`) | Tom `income` / `expense` |
 | `FinancialEvolutionChart` | `apps/web/src/components/dashboard/FinancialEvolutionChart.tsx` | — | Default (SVG puro, sem biblioteca) |
 | `CategoryBreakdown` | `apps/web/src/components/dashboard/CategoryBreakdown.tsx` | — | Default |
 | `RecentEntries` | `apps/web/src/components/dashboard/RecentEntries.tsx` | — | Tabela (desktop) / lista empilhada (mobile, `max-width: 640px`) |
 | `UpcomingEntries` | `apps/web/src/components/dashboard/UpcomingEntries.tsx` | — | Com pendências / vazio ("Nenhuma pendência...") |
+| `EntryDialog` | `apps/web/src/components/financial-entries/EntryDialog.tsx` | — | Novo (Bloco 07) — casca de diálogo (`<dialog open>`) reutilizada por criação/edição/realização/cancelamento; Escape fecha, foco retorna ao elemento de origem |
+| `FinancialEntryForm` | `apps/web/src/components/financial-entries/FinancialEntryForm.tsx` | `mode="create"` / `mode="edit"` | Erro de campo (valor inválido), erro geral (`state.actionError`), sucesso (fecha + toast) |
+| `RealizeEntryDialog` | `apps/web/src/components/financial-entries/RealizeEntryDialog.tsx` | — | Novo (Bloco 07) — valor pré-preenchido, mas exige confirmação explícita; erros de campo para valor/data ausentes |
+| `CancelEntryDialog` | `apps/web/src/components/financial-entries/CancelEntryDialog.tsx` | — | Novo (Bloco 07) — confirmação obrigatória antes de cancelar |
+| `FinancialEntryList` | `apps/web/src/components/financial-entries/FinancialEntryList.tsx` | — | Tabela (desktop) / lista empilhada (mobile, `max-width: 900px`) |
+| `FinancialEntryActions` | `apps/web/src/components/financial-entries/FinancialEntryActions.tsx` | — | Botões contextuais por status (`canEdit`/`canMarkPending`/`canRealize`/`canCancel`/`canReactivate`/`canRevertRealization`) |
+| `FinancialEntryFilters` | `apps/web/src/components/financial-entries/FinancialEntryFilters.tsx` | — | "Limpar filtros" desabilitado quando já nos valores padrão |
+| `FinancialEntryStatusBadge` | `apps/web/src/components/financial-entries/FinancialEntryStatusBadge.tsx` | — | Reaproveita os tons `data-tone` já definidos em `RecentEntries.css` |
+| `FinancialEntryEmptyState` | `apps/web/src/components/financial-entries/FinancialEntryEmptyState.tsx` | Sem filtro ativo / com filtro ativo | Default |
 
 **`PeriodOverview` foi substituído por `HeroBrand`** (correção pós-Bloco 06): a responsabilidade de "hero da competência" passou a incluir a logo oficial, então o componente foi renomeado/absorvido em vez de manter os dois lado a lado com conteúdo duplicado (status/competência apareceriam duas vezes). `PeriodOverview.tsx`/`.css` foram removidos.
 
@@ -35,9 +45,9 @@ Todo componente interativo deve ter comportamento visual definido para:
 - [x] Hover / Focus (`:focus-visible` global em `global.css`; hover em `Sidebar`, `SummaryCard`, `DashboardHeader` CTA)
 - [ ] Active / Pressed — não aplicável neste bloco (nenhum componente tem ação real que produza estado "pressionado" persistente; botões são "apenas visuais")
 - [x] Disabled — atributo HTML `disabled` nativo (não apenas `aria-disabled`) nos itens de navegação futuros da `Sidebar` e nos dois CTAs visuais ("Nova movimentação", "Revisar mês"); estilo visual próprio (`:disabled` no CSS) para cada um.
-- [ ] Loading — não aplicável (dados são síncronos, vindos de fixtures em memória)
-- [ ] Erro / Validação — não aplicável (não há formulários neste bloco)
-- [x] Vazio (`UpcomingEntries` quando não há pendências)
+- [ ] Loading — não aplicável (dados são síncronos, em memória — nenhuma chamada assíncrona real)
+- [x] Erro / Validação — `FinancialEntryForm`/`RealizeEntryDialog` (Bloco 07): erro de campo (`role="alert"`, `aria-describedby`) e erro geral vindo do domínio (`state.actionError`)
+- [x] Vazio (`UpcomingEntries` quando não há pendências; `FinancialEntryEmptyState` quando a busca/filtro não encontra nada)
 
 ## 4. Regras Obrigatórias
 
@@ -52,4 +62,5 @@ Todo componente interativo deve ter comportamento visual definido para:
 
 ## 6. Decisões Pendentes
 
-- P4 — Páginas "Movimentações", "Comparativo", "Planejamento", "Histórico", "Configurações" ainda não têm componentes próprios (apenas itens de navegação não funcionais na `Sidebar`).
+- ~~Página "Movimentações" ainda não tem componentes próprios~~ — **resolvido no Bloco 07**: componentes em `apps/web/src/components/financial-entries/`.
+- P4 — Páginas "Comparativo", "Planejamento", "Histórico", "Configurações" ainda não têm componentes próprios (apenas itens de navegação não funcionais na `Sidebar`).

@@ -8,6 +8,15 @@
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
 
+### DT-02 — Roteamento do frontend: `react-router-dom@7.18.1` (pin exato)
+
+- **Data:** 2026-07-25
+- **Contexto:** Bloco 07 precisa de navegação real entre "Visão geral" e "Movimentações". `react-router-dom` foi autorizado explicitamente pelo proprietário como a única dependência de roteamento a instalar. Ao instalar, `npm audit` acusou vulnerabilidades em praticamente toda a linha 7.x publicada: a versão mais recente (`7.18.1`) está na faixa afetada por GHSA-qwww-vcr4-c8h2 (CSRF bypass em "RSC Mode"); versões `6.0.0`–`7.17.0` (incluindo `7.11.0`, cogitada como downgrade "seguro") estão na faixa afetada por 13 outras advisories (XSS, open redirect, RCE via deserialização, DoS) — a maioria específica de SSR/RSC/prerendering/single-fetch/server actions.
+- **Decisão:** Fixar exatamente `react-router-dom@7.18.1` (sem `^`), a versão mais recente disponível. Verificado via a própria descrição da GHSA-qwww-vcr4-c8h2 que essa vulnerabilidade **só afeta aplicações usando as APIs instáveis de RSC** ("This only affects your application if you are using the unstable RSC APIs") — o Finanhouse usa apenas o modo declarativo client-side (`BrowserRouter`/`Routes`/`Route`/`Link`/`NavLink`/`useNavigate`), sem RSC, sem loaders/actions de servidor, sem SSR/prerendering. Todas as demais 13 advisories (faixa `6.0.0`–`7.17.0`) não se aplicam a `7.18.1`, que é posterior a esse intervalo.
+- **Alternativas consideradas:** `7.11.0` (evita a CSRF/RSC, mas cai nas 13 advisories da faixa anterior, incluindo open-redirect em `<Link>`/`useNavigate` — mais relevante para uso client puro que a CSRF de RSC); outro roteador (explicitamente proibido pelo prompt do Bloco 07).
+- **Consequências:** Pin exato (não `^7.18.1`) para que uma atualização automática não reintroduza silenciosamente uma versão pior; reavaliar quando uma versão publicada corrigir GHSA-qwww-vcr4-c8h2 sem reabrir as demais.
+- **Status:** Vigente
+
 ### DT-01 — Persistência: Drizzle ORM + mysql2
 
 - **Data:** 2026-07-25
