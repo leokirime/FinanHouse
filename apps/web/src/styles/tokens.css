@@ -1,0 +1,87 @@
+/**
+ * Design tokens do Finanhouse — identidade preta/roxa (Bloco 06).
+ * Não usar valores hexadecimais soltos em componentes: sempre referenciar
+ * um token daqui. Ver Docs/07_design_system/ para o racional de cada grupo.
+ */
+:root {
+  color-scheme: dark;
+
+  /* Superfícies */
+  --fh-bg: #0a0710;
+  --fh-bg-elevated: #100b1a;
+  --fh-surface: #151020;
+  --fh-surface-elevated: #1c1529;
+  --fh-surface-translucent: rgba(28, 21, 41, 0.72);
+
+  /* Marca */
+  --fh-purple: #9b5de5;
+  --fh-purple-strong: #b98bff;
+  --fh-purple-soft: rgba(155, 93, 229, 0.16);
+  --fh-purple-border: rgba(155, 93, 229, 0.35);
+  --fh-purple-glow: rgba(155, 93, 229, 0.28);
+
+  /* Texto */
+  --fh-text: #f5f2fb;
+  --fh-text-secondary: #ada4c4;
+  --fh-text-muted: #756c8c;
+
+  /* Bordas e divisores */
+  --fh-border: rgba(245, 242, 251, 0.09);
+  --fh-border-strong: rgba(245, 242, 251, 0.16);
+
+  /* Semântica financeira (uso pontual, não dominante) */
+  --fh-income: #4fd1a5;
+  --fh-expense: #f2718a;
+  --fh-warning: #f5b95c;
+
+  /* Superfície de marca — usada apenas no hero, para preservar a legibilidade
+     do wordmark escuro da logo oficial sobre o fundo preto do dashboard. */
+  --fh-brand-surface: #f4f1f8;
+  --fh-brand-surface-border: rgba(155, 93, 229, 0.22);
+
+  /* Raios */
+  --fh-radius-sm: 8px;
+  --fh-radius-md: 14px;
+  --fh-radius-lg: 20px;
+  --fh-radius-pill: 999px;
+
+  /* Espaçamentos (escala de 4px) */
+  --fh-space-1: 4px;
+  --fh-space-2: 8px;
+  --fh-space-3: 12px;
+  --fh-space-4: 16px;
+  --fh-space-5: 20px;
+  --fh-space-6: 24px;
+  --fh-space-8: 32px;
+  --fh-space-10: 40px;
+  --fh-space-12: 48px;
+
+  /* Sombras */
+  --fh-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --fh-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35), 0 1px 0 rgba(255, 255, 255, 0.03) inset;
+  --fh-shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+  --fh-shadow-purple: 0 12px 32px var(--fh-purple-glow);
+
+  /* Transições */
+  --fh-transition-fast: 120ms ease;
+  --fh-transition-base: 200ms ease;
+
+  /* Layout */
+  --fh-sidebar-width: 264px;
+  --fh-sidebar-width-collapsed: 76px;
+  --fh-content-max-width: 1280px;
+  --fh-header-height: 72px;
+
+  /* Tipografia */
+  --fh-font-sans:
+    'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    /* O produto é intencionalmente escuro por padrão (identidade da marca).
+       Mantém o mesmo tema também em ambientes claros do sistema operacional
+       para preservar a identidade visual definida para o Finanhouse. */
+    color-scheme: dark;
+  }
+}

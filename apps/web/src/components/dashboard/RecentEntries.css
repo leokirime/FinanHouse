@@ -1,0 +1,90 @@
+.fh-recent-entries {
+  padding: var(--fh-space-5);
+  overflow-x: auto;
+}
+
+.fh-recent-entries__table {
+  margin-top: var(--fh-space-4);
+  font-size: 13px;
+}
+
+.fh-recent-entries__table th {
+  text-align: left;
+  color: var(--fh-text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  padding: var(--fh-space-2) var(--fh-space-3);
+  border-bottom: 1px solid var(--fh-border);
+}
+
+.fh-recent-entries__table td {
+  padding: var(--fh-space-3);
+  border-bottom: 1px solid var(--fh-border);
+}
+
+.fh-recent-entries__amount-col {
+  text-align: right;
+}
+
+.fh-recent-entries__amount-col[data-tone='income'] {
+  color: var(--fh-income);
+}
+
+.fh-recent-entries__amount-col[data-tone='expense'] {
+  color: var(--fh-expense);
+}
+
+.fh-badge[data-tone='realized'] {
+  color: var(--fh-income);
+}
+
+.fh-badge[data-tone='pending'] {
+  color: var(--fh-warning);
+}
+
+.fh-badge[data-tone='planned'] {
+  color: var(--fh-text-secondary);
+}
+
+.fh-badge[data-tone='cancelled'] {
+  color: var(--fh-expense);
+  text-decoration: line-through;
+}
+
+/* Tabela vira lista empilhada em telas estreitas — sem rolagem horizontal. */
+@media (max-width: 640px) {
+  .fh-recent-entries__table thead {
+    display: none;
+  }
+
+  .fh-recent-entries__table,
+  .fh-recent-entries__table tbody,
+  .fh-recent-entries__table tr,
+  .fh-recent-entries__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .fh-recent-entries__table tr {
+    padding: var(--fh-space-3) 0;
+    border-bottom: 1px solid var(--fh-border);
+  }
+
+  .fh-recent-entries__table td {
+    border-bottom: none;
+    padding: 2px 0;
+    display: flex;
+    justify-content: space-between;
+    gap: var(--fh-space-3);
+  }
+
+  .fh-recent-entries__table td::before {
+    content: attr(data-label);
+    color: var(--fh-text-muted);
+    font-size: 12px;
+  }
+
+  .fh-recent-entries__amount-col {
+    text-align: right;
+  }
+}

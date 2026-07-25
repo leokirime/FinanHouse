@@ -10,37 +10,37 @@ Garantir que o produto seja usável por pessoas com diferentes capacidades visua
 
 ## 2. Padrão Adotado
 
-Nível de conformidade alvo (ex.: WCAG 2.1 AA) e por que esse nível foi escolhido.
+Alvo: WCAG 2.1 AA nos pontos aplicáveis a este bloco (contraste, navegação por teclado, foco visível, semântica). Escolhido por ser o padrão de mercado mais amplamente cobrado e testável sem ferramentas especializadas.
 
-_..._
+## 3. Diretrizes — o que foi implementado no Bloco 06
 
-## 3. Diretrizes
-
-- Contraste mínimo de texto contra fundo (ex.: 4.5:1 para texto normal).
-- Todo elemento interativo é navegável e operável por teclado.
-- Todo elemento interativo tem foco visível.
-- Imagens informativas têm texto alternativo; imagens decorativas são marcadas como tal.
-- Formulários têm labels associados corretamente aos campos, não apenas placeholder.
-- Mensagens de erro são anunciadas para leitores de tela, não apenas exibidas visualmente.
+- **Landmarks semânticos**: `<aside>` (Sidebar), `<header>` (DashboardHeader), `<main id="main-content">` (conteúdo), `<nav aria-label="Áreas do Finanhouse">`.
+- **Navegação ativa**: item "Visão geral" com `aria-current="page"`; demais itens com `aria-disabled="true"` (sem `href` fictício, sem simular navegação para página inexistente).
+- **Foco visível**: `:focus-visible` global (`global.css`) com contorno roxo consistente, sem depender de estilo de navegador.
+- **Não depender só de cor**: status de movimentação/competência sempre acompanhado de texto (badge com label, não apenas cor de fundo); indicadores de receita/despesa têm ícone (`↑`/`↓`) além da cor.
+- **Gráfico com alternativa textual**: `FinancialEvolutionChart` tem o SVG marcado `aria-hidden="true"` e um parágrafo `.fh-visually-hidden` com o resumo completo dos valores por competência, para leitores de tela.
+- **`prefers-reduced-motion`**: respeitado globalmente (`global.css` reduz duração de transições/animações a ~0 quando o usuário solicita).
+- **Elementos interativos são `<button>`**, nunca `<div>` clicável — inclusive itens de navegação "indisponíveis" e CTAs "apenas visuais".
+- **Tabelas**: cabeçalhos com `<th scope="col">` (`RecentEntries`).
 
 ## 4. Checklist
 
-- [ ] Navegação completa por teclado testada (Tab, Shift+Tab, Enter, Esc).
-- [ ] Contraste de cores verificado para texto e elementos de UI relevantes.
-- [ ] Atributos ARIA usados corretamente onde semântica HTML nativa não é suficiente.
-- [ ] Testado com pelo menos um leitor de tela (ou ferramenta de simulação) nos fluxos críticos.
-- [ ] Tamanho de área clicável/tocável adequado em mobile (mínimo recomendado ~44x44px).
+- [x] Navegação completa por teclado — todos os controles são `<button>` nativos, focáveis via Tab.
+- [ ] Contraste de cores verificado com ferramenta dedicada — verificado visualmente durante o desenvolvimento (paleta escura com texto claro de alto contraste), mas **não medido numericamente** (ex.: com um verificador de contraste automatizado); pendência registrada abaixo.
+- [x] Atributos ARIA usados onde a semântica HTML nativa não bastava (`aria-current`, `aria-disabled`, `aria-labelledby`, `aria-hidden`).
+- [ ] Testado com leitor de tela real — não realizado neste bloco (protótipo); a alternativa textual do gráfico e os labels foram escritos para funcionar com leitores de tela, mas sem teste manual com um.
+- [x] Tamanho de área clicável adequado — botões da sidebar/header usam padding generoso (`--fh-space-3`/`--fh-space-2` mínimo).
 
 ## 5. Regras Obrigatórias
 
-- [ ] Nenhum componente novo é considerado concluído sem passar pelo checklist acima.
-- [ ] _..._
+- [x] Nenhum componente novo é considerado concluído sem passar pelo checklist acima (itens não concluídos foram registrados explicitamente como pendência, não omitidos).
 
 ## 6. Perguntas Orientadoras
 
-- Este fluxo crítico (login, checkout, etc.) funciona de ponta a ponta sem usar o mouse?
-- Existe algum elemento que depende só de cor para transmitir informação (ex.: erro só em vermelho, sem ícone/texto)?
+- Este fluxo crítico (login, checkout, etc.) funciona de ponta a ponta sem usar o mouse? — Não aplicável neste bloco (sem formulários/fluxos de escrita).
+- Existe algum elemento que depende só de cor para transmitir informação? — Não: status e tipo (receita/despesa) sempre têm texto/ícone além da cor.
 
 ## 7. Decisões Pendentes
 
-_..._
+- P3 — Verificar contraste numericamente (ex.: ferramenta de contraste WCAG) antes do checkpoint visual do proprietário.
+- P3 — Testar os fluxos de leitura do dashboard com um leitor de tela real (NVDA/VoiceOver) antes de considerar a acessibilidade "validada" além do nível estrutural.

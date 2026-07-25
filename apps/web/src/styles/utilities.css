@@ -1,0 +1,64 @@
+/* Utilitários compartilhados entre componentes do dashboard. */
+
+.fh-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.fh-container {
+  width: 100%;
+  max-width: var(--fh-content-max-width);
+  margin-inline: auto;
+  padding-inline: var(--fh-space-6);
+}
+
+@media (max-width: 768px) {
+  .fh-container {
+    padding-inline: var(--fh-space-4);
+  }
+}
+
+.fh-card {
+  background: var(--fh-surface);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-lg);
+  box-shadow: var(--fh-shadow-md);
+}
+
+.fh-card--elevated {
+  background: linear-gradient(180deg, var(--fh-surface-elevated) 0%, var(--fh-surface) 100%);
+}
+
+.fh-grid {
+  display: grid;
+  gap: var(--fh-space-5);
+}
+
+.fh-text-secondary {
+  color: var(--fh-text-secondary);
+}
+
+.fh-text-muted {
+  color: var(--fh-text-muted);
+}
+
+.fh-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--fh-space-1);
+  padding: 2px var(--fh-space-3);
+  border-radius: var(--fh-radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--fh-border-strong);
+  background: var(--fh-surface-elevated);
+  color: var(--fh-text-secondary);
+}

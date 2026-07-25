@@ -1,0 +1,36 @@
+.fh-dashboard-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-6);
+}
+
+.fh-dashboard-page__indicators {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.fh-dashboard-page__insights {
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+}
+
+.fh-dashboard-page__lists {
+  grid-template-columns: 2fr 1fr;
+  align-items: start;
+}
+
+@media (max-width: 1023px) {
+  .fh-dashboard-page__indicators {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .fh-dashboard-page__insights,
+  .fh-dashboard-page__lists {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .fh-dashboard-page__indicators {
+    grid-template-columns: 1fr;
+  }
+}

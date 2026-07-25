@@ -8,57 +8,71 @@
 
 Centralizar todo valor visual reutilizável (cor, espaçamento, tipografia, raio, sombra) em tokens nomeados, para que mudar um valor não exija caçar ocorrências no código.
 
+Implementados em `apps/web/src/styles/tokens.css` (Bloco 06) como propriedades CSS customizadas (`--fh-*`), carregados por `styles/global.css`.
+
 ## 2. Cores
 
-| Token | Valor | Variável no código |
+| Token | Valor | Uso |
 |---|---|---|
-| `color-primary` | _..._ | _..._ |
-| `color-secondary` | _..._ | _..._ |
-| `color-success` | _..._ | _..._ |
-| `color-error` | _..._ | _..._ |
-| `color-warning` | _..._ | _..._ |
-| `color-text` | _..._ | _..._ |
-| `color-background` | _..._ | _..._ |
+| `--fh-bg` | `#0a0710` | Fundo principal da aplicação |
+| `--fh-bg-elevated` | `#100b1a` | Fundo da sidebar |
+| `--fh-surface` | `#151020` | Superfície de cards |
+| `--fh-surface-elevated` | `#1c1529` | Superfície elevada (hover, cards em destaque) |
+| `--fh-purple` | `#9b5de5` | Marca — CTAs |
+| `--fh-purple-strong` | `#b98bff` | Marca — destaque, texto de gradiente |
+| `--fh-purple-soft` / `--fh-purple-border` / `--fh-purple-glow` | `rgba(155,93,229,*)` | Fundos/bordas/brilho suaves de destaque |
+| `--fh-text` | `#f5f2fb` | Texto principal |
+| `--fh-text-secondary` | `#ada4c4` | Texto secundário |
+| `--fh-text-muted` | `#756c8c` | Texto terciário / labels |
+| `--fh-border` / `--fh-border-strong` | `rgba(245,242,251,*)` | Divisores |
+| `--fh-income` | `#4fd1a5` | Destaque pontual de receita (nunca dominante) |
+| `--fh-expense` | `#f2718a` | Destaque pontual de despesa |
+| `--fh-warning` | `#f5b95c` | Pendências / competência em revisão |
+| `--fh-brand-surface` | `#f4f1f8` | Superfície clara atrás da logo oficial no hero (o wordmark tem parte escura — precisa de fundo claro para ficar legível sobre o dashboard preto) |
+| `--fh-brand-surface-border` | `rgba(155,93,229,0.22)` | Borda discreta da superfície de marca |
 
 ## 3. Espaçamento
 
-Escala de espaçamento usada (ex.: base 4px/8px) e os tokens derivados.
-
-| Token | Valor |
-|---|---|
-| `space-xs` | _..._ |
-| `space-sm` | _..._ |
-| `space-md` | _..._ |
-| `space-lg` | _..._ |
-| `space-xl` | _..._ |
+Escala base 4px: `--fh-space-1` (4px) até `--fh-space-12` (48px) — `1, 2, 3, 4, 5, 6, 8, 10, 12` como sufixo (`--fh-space-4` = 16px, etc.).
 
 ## 4. Tipografia
 
-| Token | Família | Tamanho | Peso | Altura de linha |
-|---|---|---|---|---|
-| `text-heading-1` | _..._ | _..._ | _..._ | _..._ |
-| `text-body` | _..._ | _..._ | _..._ | _..._ |
-| `text-caption` | _..._ | _..._ | _..._ | _..._ |
+| Token | Família | Observação |
+|---|---|---|
+| `--fh-font-sans` | Inter, system-ui, 'Segoe UI', Roboto, sans-serif | Única família usada — tamanhos definidos por componente (13–22px), sem token dedicado por não haver ainda uma escala tipográfica extensa neste bloco. |
 
 ## 5. Raio e Sombra
 
 | Token | Valor |
 |---|---|
-| `radius-sm` | _..._ |
-| `radius-md` | _..._ |
-| `shadow-sm` | _..._ |
-| `shadow-md` | _..._ |
+| `--fh-radius-sm` | 8px |
+| `--fh-radius-md` | 14px |
+| `--fh-radius-lg` | 20px |
+| `--fh-radius-pill` | 999px |
+| `--fh-shadow-sm` | sombra sutil (elementos pequenos) |
+| `--fh-shadow-md` | sombra padrão de card |
+| `--fh-shadow-lg` | sombra de hover/destaque |
+| `--fh-shadow-purple` | brilho roxo controlado (CTAs, item de navegação ativo) |
 
-## 6. Regras Obrigatórias
+## 6. Layout
 
-- [ ] Todo valor visual usado mais de uma vez no código tem um token correspondente aqui.
-- [ ] Nenhum componente usa valor de cor/espaçamento hardcoded quando um token equivalente já existe.
-- [ ] _..._
+| Token | Valor |
+|---|---|
+| `--fh-sidebar-width` | 264px |
+| `--fh-sidebar-width-collapsed` | 76px (reservado — não usado neste bloco, sidebar vira barra horizontal em telas estreitas) |
+| `--fh-content-max-width` | 1280px |
+| `--fh-header-height` | 72px |
 
-## 7. Perguntas Orientadoras
+## 7. Regras Obrigatórias
+
+- [x] Todo valor visual usado mais de uma vez no código tem um token correspondente aqui.
+- [x] Nenhum componente usa valor de cor/espaçamento hardcoded quando um token equivalente já existe (exceção: cores semânticas de status específicas de badges, que herdam diretamente dos tokens de cor via seletor `data-tone`).
+- [x] A logo oficial foi adicionada; a única cor adicional que ela exigiu (`--fh-brand-surface`) já foi registrada como token.
+
+## 8. Perguntas Orientadoras
 
 - Este token está implementado no código (variável CSS, tema, objeto de design tokens) exatamente como documentado aqui?
 
-## 8. Decisões Pendentes
+## 9. Decisões Pendentes
 
-_..._
+_Nenhuma pendência de tokens. Pendências de logo (versão compacta para sidebar, área de proteção) estão em `identidade_visual.md`, seção 8._

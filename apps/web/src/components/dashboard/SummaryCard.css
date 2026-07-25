@@ -1,0 +1,53 @@
+.fh-summary-card {
+  padding: var(--fh-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-2);
+  transition: transform var(--fh-transition-base), box-shadow var(--fh-transition-base);
+}
+
+.fh-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--fh-shadow-lg);
+}
+
+.fh-summary-card__header {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-2);
+}
+
+.fh-summary-card__header h3 {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fh-text-secondary);
+}
+
+.fh-summary-card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--fh-radius-sm);
+  background: var(--fh-surface-elevated);
+  font-size: 14px;
+}
+
+.fh-summary-card[data-tone='income'] .fh-summary-card__icon {
+  color: var(--fh-income);
+}
+
+.fh-summary-card[data-tone='expense'] .fh-summary-card__icon {
+  color: var(--fh-expense);
+}
+
+.fh-summary-card__value {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.fh-summary-card__secondary {
+  font-size: 12px;
+}

@@ -10,43 +10,54 @@ Definir a identidade visual de forma específica o suficiente para que qualquer 
 
 ## 2. Logo
 
-Onde os arquivos de logo vivem, variações disponíveis (claro/escuro, ícone/completo), área de proteção mínima, usos proibidos.
+**A logo oficial foi adicionada ao repositório e integrada ao hero.** Arquivo: `assets/images/finanhouse-logo-hero.png` (PNG, 1536×1024, com canal alfa/transparência) — composição horizontal completa (ícone de casa + wordmark "Finanhouse" + slogan "Casa, evolução e equilíbrio"), destinada especificamente ao hero do dashboard (`apps/web/src/components/dashboard/HeroBrand.tsx`).
 
-_..._
+**Ainda não existe um arquivo oficial compacto específico para a sidebar.** Por isso `apps/web/src/components/brand/Brand.tsx` (usado na `Sidebar`) continua em **modo tipográfico** — apenas o texto "Finanhouse" estilizado (gradiente texto de `--fh-text` para `--fh-purple-strong`). A imagem do hero é uma composição larga com slogan, não recortável em um ícone compacto sem redesenhar a marca — o que não foi autorizado.
+
+Regras aplicadas:
+
+- A imagem oficial nunca é distorcida, recolorida, cortada ou usada como plano de fundo CSS — sempre um `<img>` semântico com `object-fit: contain`, preservando a proporção original.
+- Como o wordmark tem uma parte escura, o hero usa uma superfície clara dedicada (`--fh-brand-surface`/`--fh-brand-surface-border`, ver `tokens_design.md`) atrás da logo, para preservar a legibilidade sem recolorir a imagem.
+- Não foi gerado ícone/glifo substituto para a sidebar; não foi criada uma segunda versão da logo.
+- Observação registrada (não corrigida — arquivo original não foi alterado): o slogan embutido na imagem aparenta ter um erro de digitação ("equiiibrio" em vez de "equilíbrio"). Ver seção 8.
+- Área de proteção mínima e uma variação compacta (ícone/completo) para a sidebar seguem **pendentes de definição** — dependem de um arquivo oficial específico para esse uso, ainda não fornecido.
 
 ## 3. Cores
 
-| Nome do token | Valor (hex/HSL) | Uso |
-|---|---|---|
-| Primária | _..._ | _..._ |
-| Secundária | _..._ | _..._ |
-| Sucesso | _..._ | _..._ |
-| Erro | _..._ | _..._ |
-| Aviso | _..._ | _..._ |
-| Neutro / texto | _..._ | _..._ |
-| Fundo | _..._ | _..._ |
+Identidade preta/roxa, sofisticada e minimalista — ver `tokens_design.md` para os valores exatos. Uso pontual (não dominante) de verde/vermelho apenas para diferenciar receita/despesa, sempre acompanhado de texto/ícone (nunca só cor).
 
-Valores definitivos (com nome de variável/token) ficam em `tokens_design.md` — aqui registre a intenção de uso.
+| Nome do token | Uso |
+|---|---|
+| Fundo / superfícies | `--fh-bg`, `--fh-bg-elevated`, `--fh-surface`, `--fh-surface-elevated` — pretos com leve matiz roxo |
+| Marca (primária) | `--fh-purple`, `--fh-purple-strong` — CTAs, item de navegação ativo, destaques |
+| Texto | `--fh-text`, `--fh-text-secondary`, `--fh-text-muted` |
+| Semântica financeira | `--fh-income` (receita, uso pontual), `--fh-expense` (despesa, uso pontual), `--fh-warning` (pendências) |
+| Bordas | `--fh-border`, `--fh-border-strong` |
 
 ## 4. Tipografia
 
 | Uso | Fonte | Peso | Tamanho |
 |---|---|---|---|
-| Título | _..._ | _..._ | _..._ |
-| Corpo | _..._ | _..._ | _..._ |
-| Legenda | _..._ | _..._ | _..._ |
+| Título de página (`h1`) | `--fh-font-sans` (Inter/system-ui) | 600 | 22px |
+| Título de seção (`h2`/`h3`) | `--fh-font-sans` | 600 | 18–20px |
+| Corpo | `--fh-font-sans` | 400–500 | 13–15px |
+| Legenda / secundário | `--fh-font-sans` | 400–500 | 12–13px |
 
 ## 5. Tom Visual
 
-Em palavras: este produto é visualmente sóbrio, lúdico, técnico, minimalista? O que isso significa na prática (ex.: "minimalista" → evitar sombras decorativas, máximo de 2 níveis de elevação).
+Sofisticado, minimalista e contemporâneo — organização, estabilidade, evolução, equilíbrio doméstico. Na prática:
 
-_..._
+- Máximo de 2 níveis de elevação por seção (`fh-card` e `fh-card--elevated`), sem sombras pesadas.
+- Sem gradientes decorativos além do leve brilho de marca (`--fh-shadow-purple`) em elementos de destaque pontuais.
+- Cards com bordas discretas (`--fh-border`), nunca múltiplas bordas empilhadas.
+- Sem animação constante — apenas transições curtas em hover/foco, sempre respeitando `prefers-reduced-motion`.
+- Ícones consistentes por conceito (mesmo símbolo sempre para o mesmo tipo de dado — ex.: ↑ é sempre receita).
 
 ## 6. Regras Obrigatórias
 
-- [ ] Nenhuma cor fora da paleta definida em `tokens_design.md` é usada em componentes novos.
-- [ ] Logo nunca é distorcido, recolorido fora das variações aprovadas, ou usado abaixo da área de proteção mínima.
-- [ ] _..._
+- [x] Nenhuma cor fora da paleta definida em `tokens_design.md` é usada em componentes novos.
+- [x] Logo nunca é distorcida, recolorida ou cortada — usada apenas via `<img>` com `object-fit: contain`, sem filtros CSS. Área de proteção mínima formal ainda não definida (ver seção 8).
+- [x] Verde/vermelho usados apenas como destaque pontual (receita/despesa), nunca como cor dominante da interface.
 
 ## 7. Perguntas Orientadoras
 
@@ -54,4 +65,6 @@ _..._
 
 ## 8. Decisões Pendentes
 
-_..._
+- P3 — Ainda não existe um arquivo oficial compacto (ícone ou wordmark curto) para uso na `Sidebar`; `Brand.tsx` permanece em modo tipográfico até que esse arquivo específico seja fornecido.
+- P3 — Área de proteção mínima e variações formais (claro/escuro) da logo ainda não foram definidas pelo proprietário.
+- P4 — O slogan embutido em `assets/images/finanhouse-logo-hero.png` aparenta conter um erro de digitação ("equiiibrio"). O arquivo não foi alterado (fora de escopo modificar o asset); registrar para o proprietário decidir se substitui o arquivo.
