@@ -1,0 +1,25 @@
+# DDAE Engine — Document-Driven AI Engineering Engine
+
+This project follows DDAE Engine. Documents in `Docs/` are the source of truth; code implements what they specify. Methodology: `Docs/00_ddae_engine/metodologia.md` and `Docs/00_ddae_engine/regras_ddae_engine.md`.
+
+Before writing code:
+- Read `Docs/01_product/visao_produto.md` and `Docs/01_product/requisitos_funcionais.md`.
+- Check `Docs/02_architecture/` and `Docs/04_governance/registro_decisoes.md` for prior decisions that constrain your approach. Don't contradict a recorded decision without registering a new one that supersedes it.
+- Find or create the relevant session (`ddae-engine session create`) and block (`ddae-engine block create`) for the work, and read the block fully before changing code — it defines scope, files involved, and acceptance criteria.
+
+While implementing:
+- Do not change scope without reporting it and getting authorization first.
+- Respect contracts in `Docs/03_contracts/` and the design system in `Docs/07_design_system/` — changing either is a registered decision, not a side effect.
+- Check relevant quality gates in `Docs/06_quality_gates/` before treating a block as done.
+- Register every pendency found using the P1–P4 scale, not free-form prose.
+- Generate the execution prompt for a block with `ddae-engine prompt create --block <bloco> --session <sessao>`.
+- Generate and fill the closure feedback with `ddae-engine feedback create --block <bloco> --session <sessao>` when the block is done.
+- Update documentation in the same block where the behavior it describes changes.
+- Run `ddae-engine validate` and `ddae-engine audit` to check structural compliance before closing a session.
+
+Commits:
+- Never commit, push, or force-push without explicit user confirmation for that specific action, even when a semantic commit message is suggested.
+
+Do not implement features with no corresponding requirement in `Docs/01_product/requisitos_funcionais.md` — flag the gap instead of silently expanding scope.
+
+See AGENTS.md for the full workflow.
