@@ -222,7 +222,7 @@ _Nenhuma pendência P2 nova neste bloco._ A persistência real (repositórios Dr
 - Ainda não existe um arquivo oficial **compacto** (ícone/wordmark curto) para a `Sidebar` — `Brand.tsx` continua em modo tipográfico até que esse arquivo específico seja fornecido (ver `Docs/07_design_system/identidade_visual.md`, seção 8).
 - Contraste de cores não foi medido numericamente (só verificado visualmente) — ver `Docs/07_design_system/acessibilidade.md`.
 - Fluxos do dashboard não foram testados com leitor de tela real (NVDA/VoiceOver) — só com a estrutura semântica/ARIA esperada.
-- Inspeção visual em navegador real (1440/1024/768/390px) não foi realizada neste ambiente (sem ferramenta de captura de tela) — fica para o checkpoint visual do proprietário antes do merge.
+- ~~Inspeção visual em navegador real (1440/1024/768/390px) não foi realizada neste ambiente~~ — **realizada pelo proprietário via checkpoint visual local**: aprovado funcionalmente, com refinamento visual pendente e não detalhado — ver `Docs/07_design_system/backlog_refinamento_visual.md` (P3 visual, não bloqueia integração nem o Bloco 07).
 - Quando a persistência real for liberada, `dashboard-fixtures.ts` deve ser substituído por dados reais no mesmo formato de entrada esperado por `buildDashboardViewModel()` (`Category[]`/`MonthlyPeriod[]`/`FinancialEntry[]`) — view-model e componentes não devem precisar mudar.
 
 ### P4 — Opcional
@@ -305,13 +305,15 @@ Status: OK · Warnings: 9 (7 gates + P2 Bloco 03 + P2 Bloco 04) · Errors: 0
 
 ## 16. Resultado Final
 
-- [x] Bloco concluído conforme escopo
-- [ ] Bloco concluído com ressalvas (ver pendências)
+- [ ] Bloco concluído conforme escopo
+- [x] Bloco concluído com ressalvas (ver pendências)
 - [ ] Bloco bloqueado
+
+**Checkpoint visual do proprietário (2026-07-25):** *"Aprovado funcionalmente para continuidade, com refinamento visual pendente e não detalhado pelo proprietário."* O proprietário identificou elementos visuais que não representam a versão final desejada, mas autorizou a integração à `main` e a continuidade do desenvolvimento — a aprovação **não** deve ser lida como aceite definitivo do design. Ressalva registrada como P3 em `Docs/07_design_system/backlog_refinamento_visual.md`, sem virar P2 e sem bloquear o Bloco 07.
 
 ## 17. Próximo Bloco Recomendado
 
-Checkpoint visual do proprietário (revisão de hierarquia, identidade roxa/preta, responsividade e consistência dos números em navegador real) antes de integrar este bloco à `main`. Em paralelo, o Bloco 04 (TLS) continua aguardando resposta da Clever Cloud antes de qualquer trabalho de persistência real.
+Bloco 07 — Movimentações funcionais com estado em memória (navegação real entre "Visão geral" e "Movimentações", ainda sem banco de dados). Em paralelo, o Bloco 04 (TLS) continua aguardando resposta da Clever Cloud antes de qualquer trabalho de persistência real. O refinamento visual do dashboard fica para uma sessão dedicada futura (ver `Docs/07_design_system/backlog_refinamento_visual.md`).
 
 ## 18. Commit Semântico Sugerido
 
