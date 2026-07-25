@@ -36,13 +36,14 @@ Sessão de abertura do projeto. Não há débito técnico anterior — é a prim
 
 **Banco de dados — correção registrada em 2026-07-25:**
 
-O MySQL do Finanhouse **já existe** na Clever Cloud (não é um banco a ser criado). Ele é tratado como não descartável e potencialmente contendo estrutura ou dados, ainda não inspecionados nesta sessão. Regras:
+O MySQL do Finanhouse **já existe** na Clever Cloud (não é um banco a ser criado). Regras vigentes desde o início da sessão:
 
-- Não presumir banco vazio nem preenchido — o estado real só será conhecido por inspeção somente leitura (`database/inspection/`), documentada depois em `database/current-schema/`.
+- Não presumir banco vazio nem preenchido antes de inspecionar.
 - Não criar outro banco; não recriar nem sobrescrever o existente.
 - Nenhuma migration deve ser aplicada, nenhum seed executado em produção, e nenhum `DROP`/`TRUNCATE`/`ALTER`/`DELETE`/`UPDATE`/`INSERT`/`CREATE TABLE`/sincronização automática de schema (ORM push) antes do inventário.
 - Credenciais do banco nunca entram no Git, logs, documentação ou saída pública.
-- A escolha entre ORM (ex.: Drizzle + mysql2) e driver puro (mysql2) é **decisão pendente**, registrada em `Docs/04_governance/registro_decisoes.md`, a ser tomada somente após o inventário do banco.
+
+**Inventário realizado em 2026-07-25 (`bloco_02_inventario_seguro_do_banco_existente`):** conexão somente leitura confirmada (MySQL 8.4.2-2), banco configurado corresponde ao banco ativo. Resultado: **o banco existe mas está estruturalmente vazio** (0 tabelas). Ver `database/current-schema/` para o inventário sanitizado completo. A escolha entre ORM (ex.: Drizzle + mysql2) e driver puro (mysql2) segue como **decisão pendente**, registrada em `Docs/02_architecture/decisoes_tecnicas.md` (proposta técnica já documentada no feedback do Bloco 02, aguardando aprovação do proprietário).
 
 ## 3. Escopo
 
@@ -96,13 +97,15 @@ Blocos oficiais DDAE desta sessão (`05_blocks/`):
 | Bloco | Título | Status |
 |---|---|---|
 | `bloco_01_bootstrap_tecnico_do_monorepo` | Bootstrap técnico do monorepo | Concluído |
+| `bloco_02_inventario_seguro_do_banco_existente` | Inventário seguro do banco existente | Concluído |
 
 ## 8. Riscos
 
 - Divergência entre a estrutura oficial gerada pelo `ddae-engine` e a estrutura do monorepo criada manualmente, se não forem mantidas em pastas separadas (mitigado: `Docs/` é exclusivo da governança DDAE, o monorepo vive fora dela).
 - Logo oficial do Finanhouse pode não estar disponível localmente ainda, impactando `assets/brand/`.
-- Credenciais reais do MySQL (Clever Cloud) não devem vazar para `.env.example` nem para o Git — mitigado por `.gitignore`.
-- **Banco MySQL já existente ser tratado erroneamente como vazio**, levando a schema/migrations/seeds fictícios que colidem com dados reais — mitigado por proibir migrations/seeds/CREATE TABLE antes da inspeção somente leitura (`database/inspection/`).
+- Credenciais reais do MySQL (Clever Cloud) não devem vazar para `.env.example` nem para o Git — mitigado por `.gitignore` (confirmado em cada execução do inventário).
+- ~~Banco MySQL já existente ser tratado erroneamente como vazio~~ — **resolvido**: inventário confirmou que o banco realmente está vazio (não era uma suposição), então não há risco de colisão com dados reais.
+- Ausência total de schema significa que a primeira migration real definirá a base de todo o domínio financeiro — vale revisão cuidadosa antes de aplicar (ver feedback do Bloco 02).
 
 ## 9. Dependências
 

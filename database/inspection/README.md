@@ -1,10 +1,35 @@
 # database/inspection
 
-Scripts futuros de inspeção **somente leitura** do MySQL existente na Clever Cloud: testar conectividade, identificar a versão do MySQL, listar schemas/tabelas/colunas/tipos, identificar chaves/índices/relacionamentos, e verificar (sem expor conteúdo sensível) se existem registros.
+Scripts de inspeção **somente leitura** do MySQL existente na Clever Cloud: testam conectividade, identificam a versão do MySQL, listam tabelas/colunas/tipos, chaves/índices/relacionamentos, e obtêm estimativa de registros via metadados (sem ler conteúdo real das linhas).
 
-Regras:
-- Nenhuma credencial deve ser armazenada aqui.
-- Nenhum script destrutivo (`DROP`, `TRUNCATE`, `ALTER`, `DELETE`, `UPDATE`, `INSERT`, `CREATE TABLE`) é permitido nesta pasta.
-- O resultado da inspeção alimenta `database/current-schema/`.
+## Arquivos
 
-Status: vazio — nenhuma inspeção foi executada ainda; nenhuma conexão com o banco real foi feita nesta sessão.
+- `inspect-database.ts` — script principal. Carrega credenciais de `apps/api/.env.local`, valida presença das variáveis (sem imprimir valores), conecta com timeout curto e executa apenas a allowlist fixa de consultas abaixo.
+- `write-inventory-docs.ts` — formata o resultado da inspeção e escreve os documentos sanitizados em `database/current-schema/`.
+
+## Como rodar
+
+1. Preencher `apps/api/.env.local` com as credenciais reais (nunca commitado).
+2. `npm run inspect:db` (raiz do monorepo).
+
+## Allowlist de consultas
+
+Somente estas consultas (ou equivalentes) são executadas — nenhuma entrada externa vira SQL:
+
+- `SELECT 1`
+- `SELECT VERSION()`
+- `SELECT DATABASE()`
+- `information_schema.tables` (engine, collation, estimativa de linhas)
+- `information_schema.columns` (colunas, tipos, nulabilidade, default, chave)
+- `information_schema.statistics` (índices)
+- `information_schema.key_column_usage` (chaves estrangeiras)
+- `information_schema.referential_constraints` (regras de ON UPDATE/DELETE)
+
+## Regras
+
+- Nenhuma credencial é armazenada aqui ou impressa em qualquer saída.
+- Nenhum comando destrutivo (`DROP`, `TRUNCATE`, `ALTER`, `DELETE`, `UPDATE`, `INSERT`, `CREATE TABLE`) é permitido nesta pasta.
+- Nenhum conteúdo real de linha (dados financeiros/pessoais) é lido ou registrado — apenas metadados estruturais.
+- O resultado sanitizado alimenta `database/current-schema/`.
+
+Status: scripts prontos, ainda **não executados**. Nenhuma conexão com o banco real foi feita até o momento — aguardando o proprietário preencher `apps/api/.env.local` e confirmar explicitamente antes da primeira conexão.

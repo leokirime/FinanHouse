@@ -4,7 +4,7 @@
 
 > Este contrato define o que o código pode assumir sobre o esquema do banco. Mudança de esquema sem migração registrada aqui é uma quebra de contrato.
 
-> **Estado atual (2026-07-25):** o MySQL do Finanhouse **já existe** na Clever Cloud. Ele é tratado como não descartável e potencialmente contendo estrutura ou dados — ainda não inspecionado. As seções abaixo (modelo de dados, migrações, etc.) permanecem como placeholder até que uma inspeção somente leitura seja realizada (`database/inspection/`) e o estado real seja documentado em `database/current-schema/`. Nenhum schema fictício deve ser escrito aqui antes disso.
+> **Estado atual (2026-07-25):** o MySQL do Finanhouse **já existe** na Clever Cloud. A inspeção somente leitura (`bloco_02_inventario_seguro_do_banco_existente`) confirmou conectividade (MySQL 8.4.2-2) e que **o banco está vazio** (0 tabelas) — ver `database/current-schema/`. As seções abaixo (modelo de dados, migrações, etc.) permanecem como placeholder até que o schema seja modelado do zero em sessão futura. Nenhum schema fictício deve ser escrito aqui antes disso.
 
 ## 1. Objetivo
 
@@ -74,6 +74,6 @@ _..._
 
 ## 12. Decisões Pendentes
 
-- Realizar inspeção somente leitura do MySQL existente na Clever Cloud (conectividade, versão, schemas/tabelas/colunas, chaves/índices/relacionamentos, presença de registros sem expor conteúdo sensível).
-- Definir se o schema existente será reaproveitado integralmente, adaptado por migrations incrementais, ou substituído por migração controlada.
-- Biblioteca de acesso ao MySQL e estratégia de migrations (ver `Docs/02_architecture/decisoes_tecnicas.md`, seção 5) — pendente até o inventário acima.
+- ~~Realizar inspeção somente leitura do MySQL existente na Clever Cloud~~ — **concluído em 2026-07-25**, banco confirmado vazio (ver `database/current-schema/`).
+- Modelar o schema do zero (usuários, movimentações, categorias, competências, recorrências, planejamento, histórico) — não há schema legado a reaproveitar ou adaptar.
+- Biblioteca de acesso ao MySQL e estratégia de migrations (ver `Docs/02_architecture/decisoes_tecnicas.md`, seção 5) — proposta técnica já registrada, decisão final pendente de aprovação do proprietário.
