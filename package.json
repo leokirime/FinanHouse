@@ -16,6 +16,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "inspect:db": "tsx database/inspection/inspect-database.ts",
-    "typecheck:inspect-db": "tsc -p database/inspection/tsconfig.json"
+    "typecheck:inspect-db": "tsc -p database/inspection/tsconfig.json",
+    "test:tls": "tsx database/inspection/test-tls.ts"
   }
 }

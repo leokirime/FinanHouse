@@ -6,12 +6,29 @@ Scripts de inspeção **somente leitura** do MySQL existente na Clever Cloud: te
 
 - `inspect-database.ts` — script principal. Carrega credenciais de `apps/api/.env.local`, valida presença e formato das variáveis (sem imprimir valores), conecta com timeout curto e executa apenas a allowlist fixa de consultas abaixo.
 - `write-inventory-docs.ts` — formata o resultado da inspeção e escreve os documentos sanitizados em `database/current-schema/`.
+- `test-tls.ts` — diagnóstico de TLS/SSL da conexão (ver seção dedicada abaixo).
 - `package.json` — declara `mysql2` explicitamente como dependência deste workspace (`database/inspection` está listado em `workspaces` na raiz). Não depende de hoisting incidental via `apps/api`.
 
-## Como rodar
+## Como rodar o inventário
 
 1. Preencher `apps/api/.env.local` com as credenciais reais (nunca commitado).
 2. `npm run inspect:db` (raiz do monorepo).
+
+## Diagnóstico de TLS/SSL (`test-tls.ts`)
+
+```
+npm run test:tls                                        # modo current (padrão)
+npm run test:tls -- strict                               # exige rejectUnauthorized: true
+npm run test:tls -- custom-ca                            # exige DATABASE_SSL_CA_PATH
+npm run test:tls -- insecure-diagnostic --confirm-insecure # apenas diagnóstico pontual
+```
+
+- **`current`** (padrão) — usa exatamente `DATABASE_SSL` de `apps/api/.env.local`, sem alterá-lo.
+- **`strict`** — força `rejectUnauthorized: true`, a validação exigida para qualquer configuração de produção (ver `database/current-schema/tls-inspection.md`, seção 4).
+- **`custom-ca`** — força `rejectUnauthorized: true` com uma CA customizada, lida de `DATABASE_SSL_CA_PATH` (arquivo local, nunca commitado). Recusa-se a rodar sem essa variável.
+- **`insecure-diagnostic`** — força `rejectUnauthorized: false`. **Nunca é uma configuração de produção válida.** Exige o argumento extra `--confirm-insecure`; sem ele, o script recusa e explica por quê. Uso exclusivamente diagnóstico manual — nunca usado pela aplicação nem por `drizzle-kit migrate`.
+
+Todos os modos: conexão única, somente leitura, timeout curto, fechada em `finally`, sem imprimir credenciais/host/nome do banco, sem aceitar SQL externo.
 
 ## Allowlist de consultas
 

@@ -150,10 +150,10 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- Verificação de TLS/SSL entre a futura aplicação (Vercel) e o MySQL da Clever Cloud, antes da primeira migration real e antes de inserir qualquer dado real. Não resolvida neste bloco (ver ADR-001).
+- ~~Verificação de TLS/SSL entre a futura aplicação (Vercel) e o MySQL da Clever Cloud~~ — investigada no Bloco 04 (`bloco_04_validacao_tls_e_revisao_pre_migration`); permanece **aberta** com validação estrita ainda não funcionando. Ver `Docs/05_sessions/session_11_fundacao_do_finanhouse/08_feedbacks/feedback_bloco_04_validacao_tls_e_revisao_pre_migration.md` para o estado atual — fonte única desta pendência a partir do Bloco 04, não duplicada aqui.
 - `financial_entries.responsible_member_id` não tem FK composta protegendo a consistência com `household_id` — MySQL proíbe `ON DELETE SET NULL` em FK composta com coluna `NOT NULL`. Consistência permanece responsabilidade da camada de serviço (ver `database/proposed-schema/relacionamentos.md`).
-- Aplicação da migration inicial (`0000_initial_financial_domain.sql`) depende de revisão final e autorização explícita do proprietário — não é automática.
-- Commit e push deste bloco dependem de nova autorização explícita (branch `feat/session-11-bloco-03-modelagem-dominio` ainda não mesclada).
+- Aplicação da migration inicial (`0000_initial_financial_domain.sql`) depende de revisão final e autorização explícita do proprietário — não é automática; bloqueada também pela pendência de TLS acima.
+- ~~Commit e push deste bloco dependem de nova autorização explícita~~ — **resolvido**: branch `feat/session-11-bloco-03-modelagem-dominio` commitada, publicada e mesclada à `main` no commit `a73b610`.
 
 ### P3 — Melhoria Recomendada
 
