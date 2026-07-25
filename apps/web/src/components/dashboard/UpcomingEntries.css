@@ -1,0 +1,26 @@
+.fh-upcoming-entries {
+  padding: var(--fh-space-5);
+}
+
+.fh-upcoming-entries ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-3);
+  margin-top: var(--fh-space-4);
+}
+
+.fh-upcoming-entries__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fh-space-3);
+  padding: var(--fh-space-3);
+  background: var(--fh-surface-elevated);
+  border-radius: var(--fh-radius-md);
+  font-size: 13px;
+}
+
+.fh-upcoming-entries__amount {
+  font-weight: 600;
+  white-space: nowrap;
+}

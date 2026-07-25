@@ -1,0 +1,110 @@
+.fh-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: var(--fh-sidebar-width);
+  flex-shrink: 0;
+  background: var(--fh-bg-elevated);
+  border-right: 1px solid var(--fh-border);
+  padding: var(--fh-space-6) var(--fh-space-4);
+  gap: var(--fh-space-8);
+}
+
+.fh-sidebar__brand {
+  padding-inline: var(--fh-space-2);
+}
+
+.fh-sidebar__nav {
+  flex: 1;
+}
+
+.fh-sidebar__nav ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-1);
+}
+
+.fh-sidebar__nav-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--fh-space-3) var(--fh-space-3);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--fh-radius-md);
+  color: var(--fh-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  transition: background-color var(--fh-transition-fast), color var(--fh-transition-fast);
+}
+
+.fh-sidebar__nav-item:hover:not([aria-disabled='true']) {
+  background: var(--fh-surface);
+  color: var(--fh-text);
+}
+
+.fh-sidebar__nav-item[aria-current='page'] {
+  background: var(--fh-purple-soft);
+  border-color: var(--fh-purple-border);
+  color: var(--fh-text);
+  box-shadow: var(--fh-shadow-purple);
+}
+
+.fh-sidebar__nav-item[aria-disabled='true'] {
+  color: var(--fh-text-muted);
+  cursor: default;
+}
+
+.fh-sidebar__soon {
+  font-size: 10px;
+  padding: 1px var(--fh-space-2);
+}
+
+.fh-sidebar__footer {
+  padding-inline: var(--fh-space-2);
+}
+
+.fh-sidebar__demo-badge {
+  color: var(--fh-purple-strong);
+  border-color: var(--fh-purple-border);
+}
+
+@media (max-width: 1023px) {
+  .fh-sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid var(--fh-border);
+    padding: var(--fh-space-3) var(--fh-space-4);
+    gap: var(--fh-space-4);
+    flex-wrap: wrap;
+  }
+
+  .fh-sidebar__nav {
+    flex: 1;
+    min-width: 0;
+    overflow-x: auto;
+  }
+
+  .fh-sidebar__nav ul {
+    flex-direction: row;
+    gap: var(--fh-space-2);
+  }
+
+  .fh-sidebar__nav-item {
+    width: max-content;
+    white-space: nowrap;
+  }
+
+  .fh-sidebar__footer {
+    padding-inline: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .fh-sidebar__soon {
+    display: none;
+  }
+}

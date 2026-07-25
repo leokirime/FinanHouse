@@ -11,6 +11,7 @@
   "scripts": {
     "clean": "node scripts/clean-build-artifacts.mjs",
     "build:domain": "npm run build --workspace=@finanhouse/domain --if-present",
+    "predev:web": "npm run build:domain",
     "dev:web": "npm run dev --workspace=web",
     "predev:api": "npm run build:domain",
     "dev:api": "npm run dev --workspace=api",

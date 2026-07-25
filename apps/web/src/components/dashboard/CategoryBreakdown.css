@@ -1,0 +1,32 @@
+.fh-category-breakdown {
+  padding: var(--fh-space-5);
+}
+
+.fh-category-breakdown ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-4);
+  margin-top: var(--fh-space-4);
+}
+
+.fh-category-breakdown__label {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: var(--fh-space-1);
+  gap: var(--fh-space-2);
+}
+
+.fh-category-breakdown__track {
+  height: 8px;
+  border-radius: var(--fh-radius-pill);
+  background: var(--fh-surface-elevated);
+  overflow: hidden;
+}
+
+.fh-category-breakdown__bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--fh-purple) 0%, var(--fh-purple-strong) 100%);
+  border-radius: inherit;
+}

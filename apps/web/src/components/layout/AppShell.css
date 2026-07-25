@@ -1,0 +1,40 @@
+.fh-app-shell {
+  display: flex;
+  width: 100%;
+  min-height: 100svh;
+}
+
+.fh-app-shell__main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.fh-app-shell__content {
+  flex: 1;
+  padding: var(--fh-space-6);
+  max-width: var(--fh-content-max-width);
+  width: 100%;
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-6);
+}
+
+@media (max-width: 1023px) {
+  .fh-app-shell {
+    flex-direction: column;
+  }
+
+  .fh-app-shell__content {
+    padding: var(--fh-space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .fh-app-shell__content {
+    padding: var(--fh-space-3);
+    gap: var(--fh-space-4);
+  }
+}

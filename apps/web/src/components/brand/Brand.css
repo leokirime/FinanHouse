@@ -1,0 +1,20 @@
+.fh-brand {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+}
+
+.fh-brand__name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--fh-text) 0%, var(--fh-purple-strong) 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.fh-brand__logo {
+  height: 32px;
+  width: auto;
+}

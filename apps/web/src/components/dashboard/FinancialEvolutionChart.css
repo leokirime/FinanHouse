@@ -1,0 +1,71 @@
+.fh-evolution-chart {
+  padding: var(--fh-space-5);
+}
+
+.fh-evolution-chart__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--fh-space-3);
+  margin-bottom: var(--fh-space-3);
+}
+
+.fh-evolution-chart__legend {
+  display: flex;
+  gap: var(--fh-space-4);
+  font-size: 12px;
+  color: var(--fh-text-secondary);
+}
+
+.fh-evolution-chart__legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-1);
+}
+
+.fh-evolution-chart__dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.fh-evolution-chart__dot[data-tone='income'] {
+  background: var(--fh-income);
+}
+
+.fh-evolution-chart__dot[data-tone='expense'] {
+  background: var(--fh-expense);
+}
+
+.fh-evolution-chart__svg {
+  width: 100%;
+  height: auto;
+}
+
+.fh-evolution-chart__line {
+  fill: none;
+  stroke-width: 2;
+}
+
+.fh-evolution-chart__line[data-tone='income'] {
+  stroke: var(--fh-income);
+}
+
+.fh-evolution-chart__line[data-tone='expense'] {
+  stroke: var(--fh-expense);
+}
+
+.fh-evolution-chart__point[data-tone='income'] {
+  fill: var(--fh-income);
+}
+
+.fh-evolution-chart__point[data-tone='expense'] {
+  fill: var(--fh-expense);
+}
+
+.fh-evolution-chart__label {
+  fill: var(--fh-text-muted);
+  font-size: 10px;
+}
