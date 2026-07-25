@@ -47,6 +47,10 @@ O MySQL do Finanhouse **já existe** na Clever Cloud (não é um banco a ser cri
 
 **Persistência decidida em 2026-07-25 (`bloco_03_modelagem_inicial_do_dominio_financeiro`):** proprietário aprovou **Drizzle ORM + mysql2** (ADR-001, `Docs/02_architecture/adr_001_persistencia_drizzle_mysql2.md`). Schema inicial de 6 tabelas modelado (`apps/api/src/db/schema/`), com foreign keys **compostas** garantindo no banco que período e categoria de uma movimentação pertencem ao mesmo household. Migration gerada e revisada (`database/migrations/0000_initial_financial_domain.sql`) — **não aplicada**, banco real permanece vazio. Vocabulário de status corrigido para `planned`/`pending`/`realized`/`cancelled` (neutro entre receita e despesa). Pendências ativas: verificação de TLS/SSL entre Vercel e Clever Cloud (P2); consistência de `responsible_member_id` com o household, que o MySQL não permite proteger via FK composta com `SET NULL` (P2); vulnerabilidades moderadas na cadeia de desenvolvimento do `drizzle-kit`, zero em produção (P3).
 
+**TLS/SSL investigado em 2026-07-25 (`bloco_04_validacao_tls_e_revisao_pre_migration`, branch `feat/session-11-bloco-04-validacao-tls`, ainda não integrada à `main`):** conexão real hoje não usa TLS. Teste suplementar mostrou que o servidor aceita TLS 1.3 com `rejectUnauthorized:false`, mas falha validação estrita (`rejectUnauthorized:true`, `HANDSHAKE_SSL_ERROR`). Causa raiz **não confirmada** — documentada como hipótese técnica (CA fora da cadeia padrão, hostname/SNI, endpoint, ou outra causa), nunca como fato. `rejectUnauthorized:false` foi rejeitado como configuração de produção. Pedido de suporte sanitizado preparado para a Clever Cloud. Bloco segue bloqueado até resposta do suporte — branch não mesclada, `main` inalterada.
+
+**Regras de domínio e serviços financeiros em memória implementados em 2026-07-25 (`bloco_05_regras_de_dominio_e_servicos_financeiros`, branch `feat/session-11-bloco-05-domain-services`, ainda não integrada à `main`):** com o TLS ainda bloqueado, avançou-se a lógica de negócio **sem qualquer conexão real ao MySQL** — dinheiro como `bigint` em centavos, transições de status nomeadas (movimentação e competência mensal), cálculos de resumo mensal e comparação entre períodos, interfaces de repositório (`apps/api/src/application/ports/`), repositórios em memória (`apps/api/src/infrastructure/repositories/memory/`) e serviços de aplicação, todos cobertos por testes automatizados. Ver `Docs/02_architecture/regras_dominio_financeiro.md`. Nenhuma migration foi aplicada, nenhuma tabela criada, nenhuma credencial tocada.
+
 ## 3. Escopo
 
 - Inicialização oficial do DDAE Engine na raiz do projeto (`ddae-engine init`)
@@ -101,6 +105,8 @@ Blocos oficiais DDAE desta sessão (`05_blocks/`):
 | `bloco_01_bootstrap_tecnico_do_monorepo` | Bootstrap técnico do monorepo | Concluído |
 | `bloco_02_inventario_seguro_do_banco_existente` | Inventário seguro do banco existente | Concluído |
 | `bloco_03_modelagem_inicial_do_dominio_financeiro` | Modelagem inicial do domínio financeiro | Concluído (migration gerada, não aplicada) |
+| `bloco_04_validacao_tls_e_revisao_pre_migration` | Validação de TLS/SSL e revisão pré-migration | Bloqueado (branch própria, aguardando suporte Clever Cloud) |
+| `bloco_05_regras_de_dominio_e_servicos_financeiros` | Regras de domínio e serviços financeiros (em memória) | Concluído (branch própria, sem persistência real) |
 
 ## 8. Riscos
 

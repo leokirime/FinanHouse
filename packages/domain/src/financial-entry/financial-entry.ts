@@ -1,9 +1,17 @@
+import type { Money } from '../money/money.js'
+
 export const FINANCIAL_ENTRY_TYPES = ['income', 'expense'] as const
 export type FinancialEntryType = (typeof FINANCIAL_ENTRY_TYPES)[number]
 
 export const FINANCIAL_ENTRY_STATUSES = ['planned', 'pending', 'realized', 'cancelled'] as const
 export type FinancialEntryStatus = (typeof FINANCIAL_ENTRY_STATUSES)[number]
 
+/**
+ * Representação de domínio de uma movimentação. `expectedAmount`/`actualAmount`
+ * usam `Money` (centavos, `bigint`) — a conversão para a string decimal
+ * DECIMAL(13,2) usada pela persistência (`apps/api/src/db/schema`) acontece
+ * apenas na fronteira do repositório (`parseMoney`/`formatMoney`).
+ */
 export interface FinancialEntry {
   id: number
   householdId: number
@@ -14,11 +22,11 @@ export interface FinancialEntry {
   entryType: FinancialEntryType
   status: FinancialEntryStatus
   description: string
-  /** DECIMAL(13,2) como string — nunca number, para não perder precisão monetária. */
-  expectedAmount: string
-  actualAmount: string | null
+  expectedAmount: Money
+  actualAmount: Money | null
+  /** Data no formato YYYY-MM-DD. */
   dueDate: string | null
-  /** Data em que a movimentação foi de fato recebida (receita) ou paga (despesa). */
+  /** Data em que a movimentação foi de fato recebida (receita) ou paga (despesa), YYYY-MM-DD. */
   realizationDate: string | null
   notes: string | null
 }

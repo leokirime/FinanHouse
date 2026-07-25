@@ -10,20 +10,28 @@ Numere os requisitos para que possam ser referenciados por blocos e prompts (ex.
 
 | ID | Requisito | Prioridade | Status |
 |---|---|---|---|
-| RF-01 | _..._ | Must / Should / Could | Pendente / Em andamento / Concluído |
-| RF-02 | _..._ | Must / Should / Could | Pendente / Em andamento / Concluído |
+| RF-01 | Registrar movimentações financeiras (receitas/despesas) com ciclo de vida previsto → pendente → realizado, ou cancelado | Must | Concluído (regras de domínio, Bloco 05) |
+| RF-02 | Organizar movimentações por competência mensal, com abertura/revisão/fechamento | Must | Concluído (regras de domínio, Bloco 05) |
+| RF-03 | Calcular indicadores financeiros por competência (previsto, realizado, pendente, saldo) | Must | Concluído (regras de domínio, Bloco 05) |
+| RF-04 | Comparar duas competências mensais (variações de receita/despesa/saldo, categorias) | Should | Concluído (regras de domínio, Bloco 05) |
+| RF-05 | Persistir movimentações e competências em banco real (MySQL) | Must | Pendente (bloqueado por TLS — Bloco 04) |
+| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Pendente |
+
+Detalhamento técnico completo das regras (transições de status, cálculos, estratégia monetária): `Docs/02_architecture/regras_dominio_financeiro.md`.
 
 ## 2. Critérios de Aceite
 
 Para cada requisito, descreva como verificar que ele foi atendido (comportamento observável, não implementação).
 
-### RF-01 — _..._
-- [ ] _..._
-- [ ] _..._
+### RF-01 — Movimentações financeiras
+- [x] Uma movimentação pode ser criada, marcada como pendente, realizada ou cancelada, seguindo as transições documentadas.
+- [x] Uma movimentação `realized` sempre tem valor e data de realização; nenhuma outra tem.
+- [ ] Um usuário consegue realizar essas ações pela interface visual (pendente de RF-06).
 
-### RF-02 — _..._
-- [ ] _..._
-- [ ] _..._
+### RF-02 — Competência mensal
+- [x] Uma competência pode ser aberta, colocada em revisão, fechada e reaberta, seguindo as transições documentadas.
+- [x] Uma competência fechada não aceita novas movimentações nem alterações comuns.
+- [ ] Um usuário consegue gerenciar competências pela interface visual (pendente de RF-06).
 
 ## 3. Perguntas Orientadoras
 

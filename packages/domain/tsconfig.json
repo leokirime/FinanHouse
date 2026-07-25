@@ -9,7 +9,6 @@
     "noUnusedParameters": true,
     "skipLibCheck": true,
     "noEmit": true,
-    "allowImportingTsExtensions": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src"]
