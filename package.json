@@ -9,12 +9,18 @@
     "database/inspection"
   ],
   "scripts": {
+    "clean": "node scripts/clean-build-artifacts.mjs",
+    "build:domain": "npm run build --workspace=@finanhouse/domain --if-present",
     "dev:web": "npm run dev --workspace=web",
+    "predev:api": "npm run build:domain",
     "dev:api": "npm run dev --workspace=api",
-    "build": "npm run build --workspaces --if-present",
+    "build": "npm run build:domain && npm run build --workspace=api --workspace=web --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "pretypecheck": "npm run build:domain",
     "typecheck": "npm run typecheck --workspaces --if-present",
+    "pretest": "npm run build:domain",
     "test": "npm run test --workspaces --if-present",
+    "verify:runtime": "node scripts/verify-runtime-imports.mjs",
     "inspect:db": "tsx database/inspection/inspect-database.ts",
     "typecheck:inspect-db": "tsc -p database/inspection/tsconfig.json",
     "test:tls": "tsx database/inspection/test-tls.ts"
