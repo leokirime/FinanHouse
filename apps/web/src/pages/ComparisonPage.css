@@ -1,0 +1,28 @@
+.fh-comparison-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-5);
+}
+
+.fh-comparison-page__indicators {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fh-comparison-page__insights {
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
+  align-items: start;
+}
+
+@media (max-width: 1120px) {
+  .fh-comparison-page__indicators,
+  .fh-comparison-page__insights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .fh-comparison-page__indicators,
+  .fh-comparison-page__insights {
+    grid-template-columns: 1fr;
+  }
+}

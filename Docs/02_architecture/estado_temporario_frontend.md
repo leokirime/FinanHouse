@@ -24,13 +24,16 @@ apps/web/src/state/FinanceDemoProvider.tsx             (useReducer + React Conte
         ├──▶ apps/web/src/hooks/use-dashboard-view-model.ts  (dashboard deriva do estado)
         │        └──▶ view-models/dashboard-view-model.ts     (recebe entries/categories/periods por argumento)
         │
-        └──▶ apps/web/src/pages/FinancialEntriesPage.tsx      (Movimentações lê e despacha ações no mesmo estado)
-                 └──▶ view-models/financial-entries-view-model.ts  (filtros/busca/rótulos de exibição)
+        ├──▶ apps/web/src/pages/FinancialEntriesPage.tsx      (Movimentações lê e despacha ações no mesmo estado)
+        │        └──▶ view-models/financial-entries-view-model.ts  (filtros/busca/rótulos de exibição)
+        │
+        └──▶ apps/web/src/pages/ComparisonPage.tsx            (Comparativo lê o mesmo estado, sem despachar)
+                 └──▶ view-models/comparison-view-model.ts    (seletores, indicadores e gráfico)
 ```
 
 - **Fixtures**: continuam existindo (`data/dashboard-fixtures.ts`), mas agora só são lidas em um lugar — `createInitialFinanceDemoState()` — para montar o estado inicial. Nenhum componente de UI importa fixtures diretamente.
 - **Estado vivo**: um único `useReducer` (`financeDemoReducer`) dentro de `FinanceDemoProvider`, exposto via Context. Dashboard e Movimentações leem o mesmo `state` e despacham ações no mesmo `dispatch` — nunca há dois estados financeiros paralelos.
-- **View-models**: tanto `dashboard-view-model.ts` quanto `financial-entries-view-model.ts` são funções puras que recebem dados por argumento (não leem Context nem fixtures) — só formatam/derivam o que os componentes precisam.
+- **View-models**: `dashboard-view-model.ts`, `financial-entries-view-model.ts` e `comparison-view-model.ts` são funções puras que recebem dados por argumento (não leem Context nem fixtures) — só formatam/derivam o que os componentes precisam.
 
 ## 3. Ciclo de Vida em Memória
 
@@ -68,13 +71,29 @@ apps/web/src/state/FinanceDemoProvider.tsx             (useReducer + React Conte
 
 `apps/web` não importa `mysql2`, `drizzle-orm`, arquivos `.env*`, scripts de migration nem repositórios da API — apenas `@finanhouse/domain` (funções puras) e seus próprios componentes/estado. As classes de serviço de `apps/api/src/application/services/` (que orquestram repositórios reais) **não** foram movidas nem duplicadas — o frontend orquestra sozinho, no reducer, chamando diretamente as mesmas funções de regra que essas classes usam.
 
-## 7. Substituição Futura Pela API Real
+## 7. Comparativo Mensal em Memória
 
-Quando a persistência real for liberada (pós-TLS, Bloco 04), a substituição esperada é trocar `FinanceDemoProvider` por um provider que busca/envia dados via HTTP para `apps/api`, mantendo a mesma interface (`useFinanceDemo()` retornando `{ state, dispatch }` ou equivalente) — `dashboard-view-model.ts`, `financial-entries-view-model.ts` e todos os componentes de UI não precisam mudar, pois já recebem dados por argumento/Context, nunca leem fixtures diretamente.
+O Bloco 08 adicionou a rota `/comparativo`, também alimentada por `FinanceDemoProvider`. A página mantém apenas o estado local dos IDs selecionados nos dois seletores; os dados financeiros continuam vindo de `useFinanceDemo()` e todos os cálculos ficam em `view-models/comparison-view-model.ts` + `@finanhouse/domain`.
 
-## 8. O Que Ainda Não Existe
+Regras registradas:
+
+- Seletores: opções derivadas de `state.periods`, ordenadas por `referenceMonth` da mais recente para a mais antiga; padrão = `state.currentPeriodId` como base e `state.previousPeriodId` como comparado; os dois seletores nunca mantêm o mesmo ID.
+- Indicadores: `compareMonthlyPeriods`, `calculateMonthlySummary` e `calculateChange` fornecem receitas/despesas/saldo realizados, fechamento projetado, receitas/despesas previstas, variação absoluta e percentual.
+- Divisão por zero: percentual `null` vira "Sem base comparável"; nenhuma UI inventa percentual quando o período comparado é zero.
+- Chave de despesa nova/encerrada: tipo de lançamento + categoria + descrição normalizada (`trim`, lowercase, espaços repetidos colapsados), preservando a descrição original na apresentação.
+- Previsto vs. realizado: `cancelled` fica fora dos totais; `planned` e `pending` compõem projeção com `expectedAmount`; `realized` usa `actualAmount`.
+- Sincronização: criar, realizar ou cancelar uma movimentação em Movimentações atualiza o Comparativo na mesma sessão porque ambos leem o mesmo estado; remontar o provider retorna às fixtures.
+- Persistência: não há `localStorage`, `IndexedDB`, cookies, API HTTP, banco, migrations ou dados reais.
+
+O refinamento visual do Comparativo segue como P3 no backlog de design, junto da evolução visual já registrada para Dashboard/Movimentações.
+
+## 8. Substituição Futura Pela API Real
+
+Quando a persistência real for liberada (pós-TLS, Bloco 04), a substituição esperada é trocar `FinanceDemoProvider` por um provider que busca/envia dados via HTTP para `apps/api`, mantendo a mesma interface (`useFinanceDemo()` retornando `{ state, dispatch }` ou equivalente) — `dashboard-view-model.ts`, `financial-entries-view-model.ts`, `comparison-view-model.ts` e todos os componentes de UI não precisam mudar, pois já recebem dados por argumento/Context, nunca leem fixtures diretamente.
+
+## 9. O Que Ainda Não Existe
 
 - Persistência real (banco, API HTTP) — ver `Docs/02_architecture/regras_dominio_financeiro.md` e `Docs/02_architecture/arquitetura_visual_dashboard.md`.
 - Autenticação — `DEMO_CREATED_BY_USER_ID` é uma constante fictícia, não um usuário autenticado.
-- Páginas "Comparativo", "Planejamento", "Histórico", "Configurações" — apenas itens de navegação não funcionais.
-- Refinamento visual do dashboard e da nova página de Movimentações — ver `Docs/07_design_system/backlog_refinamento_visual.md`.
+- Páginas "Planejamento", "Histórico", "Configurações" — apenas itens de navegação não funcionais.
+- Refinamento visual do dashboard, Movimentações e Comparativo — ver `Docs/07_design_system/backlog_refinamento_visual.md`.
