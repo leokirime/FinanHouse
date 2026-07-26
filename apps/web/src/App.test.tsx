@@ -1,35 +1,35 @@
-import { render, screen } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { fireEvent, renderWithProviders, screen } from './test-utils.tsx'
 import App from './App.tsx'
 
 describe('App', () => {
-  it('renderiza o dashboard com "Visão geral" como navegação ativa', () => {
-    render(<App />)
-    const active = screen.getByRole('button', { name: 'Visão geral' })
+  it('renderiza o dashboard com "Visão geral" como navegação ativa por padrão', () => {
+    renderWithProviders(<App />)
+    const active = screen.getByRole('link', { name: 'Visão geral' })
     expect(active.getAttribute('aria-current')).toBe('page')
   })
 
   it('exibe os quatro indicadores principais', () => {
-    render(<App />)
+    renderWithProviders(<App />)
     expect(screen.getByText('Receitas realizadas')).toBeTruthy()
     expect(screen.getByText('Despesas realizadas')).toBeTruthy()
     expect(screen.getByText('Saldo realizado')).toBeTruthy()
     expect(screen.getByText('Fechamento projetado')).toBeTruthy()
   })
 
-  it('exibe o status da competência atual (em revisão) de forma consistente', () => {
-    render(<App />)
-    const statusMatches = screen.getAllByText('Em revisão')
-    expect(statusMatches.length).toBeGreaterThanOrEqual(2) // cabeçalho + apresentação da competência
+  it('exibe o status da competência atual (aberta) de forma consistente', () => {
+    renderWithProviders(<App />)
+    const statusMatches = screen.getAllByText('Aberta')
+    expect(statusMatches.length).toBeGreaterThanOrEqual(2) // cabeçalho + hero
   })
 
   it('exibe o indicador de dados simulados', () => {
-    render(<App />)
+    renderWithProviders(<App />)
     expect(screen.getByText(/Dados simulados/)).toBeTruthy()
   })
 
   it('exibe a lista de movimentações recentes e de pendências próximas', () => {
-    render(<App />)
+    renderWithProviders(<App />)
     expect(screen.getByText('Movimentações recentes')).toBeTruthy()
     expect(screen.getByText('Pendências próximas')).toBeTruthy()
     // Uma pendência conhecida das fixtures deve aparecer (pode repetir em
@@ -38,7 +38,7 @@ describe('App', () => {
   })
 
   it('mantém a sidebar em modo tipográfico e mostra a logo oficial no hero', () => {
-    render(<App />)
+    renderWithProviders(<App />)
     // Sidebar continua sem imagem (modo tipográfico) — nenhuma versão compacta oficial existe ainda.
     expect(screen.getByText('Finanhouse')).toBeTruthy()
     expect(screen.queryByRole('img', { name: 'Finanhouse' })).toBeNull()
@@ -48,8 +48,43 @@ describe('App', () => {
   })
 
   it('nunca renderiza NaN ou Infinity em nenhum valor', () => {
-    render(<App />)
+    renderWithProviders(<App />)
     expect(document.body.textContent).not.toContain('NaN')
     expect(document.body.textContent).not.toContain('Infinity')
+  })
+
+  it('navega para /movimentacoes ao clicar em "Movimentações", atualizando aria-current e o título do cabeçalho', () => {
+    renderWithProviders(<App />)
+    fireEvent.click(screen.getByRole('link', { name: 'Movimentações' }))
+
+    expect(screen.getByRole('link', { name: 'Movimentações' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByRole('link', { name: 'Visão geral' }).hasAttribute('aria-current')).toBe(false)
+    expect(screen.getByRole('heading', { name: 'Movimentações', level: 1 })).toBeTruthy()
+  })
+
+  it('rota desconhecida redireciona com segurança para a Visão geral', () => {
+    renderWithProviders(<App />, { initialEntries: ['/rota-que-nao-existe'] })
+    expect(screen.getByRole('link', { name: 'Visão geral' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByText('Receitas realizadas')).toBeTruthy()
+  })
+
+  it('"Visão geral" continua funcional depois de navegar para Movimentações e voltar', () => {
+    renderWithProviders(<App />)
+    fireEvent.click(screen.getByRole('link', { name: 'Movimentações' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Visão geral' }))
+
+    expect(screen.getByRole('link', { name: 'Visão geral' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByText('Receitas realizadas')).toBeTruthy()
+  })
+
+  it('a navegação entre rotas não recarrega a página inteira (react-router intercepta o clique)', () => {
+    renderWithProviders(<App />)
+    const link = screen.getByRole('link', { name: 'Movimentações' })
+    // fireEvent.click devolve o resultado de dispatchEvent: false quando o
+    // handler do <Link> chamou preventDefault() — prova de que a navegação
+    // foi tratada via history do react-router, não via navegação nativa do
+    // navegador (que recarregaria o documento inteiro).
+    const dispatched = fireEvent.click(link)
+    expect(dispatched).toBe(false)
   })
 })

@@ -1,26 +1,22 @@
 import {
   calculateMonthlySummary,
   compareMonthlyPeriods,
+  type Category,
   type FinancialEntry,
   type FinancialEntryStatus,
   type Money,
   type MonthlyPeriod,
   type MonthlyPeriodStatus,
 } from '@finanhouse/domain'
-import {
-  FIXTURE_CURRENT_PERIOD_ID,
-  FIXTURE_PREVIOUS_PERIOD_ID,
-  fixtureCategories,
-  fixtureFinancialEntries,
-  fixtureMonthlyPeriods,
-} from '../data/dashboard-fixtures.ts'
+import { formatDatePtBrShort, parseIsoDate } from '../utils/format-date-pt-br.ts'
 import { formatMoneyPtBr } from '../utils/format-money-pt-br.ts'
 
 /**
- * View-model do dashboard: única camada que lê as fixtures e as funções
- * puras de `@finanhouse/domain`. Componentes React não devem importar as
- * fixtures diretamente nem recalcular valores monetários — apenas
- * consumir o resultado desta função.
+ * View-model do dashboard: única camada que combina dados financeiros com as
+ * funções puras de `@finanhouse/domain`. Não lê fixtures nem estado global
+ * diretamente — recebe tudo por argumento (ver `BuildDashboardViewModelInput`),
+ * para que dashboard e Movimentações sempre derivem da mesma fonte (o estado
+ * compartilhado em `state/`), nunca de dados paralelos.
  */
 
 export interface PeriodOverviewViewModel {
@@ -82,18 +78,19 @@ export interface DashboardViewModel {
   upcomingEntries: UpcomingEntryViewModel[]
 }
 
-// timeZone: 'UTC' é obrigatório aqui — sem ele, o formatador usa o fuso
-// horário local do ambiente de execução, que pode "voltar" a meia-noite UTC
-// para o dia (e mês) anterior dependendo de onde o código roda.
+export interface BuildDashboardViewModelInput {
+  entries: FinancialEntry[]
+  categories: Category[]
+  /** Todas as competências conhecidas — usadas para a evolução financeira (um ponto por competência). */
+  periods: MonthlyPeriod[]
+  currentPeriodId: number
+  previousPeriodId: number
+}
+
+// timeZone: 'UTC' pelo mesmo motivo de `utils/format-date-pt-br.ts` — evita
+// que o formatador "volte" para o dia/mês anterior dependendo do fuso local.
 const monthShortFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'short', year: '2-digit', timeZone: 'UTC' })
 const monthLongFormatter = new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' })
-const dayShortFormatter = new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', timeZone: 'UTC' })
-
-/** Datas de domínio são "YYYY-MM-DD"; construir em UTC evita deslocamento de fuso. */
-function parseIsoDate(isoDate: string): Date {
-  const [year, month, day] = isoDate.split('-').map(Number)
-  return new Date(Date.UTC(year, month - 1, day))
-}
 
 const STATUS_LABELS: Record<MonthlyPeriodStatus, string> = {
   open: 'Aberta',
@@ -114,8 +111,8 @@ const ENTRY_STATUS_LABELS: Record<FinancialEntryStatus, string> = {
   cancelled: 'Cancelado',
 }
 
-function categoryName(categoryId: number): string {
-  return fixtureCategories.find((category) => category.id === categoryId)?.name ?? 'Sem categoria'
+function findCategoryName(categories: Category[], categoryId: number): string {
+  return categories.find((category) => category.id === categoryId)?.name ?? 'Sem categoria'
 }
 
 function buildPeriodOverview(currentPeriod: MonthlyPeriod): PeriodOverviewViewModel {
@@ -134,11 +131,11 @@ function percentLabel(percent: number | null): string {
   return `${sign}${formatted}% vs. mês anterior`
 }
 
-function buildIndicators(): IndicatorCardViewModel[] {
-  const currentSummary = calculateMonthlySummary(FIXTURE_CURRENT_PERIOD_ID, fixtureFinancialEntries)
+function buildIndicators(entries: FinancialEntry[], currentPeriodId: number, previousPeriodId: number): IndicatorCardViewModel[] {
+  const currentSummary = calculateMonthlySummary(currentPeriodId, entries)
   const comparison = compareMonthlyPeriods(
-    { periodId: FIXTURE_PREVIOUS_PERIOD_ID, entries: fixtureFinancialEntries },
-    { periodId: FIXTURE_CURRENT_PERIOD_ID, entries: fixtureFinancialEntries },
+    { periodId: previousPeriodId, entries },
+    { periodId: currentPeriodId, entries },
   )
 
   return [
@@ -173,9 +170,9 @@ function buildIndicators(): IndicatorCardViewModel[] {
   ]
 }
 
-function buildEvolution(): EvolutionPointViewModel[] {
-  return fixtureMonthlyPeriods.map((period) => {
-    const summary = calculateMonthlySummary(period.id, fixtureFinancialEntries)
+function buildEvolution(entries: FinancialEntry[], periods: MonthlyPeriod[]): EvolutionPointViewModel[] {
+  return periods.map((period) => {
+    const summary = calculateMonthlySummary(period.id, entries)
     return {
       periodId: period.id,
       monthLabel: monthShortFormatter.format(parseIsoDate(period.referenceMonth)),
@@ -185,10 +182,10 @@ function buildEvolution(): EvolutionPointViewModel[] {
   })
 }
 
-function buildCategoryBreakdown(): CategoryBreakdownItemViewModel[] {
+function buildCategoryBreakdown(entries: FinancialEntry[], categories: Category[], currentPeriodId: number): CategoryBreakdownItemViewModel[] {
   const totals = new Map<number, bigint>()
-  for (const entry of fixtureFinancialEntries) {
-    if (entry.periodId !== FIXTURE_CURRENT_PERIOD_ID) continue
+  for (const entry of entries) {
+    if (entry.periodId !== currentPeriodId) continue
     if (entry.entryType !== 'expense') continue
     if (entry.status === 'cancelled') continue
     const amount = entry.status === 'realized' ? (entry.actualAmount ?? 0n) : entry.expectedAmount
@@ -200,7 +197,7 @@ function buildCategoryBreakdown(): CategoryBreakdownItemViewModel[] {
   return [...totals.entries()]
     .map(([categoryId, amount]) => ({
       categoryId,
-      name: categoryName(categoryId),
+      name: findCategoryName(categories, categoryId),
       amountLabel: formatMoneyPtBr(amount),
       percent: totalExpense === 0n ? 0 : Math.round((Number(amount) / Number(totalExpense)) * 1000) / 10,
     }))
@@ -211,10 +208,13 @@ function signedAmountLabel(entryType: FinancialEntry['entryType'], amount: Money
   return formatMoneyPtBr(entryType === 'expense' ? -amount : amount)
 }
 
-function buildRecentEntries(): RecentEntryViewModel[] {
-  const candidates = fixtureFinancialEntries.filter(
-    (entry) => entry.periodId === FIXTURE_CURRENT_PERIOD_ID || entry.periodId === FIXTURE_PREVIOUS_PERIOD_ID,
-  )
+function buildRecentEntries(
+  entries: FinancialEntry[],
+  categories: Category[],
+  currentPeriodId: number,
+  previousPeriodId: number,
+): RecentEntryViewModel[] {
+  const candidates = entries.filter((entry) => entry.periodId === currentPeriodId || entry.periodId === previousPeriodId)
 
   return [...candidates]
     .sort((a, b) => {
@@ -229,44 +229,44 @@ function buildRecentEntries(): RecentEntryViewModel[] {
       return {
         id: entry.id,
         description: entry.description,
-        categoryName: categoryName(entry.categoryId),
+        categoryName: findCategoryName(categories, entry.categoryId),
         entryType: entry.entryType,
         status: entry.status,
         statusLabel: ENTRY_STATUS_LABELS[entry.status],
-        dateLabel: date ? dayShortFormatter.format(parseIsoDate(date)) : '—',
+        dateLabel: date ? formatDatePtBrShort(date) : '—',
         amountLabel: signedAmountLabel(entry.entryType, amount),
       }
     })
 }
 
-function buildUpcomingEntries(): UpcomingEntryViewModel[] {
-  return fixtureFinancialEntries
+function buildUpcomingEntries(entries: FinancialEntry[], categories: Category[], currentPeriodId: number): UpcomingEntryViewModel[] {
+  return entries
     .filter(
       (entry): entry is FinancialEntry & { dueDate: string } =>
-        entry.periodId === FIXTURE_CURRENT_PERIOD_ID && entry.status === 'pending' && entry.dueDate !== null,
+        entry.periodId === currentPeriodId && entry.status === 'pending' && entry.dueDate !== null,
     )
     .sort((a, b) => (a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0))
     .map((entry) => ({
       id: entry.id,
       description: entry.description,
-      categoryName: categoryName(entry.categoryId),
-      dueDateLabel: dayShortFormatter.format(parseIsoDate(entry.dueDate)),
+      categoryName: findCategoryName(categories, entry.categoryId),
+      dueDateLabel: formatDatePtBrShort(entry.dueDate),
       amountLabel: signedAmountLabel(entry.entryType, entry.expectedAmount),
     }))
 }
 
-export function buildDashboardViewModel(): DashboardViewModel {
-  const currentPeriod = fixtureMonthlyPeriods.find((period) => period.id === FIXTURE_CURRENT_PERIOD_ID)
+export function buildDashboardViewModel(input: BuildDashboardViewModelInput): DashboardViewModel {
+  const currentPeriod = input.periods.find((period) => period.id === input.currentPeriodId)
   if (!currentPeriod) {
-    throw new Error('Fixture inconsistente: competência atual não encontrada.')
+    throw new Error('Estado inconsistente: competência atual não encontrada.')
   }
 
   return {
     periodOverview: buildPeriodOverview(currentPeriod),
-    indicators: buildIndicators(),
-    evolution: buildEvolution(),
-    categoryBreakdown: buildCategoryBreakdown(),
-    recentEntries: buildRecentEntries(),
-    upcomingEntries: buildUpcomingEntries(),
+    indicators: buildIndicators(input.entries, input.currentPeriodId, input.previousPeriodId),
+    evolution: buildEvolution(input.entries, input.periods),
+    categoryBreakdown: buildCategoryBreakdown(input.entries, input.categories, input.currentPeriodId),
+    recentEntries: buildRecentEntries(input.entries, input.categories, input.currentPeriodId, input.previousPeriodId),
+    upcomingEntries: buildUpcomingEntries(input.entries, input.categories, input.currentPeriodId),
   }
 }

@@ -1,12 +1,25 @@
 import { describe, expect, it } from 'vitest'
+import {
+  FIXTURE_CURRENT_PERIOD_ID,
+  FIXTURE_PREVIOUS_PERIOD_ID,
+  fixtureCategories,
+  fixtureFinancialEntries,
+  fixtureMonthlyPeriods,
+} from '../data/dashboard-fixtures.ts'
 import { buildDashboardViewModel } from './dashboard-view-model.ts'
 
 describe('buildDashboardViewModel', () => {
-  const viewModel = buildDashboardViewModel()
+  const viewModel = buildDashboardViewModel({
+    entries: fixtureFinancialEntries,
+    categories: fixtureCategories,
+    periods: fixtureMonthlyPeriods,
+    currentPeriodId: FIXTURE_CURRENT_PERIOD_ID,
+    previousPeriodId: FIXTURE_PREVIOUS_PERIOD_ID,
+  })
 
-  it('descreve a competência atual como em revisão', () => {
-    expect(viewModel.periodOverview.status).toBe('review')
-    expect(viewModel.periodOverview.statusLabel).toBe('Em revisão')
+  it('descreve a competência atual como aberta', () => {
+    expect(viewModel.periodOverview.status).toBe('open')
+    expect(viewModel.periodOverview.statusLabel).toBe('Aberta')
     expect(viewModel.periodOverview.referenceMonthLabel.toLowerCase()).toContain('julho')
   })
 

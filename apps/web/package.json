@@ -14,7 +14,8 @@
   "dependencies": {
     "@finanhouse/domain": "*",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-router": "8.3.0"
   },
   "devDependencies": {
     "@testing-library/react": "^16.1.0",

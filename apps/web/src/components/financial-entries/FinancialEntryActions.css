@@ -1,0 +1,20 @@
+.fh-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--fh-space-2);
+}
+
+.fh-entry-actions button {
+  background: var(--fh-surface-elevated);
+  border: 1px solid var(--fh-border-strong);
+  color: var(--fh-text-secondary);
+  border-radius: var(--fh-radius-sm);
+  padding: var(--fh-space-1) var(--fh-space-3);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.fh-entry-actions button:hover {
+  background: var(--fh-surface);
+  color: var(--fh-text);
+}

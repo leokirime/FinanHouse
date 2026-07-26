@@ -1,23 +1,17 @@
-import { AppShell } from './components/layout/AppShell.tsx'
-import { DashboardHeader } from './components/layout/DashboardHeader.tsx'
+import { Navigate, Route, Routes } from 'react-router'
+import { RootLayout } from './components/layout/RootLayout.tsx'
 import { DashboardPage } from './pages/DashboardPage.tsx'
-import { buildDashboardViewModel } from './view-models/dashboard-view-model.ts'
+import { FinancialEntriesPage } from './pages/FinancialEntriesPage.tsx'
 
 function App() {
-  const { periodOverview } = buildDashboardViewModel()
-
   return (
-    <AppShell
-      header={
-        <DashboardHeader
-          areaTitle="Visão geral"
-          periodLabel={periodOverview.referenceMonthLabel}
-          statusLabel={periodOverview.statusLabel}
-        />
-      }
-    >
-      <DashboardPage />
-    </AppShell>
+    <Routes>
+      <Route element={<RootLayout />}>
+        <Route index element={<DashboardPage />} />
+        <Route path="movimentacoes" element={<FinancialEntriesPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
+    </Routes>
   )
 }
 

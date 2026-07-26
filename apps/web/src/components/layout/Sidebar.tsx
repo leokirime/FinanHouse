@@ -1,15 +1,25 @@
+import { NavLink } from 'react-router'
 import { Brand } from '../brand/Brand.tsx'
 import './Sidebar.css'
 
-interface SidebarNavItem {
+interface AvailableNavItem {
   key: string
   label: string
-  available: boolean
+  to: string
+  available: true
 }
 
+interface UnavailableNavItem {
+  key: string
+  label: string
+  available: false
+}
+
+type SidebarNavItem = AvailableNavItem | UnavailableNavItem
+
 const NAV_ITEMS: SidebarNavItem[] = [
-  { key: 'overview', label: 'Visão geral', available: true },
-  { key: 'entries', label: 'Movimentações', available: false },
+  { key: 'overview', label: 'Visão geral', to: '/', available: true },
+  { key: 'entries', label: 'Movimentações', to: '/movimentacoes', available: true },
   { key: 'comparison', label: 'Comparativo', available: false },
   { key: 'planning', label: 'Planejamento', available: false },
   { key: 'history', label: 'Histórico', available: false },
@@ -24,19 +34,22 @@ export function Sidebar() {
       </div>
       <nav className="fh-sidebar__nav" aria-label="Áreas do Finanhouse">
         <ul>
-          {NAV_ITEMS.map((item) => (
-            <li key={item.key}>
-              <button
-                type="button"
-                className="fh-sidebar__nav-item"
-                aria-current={item.available ? 'page' : undefined}
-                disabled={!item.available}
-              >
-                <span>{item.label}</span>
-                {!item.available && <span className="fh-badge fh-sidebar__soon">em breve</span>}
-              </button>
-            </li>
-          ))}
+          {NAV_ITEMS.map((item) =>
+            item.available ? (
+              <li key={item.key}>
+                <NavLink to={item.to} end={item.to === '/'} className="fh-sidebar__nav-item">
+                  <span>{item.label}</span>
+                </NavLink>
+              </li>
+            ) : (
+              <li key={item.key}>
+                <button type="button" className="fh-sidebar__nav-item" disabled>
+                  <span>{item.label}</span>
+                  <span className="fh-badge fh-sidebar__soon">em breve</span>
+                </button>
+              </li>
+            ),
+          )}
         </ul>
       </nav>
       <div className="fh-sidebar__footer">

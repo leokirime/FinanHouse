@@ -36,6 +36,8 @@
   font-size: 14px;
   font-weight: 500;
   text-align: left;
+  text-decoration: none;
+  cursor: pointer;
   transition: background-color var(--fh-transition-fast), color var(--fh-transition-fast);
 }
 
