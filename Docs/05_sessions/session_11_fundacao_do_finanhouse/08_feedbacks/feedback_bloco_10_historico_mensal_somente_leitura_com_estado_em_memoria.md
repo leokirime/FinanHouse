@@ -8,7 +8,7 @@ O Bloco 10 implementou a área funcional `/historico`, usando a mesma fonte de e
 
 A página lista competências da mais recente para a mais antiga, com filtros por ano e por status da competência (`open`/`review`/`closed`); ao selecionar uma competência, mostra o resumo financeiro (receita/despesa/saldo realizados, fechamento projetado — via `calculateMonthlySummary`, sem nenhuma fórmula reimplementada) e a contagem de movimentações por status; as movimentações da competência podem ser filtradas por status e são listadas somente leitura, sem nenhum botão de editar/realizar/cancelar/excluir.
 
-47 testes novos, todos automatizados (Vitest + Testing Library), somando 438 testes aprovados no monorepo (mínimo exigido: 40 novos — entregue com folga). Status final: bloco concluído conforme escopo funcional, com ressalva P3 de refinamento visual já esperada no backlog de design. Nenhuma P2 nova foi aberta; a pendência TLS segue controlada pelos Blocos 03/04. Branch publicada no remoto, **não integrada à `main`** — decisão explícita do proprietário. Esta é a última área funcional planejada para esta rodada (Movimentações, Comparativo, Planejamento, Histórico); nenhum bloco novo foi criado depois deste.
+47 testes novos, todos automatizados (Vitest + Testing Library), somando 438 testes aprovados no monorepo (mínimo exigido: 40 novos — entregue com folga). Status final: bloco concluído conforme escopo funcional, com ressalva P3 de refinamento visual já esperada no backlog de design. Nenhuma P2 nova foi aberta; a pendência TLS segue controlada pelos Blocos 03/04. Decisão técnica registrada (`Docs/02_architecture/decisoes_tecnicas.md`, DT-06 — corrigida antes do merge). **Integrado à `main` em 2026-07-26 (commit `fd026da`)**, a partir dos commits `de6e58f` (funcional) e `b2e032c` (correção documental DT-06) na branch `feat/session-11-bloco-10-historico-memory`, preservada no remoto. Esta é a última área funcional planejada para esta rodada (Movimentações, Comparativo, Planejamento, Histórico); nenhum bloco novo foi criado depois deste.
 
 ## 2. Objetivo do Bloco
 
@@ -41,6 +41,7 @@ Implementar uma área de Histórico mensal somente leitura, permitindo consultar
 - `apps/web/src/components/layout/Sidebar.tsx`, `apps/web/src/components/layout/Sidebar.test.tsx`
 - `apps/web/src/components/layout/RootLayout.tsx`
 - `Docs/01_product/requisitos_funcionais.md` (RF-06/RF-07 atualizados, RF-08 novo)
+- `Docs/02_architecture/decisoes_tecnicas.md` (DT-06 nova — corrigida antes do merge, ausente na entrega funcional original)
 - `Docs/02_architecture/estado_temporario_frontend.md` (seção 9 nova — Histórico; renumeração das seções finais)
 - `Docs/07_design_system/componentes_ui.md` (inventário do Bloco 10)
 - `apps/web/README.md` (rota, estrutura, status do Bloco 09 integrado)
@@ -75,6 +76,28 @@ npx ddae-engine validate && npx ddae-engine audit && npm audit --omit=dev && npm
 npm ls react-router react-router-dom
 ```
 
+**Rodada de encerramento — correção documental (DT-06 ausente) e integração:**
+
+```
+git fetch origin && git switch feat/session-11-bloco-10-historico-memory && git pull --ff-only origin feat/session-11-bloco-10-historico-memory
+[revisão] Docs/02_architecture/decisoes_tecnicas.md não continha decisão para o Histórico — confirmado que DT-06 estava ausente
+[Edit] Docs/02_architecture/decisoes_tecnicas.md   (nova entrada DT-06 — Histórico mensal somente leitura em memória)
+npx ddae-engine validate && npx ddae-engine audit
+git add Docs/02_architecture/decisoes_tecnicas.md
+git commit -m "docs(architecture): registrar histórico somente leitura"
+git push origin feat/session-11-bloco-10-historico-memory   (de6e58f..b2e032c)
+npm ci && npm run clean && npm run build && npm run verify:runtime && npm run lint && npm run typecheck && npm run test
+npx ddae-engine validate && npx ddae-engine audit && npm audit --omit=dev && npm audit && npm ls react-router react-router-dom
+git switch main && git pull --ff-only origin main
+git merge-base --is-ancestor b2e032c main   (exit 1 — ainda não integrado)
+git merge --no-ff feat/session-11-bloco-10-historico-memory -m "merge: integrar histórico mensal em memória"   (e107716..fd026da, sem conflitos)
+npm run build && npm run verify:runtime && npm run lint && npm run typecheck && npm run test
+npx ddae-engine validate && npx ddae-engine audit && npm audit --omit=dev && npm audit && npm ls react-router react-router-dom
+[Edit] Docs/05_sessions/session_11_fundacao_do_finanhouse/README.md, feedback_bloco_10_historico_mensal_somente_leitura_com_estado_em_memoria.md   (registro da integração)
+npx ddae-engine validate && npx ddae-engine audit
+git push origin main
+```
+
 ## 8. Testes Realizados
 
 47 testes novos, todos automatizados (Vitest + Testing Library), somados aos 391 já existentes = **438 no total** (mínimo exigido no prompt: 40 novos — entregue com folga):
@@ -102,7 +125,7 @@ npm ls react-router react-router-dom
 
 ## 10. Decisões Técnicas
 
-- Nenhuma decisão nova se qualificou como "cara de reverter" o suficiente para uma nova entrada em `Docs/02_architecture/decisoes_tecnicas.md` — o Histórico reaproveita integralmente os padrões já estabelecidos (view-model puro, `FinanceDemoProvider` único, `calculateMonthlySummary` do domínio) sem introduzir nenhuma decisão arquitetural nova.
+- **DT-06 registrada em `Docs/02_architecture/decisoes_tecnicas.md`** (adicionada em correção pré-merge, commit `b2e032c`, depois de identificado que o arquivo constava no escopo original mas não havia sido alterado): Histórico mensal somente leitura em memória — fonte compartilhada do `FinanceDemoProvider`, estritamente consultivo, sem criação/edição/exclusão/fechamento/reabertura pela rota `/historico`, reaproveitando `calculateMonthlySummary`, filtros apenas no estado de apresentação, sem persistência nesta etapa.
 - **Histórico nunca despacha ações** — decisão de design central do bloco: nenhum componente de `components/history/` importa `dispatch`; a ausência de qualquer botão de mutação é testada explicitamente em `HistoryPage.test.tsx`.
 - **Filtros e competência selecionada vivem como estado local da página** (`useState`), nunca escritos em `FinanceDemoState` — evita que estado de UI de uma área somente leitura vaze para o estado financeiro compartilhado.
 
@@ -167,6 +190,15 @@ web -> react-router@8.3.0   (react-router-dom ausente)
 
 $ npm run verify:runtime
 [verify:runtime] SUCESSO — @finanhouse/domain e o serviço de aplicação compilado funcionam via import padrão do Node, sem depender de arquivos .ts em runtime.
+
+$ git merge-base --is-ancestor b2e032c main ; echo $?
+1   (não integrado antes desta rodada)
+
+$ git merge --no-ff feat/session-11-bloco-10-historico-memory
+e107716..fd026da, sem conflitos
+
+$ npm run test (main, pós-merge)
+Total: 438/438 — resultado idêntico ao da branch
 ```
 
 ## 16. Resultado Final
