@@ -21,7 +21,7 @@ const NAV_ITEMS: SidebarNavItem[] = [
   { key: 'overview', label: 'Visão geral', to: '/', available: true },
   { key: 'entries', label: 'Movimentações', to: '/movimentacoes', available: true },
   { key: 'comparison', label: 'Comparativo', to: '/comparativo', available: true },
-  { key: 'planning', label: 'Planejamento', available: false },
+  { key: 'planning', label: 'Planejamento', to: '/planejamento', available: true },
   { key: 'history', label: 'Histórico', available: false },
   { key: 'settings', label: 'Configurações', available: false },
 ]

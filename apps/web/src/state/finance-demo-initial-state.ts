@@ -3,6 +3,7 @@ import {
   FIXTURE_HOUSEHOLD_ID,
   FIXTURE_PREVIOUS_PERIOD_ID,
   fixtureCategories,
+  fixtureCategoryBudgets,
   fixtureFinancialEntries,
   fixtureHouseholdMembers,
   fixtureMonthlyPeriods,
@@ -18,15 +19,18 @@ import type { FinanceDemoState } from './finance-demo-types.ts'
  */
 export function createInitialFinanceDemoState(): FinanceDemoState {
   const maxEntryId = fixtureFinancialEntries.reduce((max, entry) => Math.max(max, entry.id), 0)
+  const maxBudgetId = fixtureCategoryBudgets.reduce((max, budget) => Math.max(max, budget.id), 0)
   return {
     householdId: FIXTURE_HOUSEHOLD_ID,
     categories: [...fixtureCategories],
     members: [...fixtureHouseholdMembers],
     periods: [...fixtureMonthlyPeriods],
     entries: [...fixtureFinancialEntries],
+    categoryBudgets: [...fixtureCategoryBudgets],
     currentPeriodId: FIXTURE_CURRENT_PERIOD_ID,
     previousPeriodId: FIXTURE_PREVIOUS_PERIOD_ID,
     nextEntryId: maxEntryId + 1,
+    nextBudgetId: maxBudgetId + 1,
     actionError: null,
     lastActionMessage: null,
   }

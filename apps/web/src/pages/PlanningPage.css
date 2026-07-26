@@ -1,0 +1,20 @@
+.fh-planning-page__toast {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fh-space-3);
+  background: rgba(79, 209, 165, 0.12);
+  border: 1px solid rgba(79, 209, 165, 0.4);
+  color: var(--fh-text);
+  border-radius: var(--fh-radius-md);
+  padding: var(--fh-space-3) var(--fh-space-4);
+  font-size: 13px;
+}
+
+.fh-planning-page__toast button {
+  background: transparent;
+  border: none;
+  color: var(--fh-text-secondary);
+  font-size: 16px;
+  line-height: 1;
+}

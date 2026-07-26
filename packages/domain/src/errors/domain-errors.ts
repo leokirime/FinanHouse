@@ -37,3 +37,7 @@ export class CategoryNotFoundError extends DomainError {}
 export class HouseholdMemberNotFoundError extends DomainError {}
 
 export class InvalidDateError extends DomainError {}
+
+export class CategoryBudgetNotFoundError extends DomainError {}
+
+export class DuplicateCategoryBudgetError extends DomainError {}

@@ -1,4 +1,4 @@
-import type { Category, FinancialEntry, HouseholdMember, MonthlyPeriod } from '@finanhouse/domain'
+import type { Category, CategoryBudget, FinancialEntry, HouseholdMember, MonthlyPeriod } from '@finanhouse/domain'
 
 /**
  * Dados inteiramente FICTÍCIOS usados como **estado inicial** do modo
@@ -221,4 +221,26 @@ export const fixtureFinancialEntries: FinancialEntry[] = [
     dueDate: '2026-07-15',
     realizationDate: null,
   }),
+]
+
+export const BUDGET_HOUSING_CURRENT = 1
+export const BUDGET_FOOD_CURRENT = 2
+export const BUDGET_TRANSPORT_CURRENT = 3
+export const BUDGET_HOUSING_PREVIOUS = 4
+
+/**
+ * Limites de orçamento sintéticos (Bloco 09) — cobrem de propósito os quatro
+ * estados possíveis na competência atual (julho): Moradia em `attention`
+ * (180000/200000 = 90%), Alimentação em `healthy` (79000/150000 ≈ 52,7%),
+ * Transporte em `exceeded` (38000 > 30000). Lazer tem despesa (25000,
+ * `planned`) mas nenhum limite definido — vira `unplanned`. Saúde não tem
+ * limite nem despesa não cancelada — fica de fora da lista (ver
+ * `buildCategoryBudgetSummaries`). Moradia de junho (competência fechada)
+ * existe só para exercitar o bloqueio de edição/remoção em `closed`.
+ */
+export const fixtureCategoryBudgets: CategoryBudget[] = [
+  { id: BUDGET_HOUSING_CURRENT, householdId: FIXTURE_HOUSEHOLD_ID, periodId: FIXTURE_CURRENT_PERIOD_ID, categoryId: CATEGORY_HOUSING, limitAmount: 200000n },
+  { id: BUDGET_FOOD_CURRENT, householdId: FIXTURE_HOUSEHOLD_ID, periodId: FIXTURE_CURRENT_PERIOD_ID, categoryId: CATEGORY_FOOD, limitAmount: 150000n },
+  { id: BUDGET_TRANSPORT_CURRENT, householdId: FIXTURE_HOUSEHOLD_ID, periodId: FIXTURE_CURRENT_PERIOD_ID, categoryId: CATEGORY_TRANSPORT, limitAmount: 30000n },
+  { id: BUDGET_HOUSING_PREVIOUS, householdId: FIXTURE_HOUSEHOLD_ID, periodId: FIXTURE_PREVIOUS_PERIOD_ID, categoryId: CATEGORY_HOUSING, limitAmount: 180000n },
 ]

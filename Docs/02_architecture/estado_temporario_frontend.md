@@ -27,13 +27,16 @@ apps/web/src/state/FinanceDemoProvider.tsx             (useReducer + React Conte
         ├──▶ apps/web/src/pages/FinancialEntriesPage.tsx      (Movimentações lê e despacha ações no mesmo estado)
         │        └──▶ view-models/financial-entries-view-model.ts  (filtros/busca/rótulos de exibição)
         │
-        └──▶ apps/web/src/pages/ComparisonPage.tsx            (Comparativo lê o mesmo estado, sem despachar)
-                 └──▶ view-models/comparison-view-model.ts    (seletores, indicadores e gráfico)
+        ├──▶ apps/web/src/pages/ComparisonPage.tsx            (Comparativo lê o mesmo estado, sem despachar)
+        │        └──▶ view-models/comparison-view-model.ts    (seletores, indicadores e gráfico)
+        │
+        └──▶ apps/web/src/pages/PlanningPage.tsx              (Planejamento lê e despacha ações no mesmo estado)
+                 └──▶ view-models/planning-view-model.ts      (resumo, linhas por categoria, gráfico)
 ```
 
 - **Fixtures**: continuam existindo (`data/dashboard-fixtures.ts`), mas agora só são lidas em um lugar — `createInitialFinanceDemoState()` — para montar o estado inicial. Nenhum componente de UI importa fixtures diretamente.
-- **Estado vivo**: um único `useReducer` (`financeDemoReducer`) dentro de `FinanceDemoProvider`, exposto via Context. Dashboard e Movimentações leem o mesmo `state` e despacham ações no mesmo `dispatch` — nunca há dois estados financeiros paralelos.
-- **View-models**: `dashboard-view-model.ts`, `financial-entries-view-model.ts` e `comparison-view-model.ts` são funções puras que recebem dados por argumento (não leem Context nem fixtures) — só formatam/derivam o que os componentes precisam.
+- **Estado vivo**: um único `useReducer` (`financeDemoReducer`) dentro de `FinanceDemoProvider`, exposto via Context. Dashboard, Movimentações e Planejamento leem o mesmo `state` e despacham ações no mesmo `dispatch` — nunca há dois estados financeiros paralelos.
+- **View-models**: `dashboard-view-model.ts`, `financial-entries-view-model.ts`, `comparison-view-model.ts` e `planning-view-model.ts` são funções puras que recebem dados por argumento (não leem Context nem fixtures) — só formatam/derivam o que os componentes precisam.
 
 ## 3. Ciclo de Vida em Memória
 
@@ -54,8 +57,11 @@ apps/web/src/state/FinanceDemoProvider.tsx             (useReducer + React Conte
 | `CANCEL` | `cancelFinancialEntry` | `planned`\|`pending` → `cancelled` |
 | `REACTIVATE` | `reactivateFinancialEntry` | `cancelled` → `planned` |
 | `REVERT_REALIZATION` | `revertFinancialEntryRealization` | `realized` → `pending` (estorno) |
+| `CREATE_CATEGORY_BUDGET` | `createCategoryBudget` | — → limite de orçamento novo (sempre na competência atual) |
+| `UPDATE_CATEGORY_BUDGET` | `updateCategoryBudget` | altera `limitAmount` de um limite existente |
+| `REMOVE_CATEGORY_BUDGET` | `assertCategoryBudgetRemovable` (remoção feita pelo reducer após validar) | remove o limite do estado da sessão |
 | `CLEAR_ERROR` / `CLEAR_MESSAGE` | — | limpa `actionError`/`lastActionMessage` |
-| `RESET` | `createInitialFinanceDemoState()` | volta tudo às fixtures |
+| `RESET` | `createInitialFinanceDemoState()` | volta tudo às fixtures (inclui `categoryBudgets`) |
 
 `realized → cancelled` direto **não existe** — é preciso estornar primeiro (mesma regra do domínio desde o Bloco 05).
 
@@ -87,13 +93,35 @@ Regras registradas:
 
 O refinamento visual do Comparativo segue como P3 no backlog de design, junto da evolução visual já registrada para Dashboard/Movimentações.
 
-## 8. Substituição Futura Pela API Real
+## 8. Planejamento Mensal em Memória
 
-Quando a persistência real for liberada (pós-TLS, Bloco 04), a substituição esperada é trocar `FinanceDemoProvider` por um provider que busca/envia dados via HTTP para `apps/api`, mantendo a mesma interface (`useFinanceDemo()` retornando `{ state, dispatch }` ou equivalente) — `dashboard-view-model.ts`, `financial-entries-view-model.ts`, `comparison-view-model.ts` e todos os componentes de UI não precisam mudar, pois já recebem dados por argumento/Context, nunca leem fixtures diretamente.
+O Bloco 09 adicionou a rota `/planejamento`, também alimentada por `FinanceDemoProvider`. A página mantém apenas o estado local da competência sendo visualizada (`selectedPeriodId`) e de qual diálogo está aberto; os limites (`state.categoryBudgets`) e os cálculos ficam em `view-models/planning-view-model.ts` + `@finanhouse/domain` (`packages/domain/src/planning/`).
 
-## 9. O Que Ainda Não Existe
+Modelo `CategoryBudget` (`packages/domain/src/planning/category-budget.ts`): `{ id, householdId, periodId, categoryId, limitAmount }` — no máximo um por `(periodId, categoryId)`. A ausência de um `CategoryBudget` para uma categoria/competência **nunca** é representada como limite zero — é `null` em todo o pipeline (domínio → view-model → UI).
+
+Regras registradas:
+
+- Limite: `bigint` de centavos, sempre positivo (`assertPositiveMoney`); só pode ser criado/editado/removido com a competência `open` ou `review` (`assertPeriodAllowsBudgetChanges` — diferente das movimentações comuns, que bloqueiam `review` por padrão); `closed` sempre bloqueia. Categoria precisa ser `expense` e `active`; household do limite, período e categoria precisam bater.
+- Criação de um **novo** limite (formulário "Definir limite") é oferecida apenas para a competência atual do estado (`state.currentPeriodId`) — mesma convenção já usada para criar movimentações (`Docs/02_architecture/estado_temporario_frontend.md`, seção 5). Editar/remover um limite existente funciona em qualquer competência não fechada em que ele exista, inclusive ao navegar para uma competência passada pelo seletor da página.
+- Cálculo por categoria (`summarizeCategoryBudget`/`buildCategoryBudgetSummaries`, `packages/domain/src/planning/category-budget-calculations.ts`): `realizedAmount` usa `actualAmount` de `realized`; `pendingAmount` usa `expectedAmount` de `pending`; `plannedAmount` usa `expectedAmount` de `planned`; `cancelled` nunca compõe nenhum total; `projectedAmount = realized + pending + planned`.
+- Estados: `healthy` (projeção < 80% do limite), `attention` (projeção entre 80% e 100% do limite, inclusive), `exceeded` (projeção > limite), `unplanned` (há despesa não cancelada, mas nenhum limite definido). Percentual (`percentConsumed`) é `null` sem limite — nunca `NaN`/`Infinity`/zero inventado.
+- Categoria de despesa sem limite **e** sem nenhuma despesa não cancelada na competência **não aparece na lista** — decisão documentada aqui (não é um estado "unplanned": não há nada de orçamento a mostrar). Ver `buildCategoryBudgetSummaries`.
+- Sincronização: criar, editar, realizar ou cancelar uma movimentação de despesa em Movimentações atualiza o Planejamento na mesma sessão (mesmo `state.entries`); criar/editar/remover um limite atualiza os indicadores imediatamente; remontar o provider retorna às fixtures (incluindo `categoryBudgets`).
+- Persistência: não há `localStorage`, `IndexedDB`, cookies, API HTTP, banco, migrations ou dados reais.
+
+O refinamento visual do Planejamento segue como P3 no backlog de design, junto da evolução visual já registrada para Dashboard/Movimentações/Comparativo.
+
+## 9. Execução Local do Frontend
+
+`npm run dev:web` (raiz do monorepo) executa `predev:web` (`npm run build:domain`) antes de iniciar o Vite do workspace `web` — garante que `packages/domain/dist/index.js` existe sem exigir compilação manual, sem rodar `clean` (que apagaria o `dist` recém-gerado) e sem iniciar a API ou tocar no banco. Ver `apps/web/README.md`.
+
+## 10. Substituição Futura Pela API Real
+
+Quando a persistência real for liberada (pós-TLS, Bloco 04), a substituição esperada é trocar `FinanceDemoProvider` por um provider que busca/envia dados via HTTP para `apps/api`, mantendo a mesma interface (`useFinanceDemo()` retornando `{ state, dispatch }` ou equivalente) — `dashboard-view-model.ts`, `financial-entries-view-model.ts`, `comparison-view-model.ts`, `planning-view-model.ts` e todos os componentes de UI não precisam mudar, pois já recebem dados por argumento/Context, nunca leem fixtures diretamente.
+
+## 11. O Que Ainda Não Existe
 
 - Persistência real (banco, API HTTP) — ver `Docs/02_architecture/regras_dominio_financeiro.md` e `Docs/02_architecture/arquitetura_visual_dashboard.md`.
 - Autenticação — `DEMO_CREATED_BY_USER_ID` é uma constante fictícia, não um usuário autenticado.
-- Páginas "Planejamento", "Histórico", "Configurações" — apenas itens de navegação não funcionais.
-- Refinamento visual do dashboard, Movimentações e Comparativo — ver `Docs/07_design_system/backlog_refinamento_visual.md`.
+- Páginas "Histórico", "Configurações" — apenas itens de navegação não funcionais.
+- Refinamento visual do dashboard, Movimentações, Comparativo e Planejamento — ver `Docs/07_design_system/backlog_refinamento_visual.md`.

@@ -72,6 +72,16 @@ describe('App', () => {
     expect(screen.getByText('Comparação por categoria')).toBeTruthy()
   })
 
+  it('navega para /planejamento ao clicar em "Planejamento", atualizando aria-current e o título do cabeçalho', () => {
+    renderWithProviders(<App />)
+    fireEvent.click(screen.getByRole('link', { name: 'Planejamento' }))
+
+    expect(screen.getByRole('link', { name: 'Planejamento' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByRole('link', { name: 'Visão geral' }).hasAttribute('aria-current')).toBe(false)
+    expect(screen.getByRole('heading', { name: 'Planejamento', level: 1 })).toBeTruthy()
+    expect(screen.getAllByText('Limites por categoria').length).toBeGreaterThan(0)
+  })
+
   it('rota desconhecida redireciona com segurança para a Visão geral', () => {
     renderWithProviders(<App />, { initialEntries: ['/rota-que-nao-existe'] })
     expect(screen.getByRole('link', { name: 'Visão geral' }).getAttribute('aria-current')).toBe('page')
