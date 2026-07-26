@@ -8,6 +8,15 @@
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
 
+### DT-04 — Comparativo mensal derivado em view-model puro sobre estado em memória
+
+- **Data:** 2026-07-26
+- **Contexto:** O Bloco 08 precisava entregar a rota `/comparativo` antes da API real e antes da persistência MySQL, reaproveitando o estado demonstrativo criado no Bloco 07.
+- **Decisão:** Implementar o Comparativo como derivação pura em `apps/web/src/view-models/comparison-view-model.ts`, consumindo `FinanceDemoProvider` via `useFinanceDemo()` apenas na página. A página mantém somente os IDs dos períodos selecionados; todos os cálculos financeiros usam `@finanhouse/domain` (`calculateMonthlySummary`, `compareMonthlyPeriods`, `compareExpenseCategoryTotals`, `detectNewAndDiscontinuedExpenses`, `calculateChange`) e a visualização usa SVG/CSS sem biblioteca nova.
+- **Motivos:** preserva a fonte única de estado do frontend demonstrativo, evita fórmulas financeiras em JSX, mantém a futura troca para API real concentrada no provider e não introduz dependências de gráfico.
+- **Consequências:** `/comparativo` reage na mesma sessão às mudanças feitas em Movimentações; ao remontar o provider, retorna às fixtures; não há `localStorage`, `IndexedDB`, API HTTP, banco, migration nem dados reais neste bloco.
+- **Status:** Vigente
+
 ### DT-03 — Roteamento do frontend: migração para `react-router@8.3.0` (pin exato)
 
 - **Data:** 2026-07-25

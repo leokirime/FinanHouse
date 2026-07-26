@@ -59,7 +59,8 @@ export interface PeriodComparison {
   currentExpectedVsRealized: Change
 }
 
-function nonCancelledExpenseCategoryTotals(entries: FinancialEntry[], periodId: number): Map<number, Money> {
+/** Soma, por categoria, o valor não cancelado de despesas de uma competência (realizado quando `realized`, previsto nos demais status). Exportada para reaproveitamento por `compare-expense-details.ts` — nunca duplicar esta regra. */
+export function nonCancelledExpenseCategoryTotals(entries: FinancialEntry[], periodId: number): Map<number, Money> {
   const totals = new Map<number, Money>()
   for (const entry of entries) {
     if (entry.periodId !== periodId) continue

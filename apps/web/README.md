@@ -27,12 +27,18 @@ src/
 ├── hooks/                 # useFinanceDemo, useDashboardViewModel
 ├── view-models/           # funções puras que combinam dados + @finanhouse/domain
 ├── utils/                 # formatação (dinheiro/data em pt-BR)
-├── components/            # layout/, dashboard/, brand/, financial-entries/
-├── pages/                 # DashboardPage, FinancialEntriesPage
-└── App.tsx                # rotas (react-router): "/" e "/movimentacoes"
+├── components/            # layout/, dashboard/, brand/, financial-entries/, comparison/
+├── pages/                 # DashboardPage, FinancialEntriesPage, ComparisonPage
+└── App.tsx                # rotas (react-router): "/", "/movimentacoes" e "/comparativo"
 ```
 
-Status: dashboard de visão geral (Bloco 06, aprovado funcionalmente com refinamento visual pendente — ver `Docs/07_design_system/backlog_refinamento_visual.md`) + Movimentações funcional com estado em memória (Bloco 07 — `bloco_07_movimentacoes_funcionais_com_estado_em_memoria`). Consome `@finanhouse/domain` (workspace, compilado) para todas as regras e cálculos financeiros exibidos — sem conexão com o MySQL, API real ou persistência real. Ao recarregar a página, os dados voltam às fixtures iniciais.
+Status: dashboard de visão geral (Bloco 06, aprovado funcionalmente com refinamento visual pendente — ver `Docs/07_design_system/backlog_refinamento_visual.md`) + Movimentações funcional com estado em memória (Bloco 07 — `bloco_07_movimentacoes_funcionais_com_estado_em_memoria`) + Comparativo mensal em memória (Bloco 08 — `bloco_08_comparativo_mensal_com_estado_em_memoria`). Consome `@finanhouse/domain` (workspace, compilado) para todas as regras e cálculos financeiros exibidos — sem conexão com o MySQL, API real ou persistência real. Ao recarregar a página, os dados voltam às fixtures iniciais.
+
+## Rotas funcionais
+
+- `/` — visão geral do mês atual.
+- `/movimentacoes` — criação, edição e transições de movimentações em memória.
+- `/comparativo` — seleção de duas competências, indicadores comparativos, categorias, despesas novas/encerradas, previsto versus realizado e gráfico SVG leve. A página usa `FinanceDemoProvider` via `useFinanceDemo()` e `view-models/comparison-view-model.ts`; não lê fixtures, não persiste dados e não acessa API/banco.
 
 Ver `Docs/02_architecture/arquitetura_visual_dashboard.md` (dashboard), `Docs/02_architecture/estado_temporario_frontend.md` (estado compartilhado/Movimentações) e `Docs/07_design_system/` (tokens/componentes/acessibilidade/responsividade).
 

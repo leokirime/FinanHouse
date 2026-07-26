@@ -62,6 +62,16 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: 'Movimentações', level: 1 })).toBeTruthy()
   })
 
+  it('navega para /comparativo ao clicar em "Comparativo", atualizando aria-current e o título do cabeçalho', () => {
+    renderWithProviders(<App />)
+    fireEvent.click(screen.getByRole('link', { name: 'Comparativo' }))
+
+    expect(screen.getByRole('link', { name: 'Comparativo' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByRole('link', { name: 'Visão geral' }).hasAttribute('aria-current')).toBe(false)
+    expect(screen.getByRole('heading', { name: 'Comparativo', level: 1 })).toBeTruthy()
+    expect(screen.getByText('Comparação por categoria')).toBeTruthy()
+  })
+
   it('rota desconhecida redireciona com segurança para a Visão geral', () => {
     renderWithProviders(<App />, { initialEntries: ['/rota-que-nao-existe'] })
     expect(screen.getByRole('link', { name: 'Visão geral' }).getAttribute('aria-current')).toBe('page')
@@ -79,7 +89,7 @@ describe('App', () => {
 
   it('a navegação entre rotas não recarrega a página inteira (react-router intercepta o clique)', () => {
     renderWithProviders(<App />)
-    const link = screen.getByRole('link', { name: 'Movimentações' })
+    const link = screen.getByRole('link', { name: 'Comparativo' })
     // fireEvent.click devolve o resultado de dispatchEvent: false quando o
     // handler do <Link> chamou preventDefault() — prova de que a navegação
     // foi tratada via history do react-router, não via navegação nativa do

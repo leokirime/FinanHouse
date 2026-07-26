@@ -13,9 +13,9 @@ Numere os requisitos para que possam ser referenciados por blocos e prompts (ex.
 | RF-01 | Registrar movimentações financeiras (receitas/despesas) com ciclo de vida previsto → pendente → realizado, ou cancelado | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-02 | Organizar movimentações por competência mensal, com abertura/revisão/fechamento | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-03 | Calcular indicadores financeiros por competência (previsto, realizado, pendente, saldo) | Must | Concluído (regras de domínio, Bloco 05) |
-| RF-04 | Comparar duas competências mensais (variações de receita/despesa/saldo, categorias) | Should | Concluído (regras de domínio, Bloco 05) |
+| RF-04 | Comparar duas competências mensais (variações de receita/despesa/saldo, categorias) | Should | Concluído (regras de domínio no Bloco 05; interface em memória no Bloco 08) |
 | RF-05 | Persistir movimentações e competências em banco real (MySQL) | Must | Pendente (bloqueado por TLS — Bloco 04) |
-| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Em andamento — dashboard de visão geral concluído (Bloco 06, com refinamento visual pendente); Movimentações funcional com estado em memória concluído (Bloco 07); persistência real segue bloqueada (RF-05) |
+| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Em andamento — dashboard de visão geral concluído (Bloco 06, com refinamento visual pendente); Movimentações funcional com estado em memória concluído (Bloco 07); Comparativo mensal em memória concluído (Bloco 08); persistência real segue bloqueada (RF-05) |
 
 Detalhamento técnico completo das regras (transições de status, cálculos, estratégia monetária): `Docs/02_architecture/regras_dominio_financeiro.md`.
 
@@ -32,6 +32,13 @@ Para cada requisito, descreva como verificar que ele foi atendido (comportamento
 - [x] Uma competência pode ser aberta, colocada em revisão, fechada e reaberta, seguindo as transições documentadas.
 - [x] Uma competência fechada não aceita novas movimentações nem alterações comuns.
 - [ ] Um usuário consegue gerenciar (abrir/revisar/fechar) competências pela interface visual — ainda não implementado; Bloco 07 cobriu apenas as movimentações dentro da competência atual, já aberta.
+
+### RF-04 — Comparação entre competências
+- [x] Um usuário consegue acessar `/comparativo` pela sidebar sem recarregar a página.
+- [x] Um usuário consegue escolher duas competências diferentes, ordenadas da mais recente para a mais antiga, com rótulos mês/ano em pt-BR.
+- [x] A interface apresenta receitas/despesas/saldo realizados, fechamento projetado, receitas/despesas previstas, variação absoluta e percentual, tratando base zero como "Sem base comparável".
+- [x] A interface compara despesas por categoria, destaca maiores aumentos/reduções e lista despesas novas/encerradas pela chave tipo + categoria + descrição normalizada.
+- [x] O comparativo usa a mesma fonte em memória do dashboard e de Movimentações; recarregar/remontar o provider retorna às fixtures sintéticas.
 
 ## 3. Perguntas Orientadoras
 
