@@ -76,29 +76,29 @@ Implementação do Bloco 08:
 
 ## 9. Critérios de Aceite
 
-- [ ] Rota `/comparativo` navegável a partir da `Sidebar`, com `aria-current="page"` na rota ativa.
-- [ ] Página consome o mesmo `FinanceDemoProvider` do dashboard/Movimentações — nenhuma leitura direta de fixtures, nenhum estado financeiro paralelo.
-- [ ] Seleção de período nunca permite o mesmo período duas vezes; ordenação mais recente → mais antiga; estado vazio explícito com menos de duas competências.
-- [ ] Todos os indicadores/comparações usam funções de `@finanhouse/domain` — nenhuma fórmula financeira duplicada em JSX.
-- [ ] Nenhum `NaN`/`Infinity`/percentual inventado em nenhum cenário, incluindo período anterior zerado.
-- [ ] `cancelled` nunca compõe totais; `planned`/`pending` compõem projeção; `realized` usa `actualAmount`.
-- [ ] Chave de comparação de despesas novas/descontinuadas documentada (categoria + descrição normalizada + tipo) — nunca ID de movimentação.
-- [ ] Gráfico leve (SVG/CSS) com resumo textual e alternativa acessível, valores consistentes com os cards, responsivo, respeitando `prefers-reduced-motion`.
-- [ ] Nenhum uso de `localStorage`, `IndexedDB`, `mysql2`, `drizzle-orm` ou `.env*`.
-- [ ] Pelo menos 40 novos testes, todos passando, somados aos já existentes.
+- [x] Rota `/comparativo` navegável a partir da `Sidebar`, com `aria-current="page"` na rota ativa.
+- [x] Página consome o mesmo `FinanceDemoProvider` do dashboard/Movimentações — nenhuma leitura direta de fixtures, nenhum estado financeiro paralelo.
+- [x] Seleção de período nunca permite o mesmo período duas vezes; ordenação mais recente → mais antiga; estado vazio explícito com menos de duas competências.
+- [x] Todos os indicadores/comparações usam funções de `@finanhouse/domain` — nenhuma fórmula financeira duplicada em JSX.
+- [x] Nenhum `NaN`/`Infinity`/percentual inventado em nenhum cenário, incluindo período anterior zerado.
+- [x] `cancelled` nunca compõe totais; `planned`/`pending` compõem projeção; `realized` usa `actualAmount`.
+- [x] Chave de comparação de despesas novas/descontinuadas documentada (categoria + descrição normalizada + tipo) — nunca ID de movimentação.
+- [x] Gráfico leve (SVG/CSS) com resumo textual e alternativa acessível, valores consistentes com os cards, responsivo, respeitando `prefers-reduced-motion`.
+- [x] Nenhum uso de `localStorage`, `IndexedDB`, `mysql2`, `drizzle-orm` ou `.env*`.
+- [x] Pelo menos 40 novos testes, todos passando, somados aos já existentes.
 
 ## 10. Validações Obrigatórias
 
-- [ ] `npm ci`
-- [ ] `npm run clean`
-- [ ] `npm run build`
-- [ ] `npm run verify:runtime`
-- [ ] `npm run lint`
-- [ ] `npm run typecheck`
-- [ ] `npm run test`
-- [ ] `ddae-engine validate`
-- [ ] `ddae-engine audit`
-- [ ] `npm audit --omit=dev` / `npm audit`
+- [x] `npm ci`
+- [x] `npm run clean`
+- [x] `npm run build`
+- [x] `npm run verify:runtime`
+- [x] `npm run lint`
+- [x] `npm run typecheck`
+- [x] `npm run test`
+- [x] `ddae-engine validate`
+- [x] `ddae-engine audit`
+- [x] `npm audit --omit=dev` / `npm audit`
 
 ## 11. Segurança
 

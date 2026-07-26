@@ -10,6 +10,8 @@ O domínio parcial iniciado antes desta execução foi preservado: `compare-expe
 
 Status final: bloco concluído conforme escopo funcional, com ressalva P3 de refinamento visual já esperada no backlog de design. Nenhuma P2 nova foi aberta neste bloco; a pendência TLS segue controlada pelos Blocos 03/04.
 
+Encerramento da branch: commit funcional final `0238d50` (`feat(web): implementar comparativo mensal em memória`) publicado em `origin/feat/session-11-bloco-08-comparativo-memory`. Antes da integração, a branch permanecia limpa e sincronizada com o remoto.
+
 ## 2. Objetivo do Bloco
 
 Implementar uma área funcional para comparar duas competências financeiras, utilizando a mesma fonte de estado temporário do dashboard e de Movimentações, sem banco de dados ou persistência permanente.
