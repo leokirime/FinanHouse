@@ -30,13 +30,16 @@ apps/web/src/state/FinanceDemoProvider.tsx             (useReducer + React Conte
         ├──▶ apps/web/src/pages/ComparisonPage.tsx            (Comparativo lê o mesmo estado, sem despachar)
         │        └──▶ view-models/comparison-view-model.ts    (seletores, indicadores e gráfico)
         │
-        └──▶ apps/web/src/pages/PlanningPage.tsx              (Planejamento lê e despacha ações no mesmo estado)
-                 └──▶ view-models/planning-view-model.ts      (resumo, linhas por categoria, gráfico)
+        ├──▶ apps/web/src/pages/PlanningPage.tsx              (Planejamento lê e despacha ações no mesmo estado)
+        │        └──▶ view-models/planning-view-model.ts      (resumo, linhas por categoria, gráfico)
+        │
+        └──▶ apps/web/src/pages/HistoryPage.tsx               (Histórico lê o mesmo estado, sem despachar — somente leitura)
+                 └──▶ view-models/history-view-model.ts       (competências, filtros, resumo, movimentações)
 ```
 
 - **Fixtures**: continuam existindo (`data/dashboard-fixtures.ts`), mas agora só são lidas em um lugar — `createInitialFinanceDemoState()` — para montar o estado inicial. Nenhum componente de UI importa fixtures diretamente.
-- **Estado vivo**: um único `useReducer` (`financeDemoReducer`) dentro de `FinanceDemoProvider`, exposto via Context. Dashboard, Movimentações e Planejamento leem o mesmo `state` e despacham ações no mesmo `dispatch` — nunca há dois estados financeiros paralelos.
-- **View-models**: `dashboard-view-model.ts`, `financial-entries-view-model.ts`, `comparison-view-model.ts` e `planning-view-model.ts` são funções puras que recebem dados por argumento (não leem Context nem fixtures) — só formatam/derivam o que os componentes precisam.
+- **Estado vivo**: um único `useReducer` (`financeDemoReducer`) dentro de `FinanceDemoProvider`, exposto via Context. Dashboard, Movimentações, Planejamento e Histórico leem o mesmo `state`; Dashboard/Movimentações/Planejamento também despacham ações no mesmo `dispatch` — nunca há dois estados financeiros paralelos. Histórico é a única área que **nunca** despacha nenhuma ação (somente leitura por design).
+- **View-models**: `dashboard-view-model.ts`, `financial-entries-view-model.ts`, `comparison-view-model.ts`, `planning-view-model.ts` e `history-view-model.ts` são funções puras que recebem dados por argumento (não leem Context nem fixtures) — só formatam/derivam o que os componentes precisam.
 
 ## 3. Ciclo de Vida em Memória
 
@@ -111,17 +114,33 @@ Regras registradas:
 
 O refinamento visual do Planejamento segue como P3 no backlog de design, junto da evolução visual já registrada para Dashboard/Movimentações/Comparativo.
 
-## 9. Execução Local do Frontend
+## 9. Histórico Mensal em Memória (Somente Leitura)
+
+O Bloco 10 adicionou a rota `/historico`, também alimentada por `FinanceDemoProvider`, mas **estritamente consultiva**: a página nunca despacha nenhuma ação — apenas lê `state.periods`/`state.entries`/`state.categories` e mantém localmente a competência selecionada e os filtros ativos (nunca escritos de volta no estado compartilhado). Todos os cálculos ficam em `view-models/history-view-model.ts` + `@finanhouse/domain` (`calculateMonthlySummary`, reaproveitado sem duplicar fórmula).
+
+Regras registradas:
+
+- Ordenação: competências da mais recente para a mais antiga (por `referenceMonth`); movimentações da data mais recente para a mais antiga (`realizationDate ?? dueDate`).
+- Filtros (aplicados só na leitura, nunca alteram `state`): ano (`all` ou um ano específico, derivado de `referenceMonth`), status da competência (`all`/`open`/`review`/`closed`), status da movimentação (`all`/`planned`/`pending`/`realized`/`cancelled`).
+- Resumo por competência: `calculateMonthlySummary` fornece receita/despesa/saldo realizados e fechamento projetado; `cancelled` nunca compõe nenhum total (já garantido pela função de domínio).
+- Contagem por status: `planned`/`pending`/`realized`/`cancelled`, calculada sobre as movimentações da competência selecionada (antes do filtro de status de movimentação, para mostrar o panorama completo).
+- Nenhuma ação de mutação: sem botões de editar/realizar/cancelar/excluir/reativar em nenhum componente de `components/history/`.
+- Sincronização: criar, editar, realizar ou cancelar uma movimentação em Movimentações atualiza o Histórico na mesma sessão (mesmo `state.entries`); alterações em Planejamento (`state.categoryBudgets`) **não** afetam os valores históricos de movimentações, pois `history-view-model.ts` nunca lê `categoryBudgets`. Remontar o provider retorna às fixtures.
+- Persistência: não há `localStorage`, `IndexedDB`, cookies, API HTTP, banco, migrations ou dados reais.
+
+O refinamento visual do Histórico segue como P3 no backlog de design, junto da evolução visual já registrada para Dashboard/Movimentações/Comparativo/Planejamento.
+
+## 10. Execução Local do Frontend
 
 `npm run dev:web` (raiz do monorepo) executa `predev:web` (`npm run build:domain`) antes de iniciar o Vite do workspace `web` — garante que `packages/domain/dist/index.js` existe sem exigir compilação manual, sem rodar `clean` (que apagaria o `dist` recém-gerado) e sem iniciar a API ou tocar no banco. Ver `apps/web/README.md`.
 
-## 10. Substituição Futura Pela API Real
+## 11. Substituição Futura Pela API Real
 
-Quando a persistência real for liberada (pós-TLS, Bloco 04), a substituição esperada é trocar `FinanceDemoProvider` por um provider que busca/envia dados via HTTP para `apps/api`, mantendo a mesma interface (`useFinanceDemo()` retornando `{ state, dispatch }` ou equivalente) — `dashboard-view-model.ts`, `financial-entries-view-model.ts`, `comparison-view-model.ts`, `planning-view-model.ts` e todos os componentes de UI não precisam mudar, pois já recebem dados por argumento/Context, nunca leem fixtures diretamente.
+Quando a persistência real for liberada (pós-TLS, Bloco 04), a substituição esperada é trocar `FinanceDemoProvider` por um provider que busca/envia dados via HTTP para `apps/api`, mantendo a mesma interface (`useFinanceDemo()` retornando `{ state, dispatch }` ou equivalente) — `dashboard-view-model.ts`, `financial-entries-view-model.ts`, `comparison-view-model.ts`, `planning-view-model.ts`, `history-view-model.ts` e todos os componentes de UI não precisam mudar, pois já recebem dados por argumento/Context, nunca leem fixtures diretamente.
 
-## 11. O Que Ainda Não Existe
+## 12. O Que Ainda Não Existe
 
 - Persistência real (banco, API HTTP) — ver `Docs/02_architecture/regras_dominio_financeiro.md` e `Docs/02_architecture/arquitetura_visual_dashboard.md`.
 - Autenticação — `DEMO_CREATED_BY_USER_ID` é uma constante fictícia, não um usuário autenticado.
-- Páginas "Histórico", "Configurações" — apenas itens de navegação não funcionais.
-- Refinamento visual do dashboard, Movimentações, Comparativo e Planejamento — ver `Docs/07_design_system/backlog_refinamento_visual.md`.
+- Página "Configurações" — apenas item de navegação não funcional.
+- Refinamento visual do dashboard, Movimentações, Comparativo, Planejamento e Histórico — ver `Docs/07_design_system/backlog_refinamento_visual.md`.

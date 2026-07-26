@@ -30,12 +30,12 @@ src/
 ├── hooks/                 # useFinanceDemo, useDashboardViewModel
 ├── view-models/           # funções puras que combinam dados + @finanhouse/domain
 ├── utils/                 # formatação (dinheiro/data em pt-BR)
-├── components/            # layout/, dashboard/, brand/, financial-entries/, comparison/, planning/
-├── pages/                 # DashboardPage, FinancialEntriesPage, ComparisonPage, PlanningPage
-└── App.tsx                # rotas (react-router): "/", "/movimentacoes", "/comparativo" e "/planejamento"
+├── components/            # layout/, dashboard/, brand/, financial-entries/, comparison/, planning/, history/
+├── pages/                 # DashboardPage, FinancialEntriesPage, ComparisonPage, PlanningPage, HistoryPage
+└── App.tsx                # rotas (react-router): "/", "/movimentacoes", "/comparativo", "/planejamento" e "/historico"
 ```
 
-Status: dashboard de visão geral (Bloco 06, aprovado funcionalmente com refinamento visual pendente — ver `Docs/07_design_system/backlog_refinamento_visual.md`) + Movimentações funcional com estado em memória (Bloco 07 — `bloco_07_movimentacoes_funcionais_com_estado_em_memoria`) + Comparativo mensal em memória (Bloco 08 — `bloco_08_comparativo_mensal_com_estado_em_memoria`) + Planejamento mensal em memória (Bloco 09 — `bloco_09_planejamento_mensal_com_estado_em_memoria`, branch própria, não integrada à `main`). Consome `@finanhouse/domain` (workspace, compilado) para todas as regras e cálculos financeiros exibidos — sem conexão com o MySQL, API real ou persistência real. Ao recarregar a página, os dados voltam às fixtures iniciais.
+Status: dashboard de visão geral (Bloco 06, aprovado funcionalmente com refinamento visual pendente — ver `Docs/07_design_system/backlog_refinamento_visual.md`) + Movimentações funcional com estado em memória (Bloco 07 — `bloco_07_movimentacoes_funcionais_com_estado_em_memoria`) + Comparativo mensal em memória (Bloco 08 — `bloco_08_comparativo_mensal_com_estado_em_memoria`) + Planejamento mensal em memória (Bloco 09 — `bloco_09_planejamento_mensal_com_estado_em_memoria`, integrado à `main`) + Histórico mensal somente leitura em memória (Bloco 10 — `bloco_10_historico_mensal_somente_leitura_com_estado_em_memoria`, branch própria, não integrada à `main`). Consome `@finanhouse/domain` (workspace, compilado) para todas as regras e cálculos financeiros exibidos — sem conexão com o MySQL, API real ou persistência real. Ao recarregar a página, os dados voltam às fixtures iniciais.
 
 ## Rotas funcionais
 
@@ -43,6 +43,7 @@ Status: dashboard de visão geral (Bloco 06, aprovado funcionalmente com refinam
 - `/movimentacoes` — criação, edição e transições de movimentações em memória.
 - `/comparativo` — seleção de duas competências, indicadores comparativos, categorias, despesas novas/encerradas, previsto versus realizado e gráfico SVG leve. A página usa `FinanceDemoProvider` via `useFinanceDemo()` e `view-models/comparison-view-model.ts`; não lê fixtures, não persiste dados e não acessa API/banco.
 - `/planejamento` — limites de orçamento por categoria de despesa na competência selecionada: resumo, lista por categoria (limite, realizado, pendente, planejado, projetado, saldo restante, excedido, status), despesas planejadas/pendentes e gráfico SVG leve. A página usa `FinanceDemoProvider` via `useFinanceDemo()` e `view-models/planning-view-model.ts`; não lê fixtures, não persiste dados e não acessa API/banco. Definir um **novo** limite só é permitido na competência atual; editar/remover funciona em qualquer competência não fechada.
+- `/historico` — consulta somente leitura de competências e movimentações anteriores: lista de competências (filtro por ano/status), resumo financeiro e contagem por status da competência selecionada, movimentações filtráveis por status. A página usa `FinanceDemoProvider` via `useFinanceDemo()` e `view-models/history-view-model.ts`; **nunca despacha nenhuma ação** — não lê fixtures, não persiste dados, não acessa API/banco, e não oferece nenhum botão de criar/editar/realizar/cancelar/excluir.
 
 Ver `Docs/02_architecture/arquitetura_visual_dashboard.md` (dashboard), `Docs/02_architecture/estado_temporario_frontend.md` (estado compartilhado/Movimentações) e `Docs/07_design_system/` (tokens/componentes/acessibilidade/responsividade).
 

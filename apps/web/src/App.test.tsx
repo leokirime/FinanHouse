@@ -82,6 +82,16 @@ describe('App', () => {
     expect(screen.getAllByText('Limites por categoria').length).toBeGreaterThan(0)
   })
 
+  it('navega para /historico ao clicar em "Histórico", atualizando aria-current e o título do cabeçalho', () => {
+    renderWithProviders(<App />)
+    fireEvent.click(screen.getByRole('link', { name: 'Histórico' }))
+
+    expect(screen.getByRole('link', { name: 'Histórico' }).getAttribute('aria-current')).toBe('page')
+    expect(screen.getByRole('link', { name: 'Visão geral' }).hasAttribute('aria-current')).toBe(false)
+    expect(screen.getByRole('heading', { name: 'Histórico', level: 1 })).toBeTruthy()
+    expect(screen.getAllByText('Movimentações da competência').length).toBeGreaterThan(0)
+  })
+
   it('rota desconhecida redireciona com segurança para a Visão geral', () => {
     renderWithProviders(<App />, { initialEntries: ['/rota-que-nao-existe'] })
     expect(screen.getByRole('link', { name: 'Visão geral' }).getAttribute('aria-current')).toBe('page')

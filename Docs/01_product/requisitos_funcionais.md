@@ -15,8 +15,9 @@ Numere os requisitos para que possam ser referenciados por blocos e prompts (ex.
 | RF-03 | Calcular indicadores financeiros por competência (previsto, realizado, pendente, saldo) | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-04 | Comparar duas competências mensais (variações de receita/despesa/saldo, categorias) | Should | Concluído (regras de domínio no Bloco 05; interface em memória no Bloco 08) |
 | RF-05 | Persistir movimentações e competências em banco real (MySQL) | Must | Pendente (bloqueado por TLS — Bloco 04) |
-| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Em andamento — dashboard de visão geral concluído (Bloco 06, com refinamento visual pendente); Movimentações funcional com estado em memória concluído (Bloco 07); Comparativo mensal em memória concluído (Bloco 08); Planejamento mensal (limites por categoria) concluído em memória (Bloco 09); persistência real segue bloqueada (RF-05) |
-| RF-07 | Planejar limites de orçamento por categoria de despesa e acompanhar consumo (realizado, pendente, planejado, projetado) por competência | Should | Concluído em memória (Bloco 09, branch própria, não integrada à `main`) |
+| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Em andamento — dashboard de visão geral concluído (Bloco 06, com refinamento visual pendente); Movimentações funcional com estado em memória concluído (Bloco 07); Comparativo mensal em memória concluído (Bloco 08); Planejamento mensal (limites por categoria) concluído em memória (Bloco 09); Histórico mensal somente leitura concluído em memória (Bloco 10, branch própria, não integrada à `main`); persistência real segue bloqueada (RF-05) |
+| RF-07 | Planejar limites de orçamento por categoria de despesa e acompanhar consumo (realizado, pendente, planejado, projetado) por competência | Should | Concluído em memória (Bloco 09, integrado à `main` em `e107716`) |
+| RF-08 | Consultar histórico de competências e movimentações anteriores, somente leitura, com filtros por ano/status | Should | Concluído em memória (Bloco 10, branch própria, não integrada à `main`) |
 
 Detalhamento técnico completo das regras (transições de status, cálculos, estratégia monetária): `Docs/02_architecture/regras_dominio_financeiro.md`.
 
@@ -48,6 +49,14 @@ Para cada requisito, descreva como verificar que ele foi atendido (comportamento
 - [x] Cada categoria recebe um status textual explícito (saudável/em atenção/excedido/sem planejamento) — nunca comunicado só por cor.
 - [x] `cancelled` nunca compõe nenhum total; `planned`/`pending` compõem a projeção; `realized` usa o valor efetivamente realizado.
 - [x] O planejamento usa a mesma fonte em memória do dashboard, de Movimentações e do Comparativo; recarregar/remontar o provider retorna às fixtures sintéticas.
+
+### RF-08 — Histórico mensal (somente leitura)
+- [x] Um usuário consegue acessar `/historico` pela sidebar sem recarregar a página.
+- [x] A lista de competências aparece da mais recente para a mais antiga, com filtro por ano e por status da competência (`open`/`review`/`closed`).
+- [x] Ao selecionar uma competência, a interface mostra receitas/despesas/saldo realizados, fechamento projetado e a contagem de movimentações por status (`planned`/`pending`/`realized`/`cancelled`).
+- [x] As movimentações da competência selecionada podem ser filtradas por status, ordenadas da data mais recente para a mais antiga.
+- [x] Nenhuma ação de criar, editar, realizar, cancelar ou excluir é oferecida no Histórico — estritamente consultivo.
+- [x] O histórico usa a mesma fonte em memória do dashboard, de Movimentações, do Comparativo e do Planejamento; alterações em Movimentações refletem no Histórico na mesma sessão; alterações em Planejamento não afetam os valores históricos de movimentações.
 
 ## 3. Perguntas Orientadoras
 
