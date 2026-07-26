@@ -8,6 +8,16 @@
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
 
+### DT-06 — Histórico mensal somente leitura em memória
+
+- **Data:** 2026-07-26
+- **Contexto:** O Bloco 10 precisava decidir como expor o histórico de competências e movimentações anteriores sem introduzir um segundo estado financeiro nem abrir uma via alternativa de mutação fora das áreas de gestão já existentes (Movimentações, Planejamento).
+- **Decisão:** Implementar o Histórico como derivação pura em `apps/web/src/view-models/history-view-model.ts`, consumindo a mesma fonte compartilhada do `FinanceDemoProvider` via `useFinanceDemo()`. A rota `/historico` é estritamente consultiva: nenhum componente de `components/history/` despacha ações no reducer, e não há nenhum caminho de criação, edição, exclusão, fechamento ou reabertura de competência a partir dela. Os resumos financeiros reaproveitam `calculateMonthlySummary` (`@finanhouse/domain`), sem reimplementar nenhuma fórmula. Os filtros (ano, status da competência, status da movimentação) e a competência selecionada vivem apenas como estado local de apresentação da página (`useState`), nunca escritos em `FinanceDemoState`. Nenhuma persistência é implementada nesta etapa.
+- **Motivos:** impedir duplicação de estado financeiro (uma segunda fonte de movimentações/competências divergiria do Dashboard/Movimentações/Comparativo/Planejamento); evitar mutações acidentais em uma área pensada exclusivamente para consulta; manter consistência de arquitetura com as quatro áreas funcionais já entregues; preparar a substituição futura do estado demonstrativo por uma API real sem exigir mudança de interface (`useFinanceDemo()` mantém o mesmo contrato).
+- **Alternativas consideradas:** permitir ações rápidas de correção (ex.: reativar uma movimentação cancelada) diretamente do Histórico — rejeitada por misturar uma área de consulta com uma área de gestão, contrariando o objetivo do bloco ("estritamente consultivo") e abrindo uma segunda via de mutação para as mesmas regras já cobertas por Movimentações.
+- **Consequências:** alterações feitas em qualquer área de gestão (Movimentações, Planejamento) são válidas somente durante a sessão do navegador e refletem no Histórico em tempo real, por lerem o mesmo `state`; recarregar a página restaura as fixtures, inclusive no Histórico; dados históricos definitivos (competências fechadas de verdade, auditáveis) dependem da persistência real (API + MySQL), ainda bloqueada pelo TLS (Bloco 04); o refinamento visual do Histórico permanece como P3 no backlog de design, junto das demais áreas.
+- **Status:** Vigente
+
 ### DT-05 — Planejamento mensal: limite de orçamento permite alteração em competência "review", diferente de movimentações comuns
 
 - **Data:** 2026-07-26

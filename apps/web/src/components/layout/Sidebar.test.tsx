@@ -52,9 +52,23 @@ describe('Sidebar', () => {
     expect(screen.getByRole('link', { name: 'Visão geral' }).hasAttribute('aria-current')).toBe(false)
   })
 
+  it('marca "Histórico" como link real, habilitado, sem aria-current fora da sua rota', () => {
+    renderWithProviders(<Sidebar />, { initialEntries: ['/'] })
+    const history = screen.getByRole('link', { name: 'Histórico' })
+    expect(history.getAttribute('href')).toBe('/historico')
+    expect(history.hasAttribute('aria-current')).toBe(false)
+  })
+
+  it('marca "Histórico" com aria-current="page" quando a rota ativa é /historico', () => {
+    renderWithProviders(<Sidebar />, { initialEntries: ['/historico'] })
+    const history = screen.getByRole('link', { name: 'Histórico' })
+    expect(history.getAttribute('aria-current')).toBe('page')
+    expect(screen.getByRole('link', { name: 'Visão geral' }).hasAttribute('aria-current')).toBe(false)
+  })
+
   it('marca as demais áreas como indisponíveis (disabled nativo), sem aria-current', () => {
     renderWithProviders(<Sidebar />)
-    for (const label of ['Histórico', 'Configurações']) {
+    for (const label of ['Configurações']) {
       const item = screen.getByRole('button', { name: new RegExp(label) }) as HTMLButtonElement
       expect(item.disabled).toBe(true)
       expect(item.hasAttribute('aria-current')).toBe(false)

@@ -1,0 +1,219 @@
+.fh-history-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr)) auto;
+  align-items: end;
+  gap: var(--fh-space-4);
+  padding: var(--fh-space-5);
+}
+
+.fh-history-filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-2);
+  color: var(--fh-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fh-history-filters__field select {
+  min-height: 44px;
+  border: 1px solid var(--fh-border-strong);
+  border-radius: var(--fh-radius-md);
+  background: var(--fh-bg-elevated);
+  color: var(--fh-text);
+  padding: 0 var(--fh-space-3);
+  font: inherit;
+}
+
+.fh-history-filters__clear {
+  min-height: 44px;
+  padding: 0 var(--fh-space-4);
+  border-radius: var(--fh-radius-md);
+  border: 1px solid var(--fh-border-strong);
+  background: transparent;
+  color: var(--fh-text);
+  cursor: pointer;
+}
+
+.fh-history-filters__clear:disabled {
+  color: var(--fh-text-muted);
+  cursor: not-allowed;
+}
+
+.fh-history-layout {
+  display: grid;
+  grid-template-columns: minmax(220px, 280px) 1fr;
+  gap: var(--fh-space-4);
+  align-items: start;
+}
+
+.fh-history-period-list {
+  padding: var(--fh-space-4);
+}
+
+.fh-history-period-list ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-2);
+}
+
+.fh-history-period-list__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--fh-space-3);
+  padding: var(--fh-space-3);
+  border-radius: var(--fh-radius-md);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--fh-text-secondary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.fh-history-period-list__item:hover {
+  background: var(--fh-surface-elevated);
+}
+
+.fh-history-period-list__item[aria-current='true'] {
+  border-color: var(--fh-purple-border);
+  background: var(--fh-purple-soft);
+  color: var(--fh-text);
+  font-weight: 700;
+}
+
+.fh-history-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-4);
+}
+
+.fh-history-summary {
+  grid-template-columns: repeat(4, minmax(160px, 1fr));
+}
+
+.fh-history-summary__card {
+  padding: var(--fh-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-2);
+}
+
+.fh-history-summary__card h3 {
+  font-size: 13px;
+  color: var(--fh-text-secondary);
+}
+
+.fh-history-summary__value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.fh-history-status-breakdown {
+  padding: var(--fh-space-5);
+}
+
+.fh-history-status-breakdown dl {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--fh-space-3);
+  margin-top: var(--fh-space-3);
+}
+
+.fh-history-status-breakdown dt {
+  color: var(--fh-text-secondary);
+  font-size: 12px;
+}
+
+.fh-history-status-breakdown dd {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.fh-history-entries {
+  padding: var(--fh-space-5);
+}
+
+.fh-history-table-wrap {
+  overflow-x: auto;
+}
+
+.fh-history-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.fh-history-table th,
+.fh-history-table td {
+  padding: var(--fh-space-3);
+  border-bottom: 1px solid var(--fh-border);
+  text-align: left;
+}
+
+.fh-history-table thead th {
+  color: var(--fh-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.fh-history-empty {
+  padding: var(--fh-space-8) var(--fh-space-5);
+  text-align: center;
+}
+
+.fh-history-empty h2 {
+  font-size: 20px;
+  margin-bottom: var(--fh-space-2);
+}
+
+@media (max-width: 900px) {
+  .fh-history-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .fh-history-summary,
+  .fh-history-status-breakdown dl {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .fh-history-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .fh-history-table thead {
+    display: none;
+  }
+
+  .fh-history-table,
+  .fh-history-table tbody,
+  .fh-history-table tr,
+  .fh-history-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .fh-history-table tr {
+    padding: var(--fh-space-3) 0;
+    border-bottom: 1px solid var(--fh-border);
+  }
+
+  .fh-history-table td {
+    border-bottom: none;
+    padding: 2px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--fh-space-3);
+  }
+
+  .fh-history-table td::before {
+    content: attr(data-label);
+    color: var(--fh-text-muted);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+}

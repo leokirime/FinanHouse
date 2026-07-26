@@ -8,6 +8,7 @@ const AREA_TITLE_BY_PATH: Record<string, string> = {
   '/movimentacoes': 'Movimentações',
   '/comparativo': 'Comparativo',
   '/planejamento': 'Planejamento',
+  '/historico': 'Histórico',
 }
 
 /**
