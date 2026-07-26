@@ -57,6 +57,8 @@ O MySQL do Finanhouse **já existe** na Clever Cloud (não é um banco a ser cri
 
 **Comparativo mensal com estado em memória implementado e integrado em 2026-07-26 (`bloco_08_comparativo_mensal_com_estado_em_memoria`):** rota `/comparativo` adicionada sobre a mesma fonte de estado (`FinanceDemoProvider`), com seletores base/comparado, indicadores comparativos, categorias de despesa, despesas novas/encerradas pela chave tipo + categoria + descrição normalizada, previsto versus realizado e gráfico SVG/CSS sem biblioteca externa. 298 testes aprovados, `react-router@8.3.0`, `react-router-dom` ausente e zero vulnerabilidades de produção. Não acessa banco, API, `.env.local`, `localStorage` ou `IndexedDB`. Mesclado à `main` em 2026-07-26 (commit `1f68998`, a partir do commit funcional `0238d50` na branch `feat/session-11-bloco-08-comparativo-memory`, preservada no remoto).
 
+**Planejamento mensal com estado em memória implementado em 2026-07-26 (`bloco_09_planejamento_mensal_com_estado_em_memoria`, branch `feat/session-11-bloco-09-planejamento-memory`, ainda não integrada à `main`):** rota `/planejamento` sobre a mesma fonte de estado (`FinanceDemoProvider`, agora com `categoryBudgets`), com limites de orçamento por categoria de despesa (`CategoryBudget`, `packages/domain/src/planning/`), status saudável/em atenção/excedido/sem planejamento, resumo agregado, despesas planejadas/pendentes em contexto e gráfico SVG/CSS sem biblioteca externa. `npm run dev:web` (raiz) passou a ser o comando oficial de execução local — prepara `@finanhouse/domain` antes do Vite, sem `clean` e sem iniciar a API. Não acessa banco, API real, `.env.local`, `localStorage` ou `IndexedDB`; nenhuma migration aplicada. Branch publicada no remoto — merge à `main` não realizado nesta etapa, por decisão explícita do proprietário.
+
 ## 3. Escopo
 
 - Inicialização oficial do DDAE Engine na raiz do projeto (`ddae-engine init`)
@@ -116,6 +118,7 @@ Blocos oficiais DDAE desta sessão (`05_blocks/`):
 | `bloco_06_dashboard_visual_com_dados_simulados` | Dashboard visual com dados simulados | Concluído com ressalva visual (aprovado para continuidade) — mesclado à `main` em `26ec450` |
 | `bloco_07_movimentacoes_funcionais_com_estado_em_memoria` | Movimentações funcionais com estado em memória | Concluído — integrado à `main` em `27b2491` com `react-router@8.3.0` |
 | `bloco_08_comparativo_mensal_com_estado_em_memoria` | Comparativo mensal com estado em memória | Concluído — integrado à `main` em `1f68998` (branch `feat/session-11-bloco-08-comparativo-memory` preservada) |
+| `bloco_09_planejamento_mensal_com_estado_em_memoria` | Planejamento mensal com estado em memória | Concluído na branch `feat/session-11-bloco-09-planejamento-memory` — não integrado à `main` (decisão explícita do proprietário) |
 
 ## 8. Riscos
 

@@ -8,6 +8,16 @@
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
 
+### DT-05 — Planejamento mensal: limite de orçamento permite alteração em competência "review", diferente de movimentações comuns
+
+- **Data:** 2026-07-26
+- **Contexto:** O Bloco 09 precisava decidir se definir/editar/remover um limite de orçamento por categoria deveria seguir a mesma regra de `assertPeriodAllowsEntryChanges` usada por movimentações comuns — que bloqueia a competência `review` por padrão, exigindo `allowReviewAdjustment: true` explícito (hoje reservado a estorno/correção/reativação).
+- **Decisão:** `packages/domain/src/planning/category-budget-rules.ts` expõe `assertPeriodAllowsBudgetChanges`, que chama `assertPeriodAllowsEntryChanges(period, { allowReviewAdjustment: true })` sempre — ou seja, limites de orçamento podem ser criados/editados/removidos em competências `open` **ou** `review`; apenas `closed` bloqueia.
+- **Motivos:** planejar/ajustar limites é uma atividade de acompanhamento (não altera o histórico financeiro realizado), naturalmente mais frequente durante a revisão de fechamento do mês (quando o usuário está justamente comparando limite vs. realizado); tratar isso como "ajuste de revisão" evita impedir a única situação em que o planejamento é mais útil.
+- **Alternativas consideradas:** replicar a regra padrão de movimentações comuns (bloquear `review` por padrão) — rejeitada por criar fricção desnecessária exatamente no momento em que o planejamento é mais consultado/ajustado.
+- **Consequências:** criação de um **novo** limite continua restrita à competência atual do estado (mesma convenção de criação de movimentações — `Docs/02_architecture/estado_temporario_frontend.md`, seção 5), mas editar/remover um limite existente funciona em qualquer competência não fechada, inclusive ao navegar para uma competência diferente da atual no seletor da página.
+- **Status:** Vigente
+
 ### DT-04 — Comparativo mensal derivado em view-model puro sobre estado em memória
 
 - **Data:** 2026-07-26

@@ -15,7 +15,8 @@ Numere os requisitos para que possam ser referenciados por blocos e prompts (ex.
 | RF-03 | Calcular indicadores financeiros por competência (previsto, realizado, pendente, saldo) | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-04 | Comparar duas competências mensais (variações de receita/despesa/saldo, categorias) | Should | Concluído (regras de domínio no Bloco 05; interface em memória no Bloco 08) |
 | RF-05 | Persistir movimentações e competências em banco real (MySQL) | Must | Pendente (bloqueado por TLS — Bloco 04) |
-| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Em andamento — dashboard de visão geral concluído (Bloco 06, com refinamento visual pendente); Movimentações funcional com estado em memória concluído (Bloco 07); Comparativo mensal em memória concluído (Bloco 08); persistência real segue bloqueada (RF-05) |
+| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Em andamento — dashboard de visão geral concluído (Bloco 06, com refinamento visual pendente); Movimentações funcional com estado em memória concluído (Bloco 07); Comparativo mensal em memória concluído (Bloco 08); Planejamento mensal (limites por categoria) concluído em memória (Bloco 09); persistência real segue bloqueada (RF-05) |
+| RF-07 | Planejar limites de orçamento por categoria de despesa e acompanhar consumo (realizado, pendente, planejado, projetado) por competência | Should | Concluído em memória (Bloco 09, branch própria, não integrada à `main`) |
 
 Detalhamento técnico completo das regras (transições de status, cálculos, estratégia monetária): `Docs/02_architecture/regras_dominio_financeiro.md`.
 
@@ -39,6 +40,14 @@ Para cada requisito, descreva como verificar que ele foi atendido (comportamento
 - [x] A interface apresenta receitas/despesas/saldo realizados, fechamento projetado, receitas/despesas previstas, variação absoluta e percentual, tratando base zero como "Sem base comparável".
 - [x] A interface compara despesas por categoria, destaca maiores aumentos/reduções e lista despesas novas/encerradas pela chave tipo + categoria + descrição normalizada.
 - [x] O comparativo usa a mesma fonte em memória do dashboard e de Movimentações; recarregar/remontar o provider retorna às fixtures sintéticas.
+
+### RF-07 — Planejamento mensal (limites por categoria)
+- [x] Um usuário consegue acessar `/planejamento` pela sidebar sem recarregar a página, escolhendo a competência a visualizar.
+- [x] Um usuário consegue definir, editar e remover (temporariamente, só na sessão) um limite mensal para uma categoria de despesa ativa.
+- [x] A interface mostra, por categoria: limite (quando existir), realizado, pendente, planejado, projetado, saldo restante, valor excedido e percentual consumido — nunca inventando um limite zero para categoria sem planejamento.
+- [x] Cada categoria recebe um status textual explícito (saudável/em atenção/excedido/sem planejamento) — nunca comunicado só por cor.
+- [x] `cancelled` nunca compõe nenhum total; `planned`/`pending` compõem a projeção; `realized` usa o valor efetivamente realizado.
+- [x] O planejamento usa a mesma fonte em memória do dashboard, de Movimentações e do Comparativo; recarregar/remontar o provider retorna às fixtures sintéticas.
 
 ## 3. Perguntas Orientadoras
 

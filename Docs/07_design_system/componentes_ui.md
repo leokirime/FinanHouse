@@ -8,7 +8,7 @@
 
 Inventariar os componentes de UI reutilizáveis disponíveis, para evitar duplicação e inconsistência visual.
 
-## 2. Inventário de Componentes (Bloco 06 + Bloco 07)
+## 2. Inventário de Componentes (Bloco 06 + Bloco 07 + Bloco 08 + Bloco 09)
 
 | Componente | Onde vive no código | Variantes | Estados suportados |
 |---|---|---|---|
@@ -16,8 +16,8 @@ Inventariar os componentes de UI reutilizáveis disponíveis, para evitar duplic
 | `HeroBrand` | `apps/web/src/components/dashboard/HeroBrand.tsx` | — | `open` / `review` / `closed` (via `data-tone`); CTA "Revisar mês" com `disabled` nativo |
 | `AppShell` | `apps/web/src/components/layout/AppShell.tsx` | — | Default |
 | `RootLayout` | `apps/web/src/components/layout/RootLayout.tsx` | — | Novo (Bloco 07) — monta `AppShell`/`DashboardHeader` uma vez para todas as rotas via `<Outlet />` |
-| `Sidebar` | `apps/web/src/components/layout/Sidebar.tsx` | — | Item ativo = link real com `aria-current="page"` (Bloco 07: "Visão geral" e "Movimentações"; Bloco 08: "Comparativo"); indisponível = `<button disabled>` |
-| `DashboardHeader` | `apps/web/src/components/layout/DashboardHeader.tsx` | — | CTA "Nova movimentação" com `disabled` nativo; título da área muda por rota, incluindo "Comparativo" |
+| `Sidebar` | `apps/web/src/components/layout/Sidebar.tsx` | — | Item ativo = link real com `aria-current="page"` (Bloco 07: "Visão geral" e "Movimentações"; Bloco 08: "Comparativo"; Bloco 09: "Planejamento"); indisponível = `<button disabled>` (restam "Histórico"/"Configurações") |
+| `DashboardHeader` | `apps/web/src/components/layout/DashboardHeader.tsx` | — | CTA "Nova movimentação" com `disabled` nativo; título da área muda por rota, incluindo "Comparativo" e "Planejamento" |
 | `SummaryCard` | `apps/web/src/components/dashboard/SummaryCard.tsx` | 4 indicadores (`realizedIncome`/`realizedExpense`/`realizedBalance`/`projectedBalance`) | Tom `income` / `expense` |
 | `FinancialEvolutionChart` | `apps/web/src/components/dashboard/FinancialEvolutionChart.tsx` | — | Default (SVG puro, sem biblioteca) |
 | `CategoryBreakdown` | `apps/web/src/components/dashboard/CategoryBreakdown.tsx` | — | Default |
@@ -39,6 +39,13 @@ Inventariar os componentes de UI reutilizáveis disponíveis, para evitar duplic
 | `PlannedVsRealized` | `apps/web/src/components/comparison/PlannedVsRealized.tsx` | Um painel por período | Exibe receitas/despesas previstas, realizadas e diferença |
 | `ComparisonChart` | `apps/web/src/components/comparison/ComparisonChart.tsx` | — | SVG leve, legenda base/comparado, `<title>`/`<desc>` e resumo textual acessível |
 | `ComparisonEmptyState` | `apps/web/src/components/comparison/ComparisonEmptyState.tsx` | — | Vazio para menos de duas competências ou seleção inválida |
+| `PlanningSummary` | `apps/web/src/components/planning/PlanningSummary.tsx` | — | Cards de limite total, projetado, saldo restante, total excedido e contagem por status |
+| `CategoryBudgetList` | `apps/web/src/components/planning/CategoryBudgetList.tsx` | — | Tabela responsiva (empilha em `max-width: 900px`) com ações "Editar limite"/"Remover limite" ou "Definir limite" por linha |
+| `BudgetProgress` | `apps/web/src/components/planning/BudgetProgress.tsx` | `healthy`/`attention`/`exceeded`/`unplanned` (via `data-tone`) | Puramente visual — sempre acompanhada do `statusLabel` em texto (nunca só cor) |
+| `CategoryBudgetForm` | `apps/web/src/components/planning/CategoryBudgetForm.tsx` | `mode="create"` / `mode="edit"` | Erro de campo (valor inválido), erro geral (`state.actionError`), sucesso (fecha + toast) |
+| `PlanningEntries` | `apps/web/src/components/planning/PlanningEntries.tsx` | Planejadas / pendentes | Listas com estado vazio próprio |
+| `PlanningChart` | `apps/web/src/components/planning/PlanningChart.tsx` | — | SVG leve, legenda por status, `<title>`/`<desc>` e resumo textual acessível |
+| `PlanningEmptyState` | `apps/web/src/components/planning/PlanningEmptyState.tsx` | — | Vazio para nenhuma competência disponível |
 
 **`PeriodOverview` foi substituído por `HeroBrand`** (correção pós-Bloco 06): a responsabilidade de "hero da competência" passou a incluir a logo oficial, então o componente foi renomeado/absorvido em vez de manter os dois lado a lado com conteúdo duplicado (status/competência apareceriam duas vezes). `PeriodOverview.tsx`/`.css` foram removidos.
 
@@ -53,14 +60,14 @@ Todo componente interativo deve ter comportamento visual definido para:
 - [ ] Active / Pressed — não aplicável neste bloco (nenhum componente tem ação real que produza estado "pressionado" persistente; botões são "apenas visuais")
 - [x] Disabled — atributo HTML `disabled` nativo (não apenas `aria-disabled`) nos itens de navegação futuros da `Sidebar` e nos dois CTAs visuais ("Nova movimentação", "Revisar mês"); estilo visual próprio (`:disabled` no CSS) para cada um.
 - [ ] Loading — não aplicável (dados são síncronos, em memória — nenhuma chamada assíncrona real)
-- [x] Erro / Validação — `FinancialEntryForm`/`RealizeEntryDialog` (Bloco 07): erro de campo (`role="alert"`, `aria-describedby`) e erro geral vindo do domínio (`state.actionError`)
-- [x] Vazio (`UpcomingEntries` quando não há pendências; `FinancialEntryEmptyState` quando a busca/filtro não encontra nada; `ComparisonEmptyState` quando há menos de duas competências)
+- [x] Erro / Validação — `FinancialEntryForm`/`RealizeEntryDialog` (Bloco 07), `CategoryBudgetForm` (Bloco 09): erro de campo (`role="alert"`, `aria-describedby`) e erro geral vindo do domínio (`state.actionError`)
+- [x] Vazio (`UpcomingEntries` quando não há pendências; `FinancialEntryEmptyState` quando a busca/filtro não encontra nada; `ComparisonEmptyState` quando há menos de duas competências; `PlanningEmptyState` quando não há nenhuma competência)
 
 ## 4. Regras Obrigatórias
 
 - [x] Antes de criar um componente novo, verificar se um existente (com prop/variante adicional) resolve o mesmo caso.
 - [x] Todo componente novo é adicionado a este inventário no mesmo bloco em que é criado.
-- [x] Nenhum componente lê fixtures ou recalcula valores monetários diretamente — todos recebem dados já prontos via `view-models/dashboard-view-model.ts`, `view-models/financial-entries-view-model.ts` ou `view-models/comparison-view-model.ts`.
+- [x] Nenhum componente lê fixtures ou recalcula valores monetários diretamente — todos recebem dados já prontos via `view-models/dashboard-view-model.ts`, `view-models/financial-entries-view-model.ts`, `view-models/comparison-view-model.ts` ou `view-models/planning-view-model.ts`.
 
 ## 5. Perguntas Orientadoras
 
@@ -70,4 +77,4 @@ Todo componente interativo deve ter comportamento visual definido para:
 ## 6. Decisões Pendentes
 
 - ~~Página "Movimentações" ainda não tem componentes próprios~~ — **resolvido no Bloco 07**: componentes em `apps/web/src/components/financial-entries/`.
-- ~~Páginas "Comparativo", "Planejamento", "Histórico", "Configurações" ainda não têm componentes próprios~~ — **parcialmente resolvido no Bloco 08**: "Comparativo" ganhou componentes próprios; "Planejamento", "Histórico" e "Configurações" continuam indisponíveis.
+- ~~Páginas "Comparativo", "Planejamento", "Histórico", "Configurações" ainda não têm componentes próprios~~ — **resolvido para "Comparativo" (Bloco 08) e "Planejamento" (Bloco 09)**; "Histórico" e "Configurações" continuam indisponíveis (`<button disabled>`).

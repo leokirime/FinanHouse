@@ -1,6 +1,10 @@
 import {
+  assertCategoryBudgetRemovable,
   cancelFinancialEntry,
+  type CategoryBudget,
+  CategoryBudgetNotFoundError,
   CategoryNotFoundError,
+  createCategoryBudget,
   createFinancialEntry,
   DomainError,
   type FinancialEntry,
@@ -13,6 +17,7 @@ import {
   reactivateFinancialEntry,
   realizeFinancialEntry,
   revertFinancialEntryRealization,
+  updateCategoryBudget,
   updateFinancialEntry,
 } from '@finanhouse/domain'
 import { createInitialFinanceDemoState } from './finance-demo-initial-state.ts'
@@ -60,6 +65,14 @@ function replaceEntry(state: FinanceDemoState, updated: FinancialEntry): Finance
     actionError: null,
     lastActionMessage: null,
   }
+}
+
+function findBudgetOrThrow(state: FinanceDemoState, id: number): CategoryBudget {
+  const budget = state.categoryBudgets.find((candidate) => candidate.id === id)
+  if (!budget) {
+    throw new CategoryBudgetNotFoundError(`Limite de orçamento #${id} não encontrado no estado da sessão.`)
+  }
+  return budget
 }
 
 /**
@@ -144,6 +157,56 @@ export function financeDemoReducer(state: FinanceDemoState, action: FinanceDemoA
         const existing = findEntryOrThrow(state, action.id)
         const period = findPeriodOrThrow(state, existing.periodId)
         return replaceEntry(state, revertFinancialEntryRealization(existing, period))
+      }
+
+      case 'CREATE_CATEGORY_BUDGET': {
+        const period = findPeriodOrThrow(state, state.currentPeriodId)
+        const category = state.categories.find((candidate) => candidate.id === action.input.categoryId)
+        if (!category) {
+          throw new CategoryNotFoundError(`Categoria #${action.input.categoryId} não encontrada no estado da sessão.`)
+        }
+        const created = createCategoryBudget(
+          {
+            id: state.nextBudgetId,
+            householdId: state.householdId,
+            periodId: state.currentPeriodId,
+            categoryId: action.input.categoryId,
+            limitAmount: action.input.limitAmount,
+          },
+          { period, category },
+          state.categoryBudgets,
+        )
+        return {
+          ...state,
+          categoryBudgets: [...state.categoryBudgets, created],
+          nextBudgetId: state.nextBudgetId + 1,
+          actionError: null,
+          lastActionMessage: 'Planejamento atualizado somente nesta sessão demonstrativa.',
+        }
+      }
+
+      case 'UPDATE_CATEGORY_BUDGET': {
+        const existing = findBudgetOrThrow(state, action.id)
+        const period = findPeriodOrThrow(state, existing.periodId)
+        const updated = updateCategoryBudget(existing, action.changes, period)
+        return {
+          ...state,
+          categoryBudgets: state.categoryBudgets.map((budget) => (budget.id === updated.id ? updated : budget)),
+          actionError: null,
+          lastActionMessage: 'Planejamento atualizado somente nesta sessão demonstrativa.',
+        }
+      }
+
+      case 'REMOVE_CATEGORY_BUDGET': {
+        const existing = findBudgetOrThrow(state, action.id)
+        const period = findPeriodOrThrow(state, existing.periodId)
+        assertCategoryBudgetRemovable(period)
+        return {
+          ...state,
+          categoryBudgets: state.categoryBudgets.filter((budget) => budget.id !== existing.id),
+          actionError: null,
+          lastActionMessage: 'Planejamento atualizado somente nesta sessão demonstrativa.',
+        }
       }
 
       case 'CLEAR_ERROR':
