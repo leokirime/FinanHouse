@@ -16,7 +16,7 @@ O dashboard hoje é somente leitura sobre fixtures estáticas — não é possí
 
 ## 4. Escopo
 
-- Instalação de `react-router-dom` e rotas reais: `/` (Visão geral) e `/movimentacoes`.
+- Instalação de `react-router` e rotas reais: `/` (Visão geral) e `/movimentacoes`. Migrado de `react-router-dom@7.18.1` para `react-router@8.3.0` antes da integração à `main`, por correção de segurança (DT-02 superada pela DT-03 — ver `Docs/02_architecture/decisoes_tecnicas.md`).
 - Estado financeiro compartilhado em memória (`apps/web/src/state/`): provider, reducer, contexto e hook de acesso.
 - `dashboard-view-model.ts` adaptado para receber movimentações/competência/categorias como argumentos, em vez de importar as fixtures diretamente.
 - Página `FinancialEntriesPage` com listagem, filtros, busca e ações contextuais por status.
@@ -46,7 +46,7 @@ O dashboard hoje é somente leitura sobre fixtures estáticas — não é possí
 - `apps/web/src/components/layout/{AppShell,Sidebar}.tsx` (navegação real)
 - `apps/web/src/view-models/dashboard-view-model.ts` (adaptado para receber argumentos)
 - `apps/web/src/App.tsx`, `apps/web/src/main.tsx` (roteador)
-- `apps/web/package.json` (dependência `react-router-dom`)
+- `apps/web/package.json` (dependência `react-router`)
 - `Docs/02_architecture/estado_temporario_frontend.md`, `Docs/01_product/requisitos_funcionais.md`, `Docs/07_design_system/componentes_ui.md`, `apps/web/README.md`
 - Não tocar em `apps/api/src/db/**`, `database/migrations/**`, `apps/api/.env.local`
 
@@ -57,11 +57,11 @@ O dashboard hoje é somente leitura sobre fixtures estáticas — não é possí
 
 ## 8. Plano de Implementação
 
-1. Instalar `react-router-dom` (versão compatível com React 19 já em uso) e configurar rotas `/` e `/movimentacoes` em `App.tsx`.
+1. Instalar `react-router@8.3.0` (versão compatível com React 19 já em uso, correção oficial da vulnerabilidade que motivou a DT-03) e configurar rotas `/` e `/movimentacoes` em `App.tsx`.
 2. Criar o estado compartilhado (`state/`) com reducer cobrindo criação, edição e todas as transições de status, inicializado a partir das fixtures existentes.
 3. Adaptar `dashboard-view-model.ts` para receber `entries`/`categories`/`currentPeriod`/`previousPeriod` como argumentos.
 4. Envolver a aplicação com `FinanceDemoProvider` em `main.tsx`/`App.tsx`.
-5. Atualizar `Sidebar` para navegação real (`react-router-dom` `Link`/`NavLink`) mantendo apenas "Visão geral" e "Movimentações" habilitadas.
+5. Atualizar `Sidebar` para navegação real (`react-router` `Link`/`NavLink`) mantendo apenas "Visão geral" e "Movimentações" habilitadas.
 6. Criar `FinancialEntriesPage` com listagem, filtros e busca.
 7. Criar o formulário de criação/edição e os diálogos de realização/cancelamento, usando os serviços de `@finanhouse/domain`.
 8. Ligar as ações da página ao reducer; garantir que o dashboard reflita as mudanças.
@@ -99,7 +99,7 @@ Nenhum dado real é usado (fixtures sintéticas). Nenhuma autenticação impleme
 
 ## 12. Performance
 
-Estado em memória via `useReducer`/Context — sem I/O. `react-router-dom` é a única dependência de runtime nova; sem bibliotecas adicionais de formulário/modal.
+Estado em memória via `useReducer`/Context — sem I/O. `react-router` é a única dependência de runtime nova; sem bibliotecas adicionais de formulário/modal.
 
 ## 13. Design System / UX
 
@@ -113,6 +113,7 @@ Reaproveita tokens e componentes do Bloco 06 (`fh-card`, `fh-badge`, `fh-grid`, 
 ## 15. Pendências Esperadas
 
 - P3 — Quando a API real existir, o `FinanceDemoProvider` deve ser substituído por um provider que fala com a API via HTTP, mantendo a mesma interface de hook (`useFinanceDemo`).
+- P4 — Reavaliar o roteamento se uma futura versão do React Router alterar novamente a superfície de pacotes/APIs (ver DT-03).
 - P3 — Refinamento visual do dashboard (Bloco 06) e da nova página de Movimentações permanece pendente de sessão dedicada.
 - P4 — Estorno (`realized→pending`) só será implementado se a regra e o serviço já existirem no domínio prontos para reutilização — caso contrário, fica para bloco futuro.
 

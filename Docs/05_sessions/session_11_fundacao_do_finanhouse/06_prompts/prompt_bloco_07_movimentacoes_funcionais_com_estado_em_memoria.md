@@ -44,7 +44,7 @@ Apenas dados fictícios. Nenhuma autenticação implementada (fora de escopo). N
 
 ## 8. Restrições de Performance
 
-Estado em memória via `useReducer`/Context — sem I/O. Única dependência nova: `react-router-dom`.
+Estado em memória via `useReducer`/Context — sem I/O. Única dependência nova: `react-router` (migrada de `react-router-dom@7.18.1` para `react-router@8.3.0` antes da integração à `main` — ver DT-03).
 
 ## 9. Restrições de Design System
 
@@ -52,7 +52,7 @@ Reaproveitar tokens/componentes do Bloco 06 — nenhum novo token de cor. Novos 
 
 ## 10. Tarefas
 
-1. Instalar `react-router-dom` e configurar rotas `/` e `/movimentacoes`.
+1. Instalar `react-router@8.3.0` e configurar rotas `/` e `/movimentacoes`.
 2. Criar estado compartilhado (`state/`) com reducer para criação, edição e transições.
 3. Adaptar `dashboard-view-model.ts` para receber dados por argumento.
 4. Atualizar `Sidebar` para navegação real.

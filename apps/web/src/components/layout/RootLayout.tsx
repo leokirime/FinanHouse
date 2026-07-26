@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router'
 import { useDashboardViewModel } from '../../hooks/use-dashboard-view-model.ts'
 import { AppShell } from './AppShell.tsx'
 import { DashboardHeader } from './DashboardHeader.tsx'

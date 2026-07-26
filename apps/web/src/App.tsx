@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router'
 import { RootLayout } from './components/layout/RootLayout.tsx'
 import { DashboardPage } from './pages/DashboardPage.tsx'
 import { FinancialEntriesPage } from './pages/FinancialEntriesPage.tsx'

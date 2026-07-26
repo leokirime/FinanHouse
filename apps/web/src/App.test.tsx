@@ -76,4 +76,15 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Visão geral' }).getAttribute('aria-current')).toBe('page')
     expect(screen.getByText('Receitas realizadas')).toBeTruthy()
   })
+
+  it('a navegação entre rotas não recarrega a página inteira (react-router intercepta o clique)', () => {
+    renderWithProviders(<App />)
+    const link = screen.getByRole('link', { name: 'Movimentações' })
+    // fireEvent.click devolve o resultado de dispatchEvent: false quando o
+    // handler do <Link> chamou preventDefault() — prova de que a navegação
+    // foi tratada via history do react-router, não via navegação nativa do
+    // navegador (que recarregaria o documento inteiro).
+    const dispatched = fireEvent.click(link)
+    expect(dispatched).toBe(false)
+  })
 })
