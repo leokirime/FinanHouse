@@ -1,12 +1,22 @@
 # Decisões Técnicas
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: FinanHouse · Atualizado em: 2026-07-27
 
 > Registre apenas decisões caras de reverter (troca de framework, modelo de dados, estratégia de autenticação, etc.) — não decisões triviais de estilo de código.
 
 ## 1. Decisões Registradas
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
+
+### DT-07 — Aiven MySQL como infraestrutura de dados
+
+- **Data:** 2026-07-27
+- **Contexto:** O Bloco 11 precisava decidir o provedor de infraestrutura MySQL ativo do Finanhouse. A Clever Cloud (Bloco 02) permanecia com o banco confirmadamente vazio e com a pendência P2 (verificação de TLS/SSL) ainda em aberto desde o Bloco 03/04 — sem correção aplicada, apenas diagnosticada. Foi criado externamente um projeto Aiven (`finanhouse`, serviço `finanhouse-mysql`, MySQL 8.4, plano Free) com um banco de desenvolvimento (`finanhouse_dev`) e um usuário de aplicação dedicado (`finanhouse_dev_app`), fora do escopo deste bloco de código.
+- **Decisão:** Adotar Aiven for MySQL como provedor ativo de infraestrutura de dados do Finanhouse, substituindo a Clever Cloud na arquitetura corrente (a Clever Cloud permanece apenas como registro histórico — Blocos 02/03/04 não são reescritos). Mantido MySQL como motor de banco (nenhuma migração para PostgreSQL) e Drizzle ORM + `mysql2` como camada de acesso, schema e migrations existentes preservados sem alteração. Nenhuma instância local de MySQL é instalada ou usada em nenhum ambiente. Ambientes de desenvolvimento e produção são bancos e usuários estritamente separados: `finanhouse_dev` com `finanhouse_dev_app` para desenvolvimento (dados sintéticos, descartáveis a qualquer momento); `finanhouse_prod` (a ser criado vazio, sem dados sintéticos, com usuário de aplicação exclusivo) para produção futura — nunca reaproveitando nem "limpando" o banco de desenvolvimento para virar produção. Toda conexão exige TLS com certificado CA explícito: `rejectUnauthorized: true`, `minVersion: 'TLSv1.2'`, verificação de identidade do host preservada (nenhum override de `checkServerIdentity`, nenhuma desativação de validação de hostname). Migrations continuam versionadas em `database/migrations/`; `drizzle-kit push` permanece proibido. A suíte de testes automatizados existente foi integralmente preservada.
+- **Motivos:** a pendência de TLS da Clever Cloud (P2) nunca foi corrigida, apenas diagnosticada — trocar de provedor resolve a causa raiz em vez de continuar adiando; Aiven oferece TLS gerenciado com CA verificável nativamente; manter MySQL/Drizzle/schema evita reescrever toda a camada de persistência já modelada e testada; a separação `finanhouse_dev`/`finanhouse_prod` com usuários distintos elimina o risco de um ambiente de desenvolvimento acidentalmente afetar dados de produção.
+- **Alternativas consideradas:** permanecer na Clever Cloud tentando corrigir o TLS na infraestrutura atual — rejeitada porque a decisão de trocar de provedor já foi tomada e comunicada externamente a este bloco; usar um único banco Aiven compartilhado entre desenvolvimento e produção — rejeitada por misturar dados sintéticos com dados reais e impedir descarte seguro do ambiente de desenvolvimento; migrar para PostgreSQL aproveitando a troca de provedor — fora de escopo, rejeitada explicitamente (nenhuma justificativa para trocar o motor de banco junto com o provedor).
+- **Consequências:** o Finanhouse passa a depender de um serviço Aiven no plano Free, que não possui SLA formal e pode apresentar indisponibilidade por inatividade — um upgrade de plano é possível no futuro se necessário; a pendência P2 de TLS (`Docs/03_contracts/contrato_banco_dados.md`) muda de alvo (Aiven em vez de Clever Cloud) mas **não é encerrada por esta decisão** — só fecha quando um `db:check` real, com CA configurado, confirmar TLS ativo contra o Aiven; nenhuma migration foi aplicada neste bloco; nenhuma conexão real foi estabelecida neste bloco; a validação real de TLS contra o Aiven continua pendente como próximo passo, não como resultado já obtido aqui.
+- **Status:** Vigente
 
 ### DT-06 — Histórico mensal somente leitura em memória
 
@@ -86,5 +96,5 @@ _..._
 
 Decisões que precisam ser tomadas mas ainda não foram.
 
-- **Verificação de TLS/SSL entre a futura aplicação (Vercel) e o MySQL da Clever Cloud** — a inspeção do Bloco 02 usou `DATABASE_SSL=false` apenas para ler metadados; produção precisa de transporte seguro confirmado antes da primeira migration real e antes de qualquer dado real. Ver ADR-001 (`Docs/02_architecture/adr_001_persistencia_drizzle_mysql2.md`) e `Docs/03_contracts/contrato_banco_dados.md`.
-- **Aplicação da migration inicial gerada no Bloco 03** — depende de revisão e autorização explícita do proprietário; não é automática mesmo após o schema estar modelado.
+- **Verificação de TLS/SSL entre a aplicação e o MySQL (P2)** — diagnosticada como incompatível na Clever Cloud (Bloco 02 usou `DATABASE_SSL=false` apenas para ler metadados) e nunca corrigida ali. Desde o Bloco 11, o alvo passa a ser o Aiven (DT-07): a infraestrutura e o código de TLS/CA já estão preparados, mas esta pendência **só é encerrada quando um `db:check` real, com certificado CA configurado, confirmar TLS ativo contra o Aiven** — o que ainda não ocorreu. Não há uma segunda pendência de TLS; esta é a mesma P2, apenas com o alvo atualizado. Ver ADR-001 (`Docs/02_architecture/adr_001_persistencia_drizzle_mysql2.md`) e `Docs/03_contracts/contrato_banco_dados.md`.
+- **Aplicação da migration inicial gerada no Bloco 03** — depende de revisão e autorização explícita do proprietário; não é automática mesmo após o schema estar modelado. Migrations permanecem bloqueadas também pela pendência de TLS acima: nenhuma migration real deve ser aplicada antes de um `db:check` bem-sucedido contra o Aiven.

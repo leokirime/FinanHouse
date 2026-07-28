@@ -24,6 +24,10 @@
     "verify:runtime": "node scripts/verify-runtime-imports.mjs",
     "inspect:db": "tsx database/inspection/inspect-database.ts",
     "typecheck:inspect-db": "tsc -p database/inspection/tsconfig.json",
-    "test:tls": "tsx database/inspection/test-tls.ts"
+    "test:tls": "tsx database/inspection/test-tls.ts",
+    "db:check": "npm run db:check --workspace=api",
+    "db:migrate": "npm run db:migrate --workspace=api",
+    "db:seed:dev": "npm run db:seed:dev --workspace=api",
+    "typecheck:api-scripts": "npm run typecheck:scripts --workspace=api"
   }
 }

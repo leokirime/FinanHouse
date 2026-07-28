@@ -1,10 +1,10 @@
 # Contrato de Banco de Dados
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: FinanHouse · Atualizado em: 2026-07-27
 
 > Este contrato define o que o código pode assumir sobre o esquema do banco. Mudança de esquema sem migração registrada aqui é uma quebra de contrato.
 
-> **Estado atual (2026-07-25):** o MySQL do Finanhouse **já existe** na Clever Cloud e **permanece vazio** no banco real — ver `database/current-schema/`. O Bloco 03 (`bloco_03_modelagem_inicial_do_dominio_financeiro`) modelou um **schema proposto** (Drizzle ORM, ver ADR-001) e gerou uma migration inicial revisável — nada disso foi aplicado ao banco. O modelo abaixo descreve o schema *proposto*, não o estado real. Ver `database/proposed-schema/` para a documentação completa.
+> **Estado atual (2026-07-27):** a infraestrutura MySQL ativa do Finanhouse passou a ser o **Aiven for MySQL** (Bloco 11, DT-07 em `Docs/02_architecture/decisoes_tecnicas.md`) — a Clever Cloud (Bloco 02) deixou de ser a infraestrutura corrente e permanece apenas como registro histórico; seu banco estava confirmadamente vazio. O Bloco 03 (`bloco_03_modelagem_inicial_do_dominio_financeiro`) modelou um **schema proposto** (Drizzle ORM, ver ADR-001) e gerou uma migration inicial revisável — este schema/migration não mudou com a troca de provedor e **continua não aplicado a nenhum banco real**. O Bloco 11 preparou configuração, validação, TLS e scripts para o Aiven, mas **nenhuma conexão real foi estabelecida e nenhuma migration foi aplicada** nesta etapa. O modelo abaixo descreve o schema *proposto*, não o estado real. Ver `database/proposed-schema/` para a documentação completa.
 
 ## 1. Objetivo
 
@@ -123,6 +123,7 @@ _..._
 - ~~Realizar inspeção somente leitura do MySQL existente na Clever Cloud~~ — **concluído em 2026-07-25**, banco confirmado vazio.
 - ~~Biblioteca de acesso ao MySQL e estratégia de migrations~~ — **decidido em 2026-07-25**: Drizzle + mysql2 (ADR-001).
 - ~~Modelar o schema inicial~~ — **proposto em 2026-07-25** (Bloco 03): 6 tabelas, migration gerada e revisada, **ainda não aplicada**.
-- **P2 — Verificação de TLS/SSL** entre a futura aplicação (Vercel) e o MySQL da Clever Cloud, antes da primeira migration real e antes de inserir qualquer dado real.
-- **P2 — Aplicação da migration inicial**: depende de revisão final e autorização explícita do proprietário.
+- ~~Decidir o provedor de infraestrutura MySQL ativo~~ — **decidido em 2026-07-27** (Bloco 11, DT-07): Aiven for MySQL substitui a Clever Cloud; configuração, TLS/CA e scripts preparados, **sem conexão real nem migration aplicada** nesta etapa.
+- **P2 — Verificação de TLS/SSL**: diagnosticada como incompatível na Clever Cloud, nunca corrigida ali. Desde o Bloco 11 o alvo é o Aiven — a pendência só é encerrada quando um `db:check` real, com CA configurado, confirmar TLS ativo contra o Aiven (`apps/api/scripts/db-check.ts`). Continua em aberto.
+- **P2 — Aplicação da migration inicial**: depende de revisão final e autorização explícita do proprietário, e continua bloqueada pela pendência de TLS acima — nenhuma migration deve ser aplicada antes de um `db:check` bem-sucedido contra o Aiven.
 - Extensões futuras não modeladas ainda: `recurrence_rules`, `installment_plans`, `category_budgets`, `period_status_history` — ver `database/proposed-schema/extensoes-futuras.md`.
