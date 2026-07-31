@@ -1,6 +1,6 @@
 # Contrato de Variáveis de Ambiente
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-30
+> Projeto: FinanHouse · Atualizado em: 2026-07-31
 
 > Nenhum valor real de segredo (chave de API, senha, connection string) deve aparecer neste arquivo — apenas nome, propósito e formato esperado.
 
@@ -58,4 +58,5 @@ Uma nova variável obrigatória é adicionada primeiro em `resolveDatabaseConfig
 
 ## 10. Decisões Pendentes
 
-- ~~A validação real de TLS contra o Aiven (execução real de `db:check`) ainda não ocorreu~~ — **executada em 2026-07-30** pelo proprietário, com sucesso (TLS ativo, MySQL `8.4.8`, banco `finanhouse_dev`, usuário `finanhouse_dev_app`) — ver P2 em `Docs/03_contracts/contrato_banco_dados.md` e DT-07 em `Docs/02_architecture/decisoes_tecnicas.md`. A aplicação real da migration inicial (`db:migrate`) continua pendente, dependendo de autorização e execução separadas. Os valores reais de `DATABASE_HOST`/`DATABASE_PORT`/`DATABASE_USER`/`DATABASE_PASSWORD`/`DATABASE_CA_PATH` (ou `DATABASE_CA_CERT_BASE64`) permanecem apenas em `apps/api/.env.local`, fora deste contrato e fora do repositório — nunca lidos por este processo de documentação.
+- ~~A validação real de TLS contra o Aiven (execução real de `db:check`) ainda não ocorreu~~ — **executada em 2026-07-30** pelo proprietário, com sucesso (TLS ativo, MySQL `8.4.8`, banco `finanhouse_dev`, usuário `finanhouse_dev_app`) — ver P2 em `Docs/03_contracts/contrato_banco_dados.md` e DT-07 em `Docs/02_architecture/decisoes_tecnicas.md`.
+- ~~A aplicação real da migration inicial (`db:migrate`) continua pendente~~ — **executada em 2026-07-31** (Bloco 12, DT-08): aplicada uma única vez a `finanhouse_dev`, com autorização explícita do proprietário. Os valores reais de `DATABASE_HOST`/`DATABASE_PORT`/`DATABASE_USER`/`DATABASE_PASSWORD`/`DATABASE_CA_PATH` (ou `DATABASE_CA_CERT_BASE64`) permanecem apenas em `apps/api/.env.local`, fora deste contrato e fora do repositório — nunca lidos por este processo de documentação.

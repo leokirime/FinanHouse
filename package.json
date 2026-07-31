@@ -28,6 +28,7 @@
     "db:check": "npm run db:check --workspace=api",
     "db:migrate": "npm run db:migrate --workspace=api",
     "db:seed:dev": "npm run db:seed:dev --workspace=api",
+    "db:audit:schema": "npm run db:audit:schema --workspace=api --",
     "typecheck:api-scripts": "npm run typecheck:scripts --workspace=api"
   }
 }
