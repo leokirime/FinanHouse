@@ -1,6 +1,6 @@
 # Bloco 11 — Migração da infraestrutura MySQL para Aiven
 
-> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-07-27
+> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-07-30
 
 ## 1. Objetivo
 
@@ -101,8 +101,8 @@ Não aplicável — nenhuma alteração de interface, layout ou componente visua
 
 ## 15. Pendências Esperadas
 
-- **P2** — Verificação real de TLS contra o Aiven (`db:check` com CA real) ainda não executada; mesma pendência do Bloco 04, alvo atualizado (ver DT-07 e `contrato_banco_dados.md`).
-- **P2** — Aplicação da migration inicial (Bloco 03) continua bloqueada até a P2 de TLS ser resolvida.
+- ~~P2 — Verificação real de TLS contra o Aiven~~ — **encerrada em 2026-07-30** (`db:check` executado manualmente pelo proprietário, TLS ativo confirmado; ver seção 19 do feedback deste bloco).
+- **P2** — Aplicação da migration inicial (Bloco 03) continua em aberto — a TLS que a bloqueava foi validada, mas nenhuma migration foi aplicada ainda.
 - **P3** — `db:seed:dev` não é idempotente por linha (apenas por execução completa, verificando o usuário de seed); um smoke-test contra `finanhouse_dev` real é recomendado antes do primeiro uso.
 
 ## 16. Feedback Obrigatório

@@ -1,6 +1,6 @@
 # Requisitos Funcionais
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-27
+> Projeto: FinanHouse · Atualizado em: 2026-07-30
 
 > Todo bloco de implementação deve referenciar um requisito listado aqui. Se uma tarefa não tem requisito correspondente, atualize esta lista antes de implementar — não implemente "por inferência".
 
@@ -14,7 +14,7 @@ Numere os requisitos para que possam ser referenciados por blocos e prompts (ex.
 | RF-02 | Organizar movimentações por competência mensal, com abertura/revisão/fechamento | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-03 | Calcular indicadores financeiros por competência (previsto, realizado, pendente, saldo) | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-04 | Comparar duas competências mensais (variações de receita/despesa/saldo, categorias) | Should | Concluído (regras de domínio no Bloco 05; interface em memória no Bloco 08) |
-| RF-05 | Persistir movimentações e competências em banco real (MySQL) | Must | Pendente — bloqueado por TLS (P2). Infraestrutura migrada de Clever Cloud para Aiven for MySQL no Bloco 11 (DT-07); configuração, TLS/CA e scripts preparados, mas TLS ainda não foi validado com conexão real contra o Aiven — RF-05 segue pendente até um `db:check` real bem-sucedido |
+| RF-05 | Persistir movimentações e competências em banco real (MySQL) | Must | Pendente — bloqueado pela aplicação da migration inicial (P2). Infraestrutura migrada de Clever Cloud para Aiven for MySQL no Bloco 11 (DT-07); TLS validado com conexão real em 2026-07-30 (`db:check`, MySQL `8.4.8`, banco `finanhouse_dev`) — pendência de TLS encerrada. RF-05 segue pendente até a migration inicial ser aplicada a um banco real e os repositórios em memória serem substituídos por repositórios reais |
 | RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Em andamento — dashboard de visão geral concluído (Bloco 06, com refinamento visual pendente); Movimentações funcional com estado em memória concluído (Bloco 07); Comparativo mensal em memória concluído (Bloco 08); Planejamento mensal (limites por categoria) concluído em memória (Bloco 09); Histórico mensal somente leitura concluído em memória e integrado à `main` (Bloco 10, commit `fd026da`); persistência real segue bloqueada (RF-05) |
 | RF-07 | Planejar limites de orçamento por categoria de despesa e acompanhar consumo (realizado, pendente, planejado, projetado) por competência | Should | Concluído em memória (Bloco 09, integrado à `main` em `e107716`) |
 | RF-08 | Consultar histórico de competências e movimentações anteriores, somente leitura, com filtros por ano/status | Should | Concluído em memória (Bloco 10, integrado à `main` em `fd026da`) |
