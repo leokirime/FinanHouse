@@ -96,16 +96,21 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- **Validação TLS estrita (`rejectUnauthorized: true`) não concluída com sucesso; causa do `HANDSHAKE_SSL_ERROR` não confirmada; resposta oficial da Clever Cloud pendente (solicitação preparada em `clever-cloud-tls-support-request.md`, envio manual pelo proprietário); aplicação da migration permanece bloqueada até resolução.** `rejectUnauthorized: false` não é uma alternativa aceita — ver decisão de segurança em `database/current-schema/tls-inspection.md`, seção 4. Esta é a mesma pendência de TLS/aplicação de migration citada no feedback do Bloco 03; tratada aqui como fonte única, não duplicada.
-- `financial_entries.responsible_member_id` sem FK composta protegendo consistência com household — pendência registrada no Bloco 03, não resolvida aqui (fora de escopo).
+- `financial_entries.responsible_member_id` sem FK composta protegendo consistência com household — pendência registrada no Bloco 03, não resolvida aqui (fora de escopo). Única pendência P2 deste bloco ainda aberta — ver histórico abaixo para o item já encerrado.
 
 ### P3 — Melhoria Recomendada
 
-- Considerar automatizar a obtenção/atualização de uma eventual CA fornecida pela Clever Cloud (se disponível via API/painel) em vez de processo manual, quando a integração com Vercel for implementada — condicionado à resposta oficial do suporte.
+- Considerar automatizar a obtenção/atualização de uma eventual CA fornecida pela Clever Cloud (se disponível via API/painel) em vez de processo manual, quando a integração com Vercel for implementada — condicionado à resposta oficial do suporte. **Nota (2026-07-31):** a Clever Cloud deixou de ser a infraestrutura ativa (DT-07); este item ficou sem objeto e não será retomado.
 
 ### P4 — Opcional
 
 _Nenhuma pendência opcional identificada._
+
+## Histórico de Pendências Encerradas
+
+_Seção adicionada em 2026-07-31 durante a reconciliação documental pós-Bloco 12. O item abaixo estava registrado como pendência P2 aberta no momento em que este feedback foi originalmente escrito (2026-07-25); nenhum resultado é reescrito como se já fosse conhecido naquela data — apenas o encerramento é registrado agora, com a data real em que ocorreu._
+
+- **Validação TLS estrita (`rejectUnauthorized: true`) não concluída com sucesso contra a Clever Cloud; causa do `HANDSHAKE_SSL_ERROR` nunca confirmada; resposta oficial da Clever Cloud nunca chegou** — esta era a "fonte única" da pendência de TLS/aplicação de migration citada também no feedback do Bloco 03. Em vez de aguardar indefinidamente uma resposta da Clever Cloud, o proprietário decidiu trocar de provedor: **Aiven for MySQL** substituiu a Clever Cloud na arquitetura ativa (Bloco 11, DT-07). TLS foi validado com sucesso contra o Aiven em **2026-07-30** (`db:check` real, `rejectUnauthorized: true`, verificação de hostname padrão). A migration inicial foi aplicada em **2026-07-31** (Bloco 12, DT-08), destravada por essa validação. Ambos os itens estão encerrados.
 
 ## 14. Riscos Restantes
 

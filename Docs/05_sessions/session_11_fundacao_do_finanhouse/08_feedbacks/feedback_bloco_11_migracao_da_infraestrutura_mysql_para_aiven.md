@@ -137,8 +137,7 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- ~~Verificação real de TLS contra o Aiven~~ — **encerrada em 2026-07-30.** Ver seção 19 (Atualização) para a evidência operacional completa.
-- **Aplicação da migration inicial (Bloco 03)** — a pendência de TLS que a bloqueava foi encerrada (item acima), mas a migration em si **continua não aplicada** a nenhum banco real. Permanece em aberto até uma execução real e auditada de `db:migrate`, com autorização explícita separada.
+_Nenhuma pendência P2 aberta neste momento._ As duas pendências P2 originalmente registradas neste bloco (verificação real de TLS contra o Aiven; aplicação da migration inicial) foram ambas encerradas — ver seção 19 (evidência de TLS, 2026-07-30) e "Histórico de Pendências Encerradas" abaixo (migration, 2026-07-31, Bloco 12). Persistência real completa (repositórios/API/frontend) segue como escopo de produto ainda não implementado — ver RF-05, não tratada como uma nova P2 deste bloco.
 
 ### P3 — Melhoria Recomendada
 
@@ -148,6 +147,12 @@ _Nenhuma pendência crítica identificada._
 ### P4 — Opcional
 
 - Avaliar, em bloco futuro, se `apps/api/scripts/` deveria expor uma flag `--dry-run` para `db:migrate`, permitindo listar as migrations pendentes sem exigir `CONFIRM_DATABASE_MIGRATION=true`.
+
+## Histórico de Pendências Encerradas
+
+_Seção adicionada em 2026-07-31 durante a reconciliação documental pós-Bloco 12. O item abaixo estava registrado como pendência P2 aberta no momento em que este feedback foi originalmente escrito (2026-07-30); nenhum resultado é reescrito como se já fosse conhecido naquela data — apenas o encerramento é registrado agora, com a data real em que ocorreu._
+
+- **Aplicação da migration inicial (Bloco 03)** — estava registrada como pendência P2 aberta neste bloco, aguardando execução real e auditada de `db:migrate` com autorização explícita separada. **Encerrada em 2026-07-31** (Bloco 12, DT-08): migration aplicada uma única vez ao banco `finanhouse_dev`, com autorização explícita do proprietário ("AUTORIZO MIGRATION FINANHOUSE_DEV"), seis tabelas criadas, journal do Drizzle registrado, todas as tabelas auditadas com zero registros.
 
 ## 14. Riscos Restantes
 

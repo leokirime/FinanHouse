@@ -128,7 +128,7 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- **Persistência real incompleta (RF-05)** — infraestrutura, TLS e schema já disponíveis no Aiven, mas repositórios Drizzle reais, endpoints de API e integração do frontend com a API continuam pendentes. Não é uma pendência nova relacionada à migration (essa está encerrada) — é o que resta do RF-05 original.
+_Nenhuma pendência P2 nova neste bloco._ A migration inicial (a única P2 deste bloco) está encerrada — ver seção 16. O restante de RF-05 (repositórios Drizzle reais, endpoints de API, integração do frontend) não é uma condição bloqueadora encontrada durante este bloco, mas escopo de produto ainda não implementado — registrado como roadmap funcional na seção 17, não como pendência P2.
 
 ### P3 — Melhoria Recomendada
 
@@ -165,6 +165,14 @@ _Nenhuma pendência crítica identificada._
 ## 17. Próximo Bloco Recomendado
 
 Nenhum bloco novo deve ser criado nesta sessão como consequência direta deste — por instrução explícita do proprietário. O próximo passo natural, quando autorizado, é um bloco de implementação de repositórios Drizzle reais e endpoints de API sobre o schema agora aplicado em `finanhouse_dev`, substituindo gradualmente os repositórios em memória — mas isso não deve começar automaticamente a partir deste feedback.
+
+**Roadmap funcional restante de RF-05** (escopo de produto ainda não implementado, não uma pendência P2 bloqueadora encontrada neste bloco):
+
+- Repositórios Drizzle reais, substituindo os repositórios em memória atrás das mesmas portas de aplicação (`apps/api/src/application/ports/`).
+- Endpoints de API expondo essas operações.
+- Integração do frontend (`apps/web`) com a API real, substituindo o `FinanceDemoProvider` em memória.
+- Persistência real do Planejamento (`category_budgets`) — depende de uma migration incremental futura, já que não faz parte do schema inicial (DT-08).
+- Autenticação/acesso privado e deploy de produção — ainda não iniciados.
 
 ## 18. Commit Semântico Sugerido
 

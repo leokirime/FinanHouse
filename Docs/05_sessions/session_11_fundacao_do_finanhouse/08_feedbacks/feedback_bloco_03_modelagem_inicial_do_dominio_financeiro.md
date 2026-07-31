@@ -150,10 +150,7 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- ~~Verificação de TLS/SSL entre a futura aplicação (Vercel) e o MySQL da Clever Cloud~~ — investigada no Bloco 04 (`bloco_04_validacao_tls_e_revisao_pre_migration`); permanece **aberta** com validação estrita ainda não funcionando. Ver `Docs/05_sessions/session_11_fundacao_do_finanhouse/08_feedbacks/feedback_bloco_04_validacao_tls_e_revisao_pre_migration.md` para o estado atual — fonte única desta pendência a partir do Bloco 04, não duplicada aqui.
-- `financial_entries.responsible_member_id` não tem FK composta protegendo a consistência com `household_id` — MySQL proíbe `ON DELETE SET NULL` em FK composta com coluna `NOT NULL`. Consistência permanece responsabilidade da camada de serviço (ver `database/proposed-schema/relacionamentos.md`).
-- Aplicação da migration inicial (`0000_initial_financial_domain.sql`) depende de revisão final e autorização explícita do proprietário — não é automática; bloqueada também pela pendência de TLS acima.
-- ~~Commit e push deste bloco dependem de nova autorização explícita~~ — **resolvido**: branch `feat/session-11-bloco-03-modelagem-dominio` commitada, publicada e mesclada à `main` no commit `a73b610`.
+- `financial_entries.responsible_member_id` não tem FK composta protegendo a consistência com `household_id` — MySQL proíbe `ON DELETE SET NULL` em FK composta com coluna `NOT NULL`. Consistência permanece responsabilidade da camada de serviço (ver `database/proposed-schema/relacionamentos.md`). Única pendência P2 deste bloco ainda aberta — ver histórico abaixo para os itens já encerrados.
 
 ### P3 — Melhoria Recomendada
 
@@ -164,6 +161,14 @@ _Nenhuma pendência crítica identificada._
 ### P4 — Opcional
 
 _Nenhuma pendência opcional identificada._
+
+## Histórico de Pendências Encerradas
+
+_Seção adicionada em 2026-07-31 durante a reconciliação documental pós-Bloco 12. Os itens abaixo estavam registrados como pendências P2 abertas no momento em que este feedback foi originalmente escrito (2026-07-25); nenhum resultado é reescrito como se já fosse conhecido naquela data — apenas o encerramento é registrado agora, com a data real em que ocorreu._
+
+- **Verificação de TLS/SSL entre a aplicação e o MySQL** — estava aberta neste bloco, investigada no Bloco 04 (TLS estrito não funcional contra a Clever Cloud) e **encerrada em 2026-07-30**, após a migração de infraestrutura para o Aiven (Bloco 11, DT-07) e validação real de `db:check`. Ver `Docs/02_architecture/decisoes_tecnicas.md` (DT-07) e `Docs/03_contracts/contrato_banco_dados.md`.
+- **Aplicação da migration inicial (`0000_initial_financial_domain.sql`)** — estava pendente de revisão e autorização explícita, bloqueada pela pendência de TLS acima. **Encerrada em 2026-07-31** (Bloco 12, DT-08): aplicada uma única vez ao banco `finanhouse_dev`, com autorização explícita do proprietário, seis tabelas criadas, journal registrado, todas as tabelas vazias.
+- ~~Commit e push deste bloco dependem de nova autorização explícita~~ — resolvido ainda em 2026-07-25: branch `feat/session-11-bloco-03-modelagem-dominio` commitada, publicada e mesclada à `main` no commit `a73b610`.
 
 ## 14. Riscos Restantes
 
