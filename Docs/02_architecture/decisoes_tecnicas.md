@@ -1,12 +1,22 @@
 # Decisões Técnicas
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-30
+> Projeto: FinanHouse · Atualizado em: 2026-07-31
 
 > Registre apenas decisões caras de reverter (troca de framework, modelo de dados, estratégia de autenticação, etc.) — não decisões triviais de estilo de código.
 
 ## 1. Decisões Registradas
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
+
+### DT-08 — Schema inicial versionado aplicado no Aiven DEV
+
+- **Data:** 2026-07-31
+- **Contexto:** O Bloco 11 (DT-07) validou TLS real contra o Aiven, encerrando a P2 de TLS, mas deixou aberta a P2 de aplicação da migration inicial — o schema (6 tabelas, gerado e revisado desde o Bloco 03) nunca havia sido aplicado a nenhum banco real. O Bloco 12 preparou um checkpoint humano obrigatório, uma auditoria de schema somente leitura reutilizável (`apps/api/scripts/db-audit-schema.ts`) e, após autorização explícita do proprietário ("AUTORIZO MIGRATION FINANHOUSE_DEV"), aplicou a migration versionada uma única vez.
+- **Decisão:** O schema inicial (`database/migrations/0000_initial_financial_domain.sql`, hash SHA-256 `5036d7f978cbd09c88df59664978515d2c9b6cf038c4eac68f94b2a7c0a4c044`) foi aplicado somente ao banco de desenvolvimento `finanhouse_dev` no Aiven, via `db:migrate` (script versionado, exigindo `CONFIRM_DATABASE_MIGRATION=true`). A produção permanece inexistente (nenhum `finanhouse_prod` criado). A migration versionada em `database/migrations/` continua sendo a única fonte de DDL — alteração manual de schema no banco é proibida; qualquer mudança futura de schema exige uma nova migration gerada por `drizzle-kit generate` e revisada, nunca `drizzle-kit push` nem SQL manual. Seed de dados (`db:seed:dev`) é uma etapa deliberadamente separada da migration — não é executado automaticamente após ela. Nenhum dado real foi inserido; as seis tabelas foram auditadas com zero registros logo após a aplicação. O schema inicial contém exatamente as seis tabelas já aprovadas (`users`, `households`, `household_members`, `categories`, `monthly_periods`, `financial_entries`); funcionalidades implementadas depois do Bloco 03 no frontend em memória (ex.: `category_budgets`, do Planejamento) **não fazem parte** desta migration inicial — exigirão migrations incrementais futuras, geradas e revisadas da mesma forma.
+- **Motivos:** aplicar o schema já modelado e testado é pré-requisito para qualquer persistência real (RF-05); um checkpoint humano explícito antes da escrita remota evita aplicar DDL em produção por engano; manter a migration como única fonte de DDL preserva rastreabilidade e reversibilidade; separar seed de migration evita que dados sintéticos sejam inseridos silenciosamente como efeito colateral de uma operação estrutural.
+- **Alternativas consideradas:** aplicar a migration automaticamente ao final do Bloco 11 (sem checkpoint separado) — rejeitada por misturar preparação de infraestrutura com a primeira escrita real no banco, que o proprietário explicitamente quis revisar e autorizar à parte; usar `drizzle-kit push` para sincronizar o schema diretamente — proibido desde o ADR-001, mantido proibido aqui.
+- **Consequências:** RF-05 não é declarado concluído — persistência real depende ainda de repositórios Drizzle reais, endpoints de API e integração do frontend, todos fora do escopo deste bloco; a P2 de aplicação da migration inicial está encerrada; qualquer tabela nova (ex.: `category_budgets`) exigirá uma migration incremental futura, nunca uma edição manual desta migration inicial.
+- **Status:** Vigente
 
 ### DT-07 — Aiven MySQL como infraestrutura de dados
 
@@ -98,4 +108,4 @@ _..._
 Decisões que precisam ser tomadas mas ainda não foram.
 
 - ~~Verificação de TLS/SSL entre a aplicação e o MySQL (P2)~~ — **encerrada em 2026-07-30**. Diagnosticada como incompatível na Clever Cloud (Bloco 02 usou `DATABASE_SSL=false` apenas para ler metadados) e nunca corrigida ali; desde o Bloco 11 o alvo passou a ser o Aiven (DT-07). O proprietário executou manualmente `npm run db:check` em 2026-07-30 e confirmou TLS ativo contra o Aiven (MySQL `8.4.8`, banco `finanhouse_dev`, usuário `finanhouse_dev_app`, CA oficial, `rejectUnauthorized: true`, verificação de hostname padrão preservada). Ver ADR-001 (`Docs/02_architecture/adr_001_persistencia_drizzle_mysql2.md`) e `Docs/03_contracts/contrato_banco_dados.md`.
-- **Aplicação da migration inicial gerada no Bloco 03** — depende de revisão e autorização explícita do proprietário; não é automática mesmo após o schema estar modelado. A pendência de TLS que a bloqueava foi encerrada (item acima), mas a migration em si **continua não aplicada** — permanece em aberto até uma execução real e auditada de `db:migrate`.
+- ~~Aplicação da migration inicial gerada no Bloco 03~~ — **encerrada em 2026-07-31** (Bloco 12, DT-08): aplicada uma única vez ao banco `finanhouse_dev`, com autorização explícita do proprietário, journal registrado, seis tabelas auditadas com zero registros. Persistência real completa (repositórios, API, frontend) permanece pendente — RF-05 não está concluído.

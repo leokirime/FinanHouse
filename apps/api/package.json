@@ -13,7 +13,8 @@
     "test": "vitest run",
     "db:check": "tsx scripts/db-check.ts",
     "db:migrate": "tsx scripts/db-migrate.ts",
-    "db:seed:dev": "tsx scripts/db-seed-dev.ts"
+    "db:seed:dev": "tsx scripts/db-seed-dev.ts",
+    "db:audit:schema": "tsx scripts/db-audit-schema.ts"
   },
   "dependencies": {
     "@finanhouse/domain": "*",

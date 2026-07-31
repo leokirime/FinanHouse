@@ -1,6 +1,6 @@
 # Session 11 — Fundação do Finanhouse
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-30
+> Projeto: FinanHouse · Atualizado em: 2026-07-31
 
 > Este README é o ponto de entrada da sessão. Qualquer pessoa ou agente de IA deve conseguir, lendo só este arquivo, entender o que esta sessão faz, o que já está pronto e qual é o próximo passo — sem precisar abrir todas as subpastas.
 
@@ -65,7 +65,9 @@ O MySQL do Finanhouse **já existe** na Clever Cloud (não é um banco a ser cri
 
 **Validação real de TLS registrada em 2026-07-30:** o proprietário executou manualmente `npm run db:check`, com o certificado CA oficial do serviço, `DATABASE_SSL_MODE=verify_identity` e o usuário de aplicação `finanhouse_dev_app`. Resultado sanitizado confirmado: provider `aiven`, ambiente `development`, banco `finanhouse_dev`, conectividade bem-sucedida, MySQL `8.4.8`, banco ativo correspondente ao configurado, TLS ativo, `rejectUnauthorized: true` e verificação padrão de hostname preservados. Nenhuma migration foi aplicada, nenhum seed foi executado, nenhuma tabela foi criada nesta verificação. Essa evidência operacional encerra a pendência P2 de TLS (ver `Docs/02_architecture/decisoes_tecnicas.md`, DT-07, e `Docs/03_contracts/contrato_banco_dados.md`); a pendência P2 de aplicação da migration inicial continua aberta.
 
-**Bloco 11 integrado à `main` em 2026-07-30** (merge `e64de2c`, a partir dos commits `0454aed` e `177719f` na branch `feat/session-11-bloco-11-aiven-database`, preservada no remoto). Nenhum bloco novo foi criado após o Bloco 11.
+**Bloco 11 integrado à `main` em 2026-07-30** (merge `e64de2c`, a partir dos commits `0454aed` e `177719f` na branch `feat/session-11-bloco-11-aiven-database`, preservada no remoto).
+
+**Migration inicial aplicada e auditada no Aiven DEV em 2026-07-31 (`bloco_12_aplicacao_e_auditoria_da_migration_inicial_no_aiven`):** com um checkpoint humano obrigatório antes de qualquer escrita remota, a migration versionada desde o Bloco 03 (`database/migrations/0000_initial_financial_domain.sql`, hash SHA-256 `5036d7f978cbd09c88df59664978515d2c9b6cf038c4eac68f94b2a7c0a4c044`) foi revisada estaticamente, auditada por um script somente leitura reutilizável (`apps/api/scripts/db-audit-schema.ts` + `apps/api/src/db/schema-audit.ts`, com testes unitários sem conexão real) e, após o proprietário responder exatamente "AUTORIZO MIGRATION FINANHOUSE_DEV", aplicada uma única vez ao banco `finanhouse_dev` via `db:migrate`. Auditoria pós-migration confirmou as seis tabelas (`users`, `households`, `household_members`, `categories`, `monthly_periods`, `financial_entries`), o journal do Drizzle (`__drizzle_migrations`) com uma migration registrada, e **zero registros em todas as tabelas** — nenhum seed executado, nenhum dado real inserido. Decisão técnica registrada (`Docs/02_architecture/decisoes_tecnicas.md`, DT-08). A pendência P2 de aplicação da migration inicial está **encerrada**; RF-05 não é declarado concluído — repositórios Drizzle reais, endpoints de API e integração do frontend continuam pendentes. Nenhum bloco novo foi criado após o Bloco 12.
 
 ## 3. Escopo
 
@@ -129,6 +131,7 @@ Blocos oficiais DDAE desta sessão (`05_blocks/`):
 | `bloco_09_planejamento_mensal_com_estado_em_memoria` | Planejamento mensal com estado em memória | Concluído — integrado à `main` em `e107716` |
 | `bloco_10_historico_mensal_somente_leitura_com_estado_em_memoria` | Histórico mensal somente leitura com estado em memória | Concluído — integrado à `main` em `fd026da` (última rodada planejada das áreas funcionais; nenhum bloco funcional novo criado depois) |
 | `bloco_11_migracao_da_infraestrutura_mysql_para_aiven` | Migração da infraestrutura MySQL para Aiven | Concluído — TLS validado com conexão real em 2026-07-30 (P2 encerrada); integrado à `main` em `e64de2c`; migration/seed continuam não executados (P2 aberta) |
+| `bloco_12_aplicacao_e_auditoria_da_migration_inicial_no_aiven` | Aplicação e auditoria da migration inicial no Aiven | Concluído — migration aplicada e auditada em `finanhouse_dev` em 2026-07-31 (P2 de migration encerrada); branch `feat/session-11-bloco-12-migration-inicial-aiven` |
 
 ## 8. Riscos
 
@@ -137,7 +140,8 @@ Blocos oficiais DDAE desta sessão (`05_blocks/`):
 - Credenciais reais do MySQL (Clever Cloud) não devem vazar para `.env.example` nem para o Git — mitigado por `.gitignore` (confirmado em cada execução do inventário e da modelagem).
 - ~~Banco MySQL já existente ser tratado erroneamente como vazio~~ — **resolvido**: inventário confirmou que o banco realmente está vazio (não era uma suposição), então não há risco de colisão com dados reais.
 - ~~TLS/SSL não verificado com o provedor real (P2)~~ — **encerrado em 2026-07-30**: diagnosticado como incompatível na Clever Cloud (Bloco 02 usou `DATABASE_SSL=false` apenas para ler metadados) e nunca corrigido ali; desde o Bloco 11 o alvo passou a ser o Aiven (DT-07), e o proprietário confirmou TLS ativo com `db:check` real em 2026-07-30 (MySQL `8.4.8`, banco `finanhouse_dev`, usuário `finanhouse_dev_app`). Registrado em ADR-001 e `Docs/03_contracts/contrato_banco_dados.md`.
-- **Aplicação da migration inicial não realizada (P2)** — schema modelado desde o Bloco 03, TLS agora validado (item acima), mas nenhuma migration foi aplicada a nenhum banco real ainda. Continua em aberto, dependendo de autorização e execução separadas.
+- ~~Aplicação da migration inicial não realizada (P2)~~ — **encerrado em 2026-07-31** (Bloco 12, DT-08): migration aplicada a `finanhouse_dev`, com autorização explícita do proprietário, auditada com sucesso (seis tabelas, zero registros).
+- **Persistência real incompleta (RF-05)** — infraestrutura, TLS e schema já disponíveis no Aiven, mas repositórios Drizzle reais, endpoints de API e integração do frontend com a API continuam pendentes. A aplicação segue lendo/escrevendo apenas o estado em memória.
 - Ausência total de schema significa que a primeira migration real definirá a base de todo o domínio financeiro — mitigado por revisão manual do SQL gerado (Bloco 03) antes de qualquer aplicação futura.
 
 ## 9. Dependências
