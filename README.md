@@ -14,7 +14,7 @@ Controle financeiro doméstico por competência mensal: registro de movimentaç�
 - Vite
 - TypeScript
 - Node.js
-- MySQL (Clever Cloud)
+- MySQL (Aiven for MySQL — ver `Docs/02_architecture/decisoes_tecnicas.md`, DT-07; Clever Cloud não é mais a infraestrutura ativa, permanece como registro histórico)
 - Deploy futuro na Vercel
 - npm workspaces (monorepo)
 
@@ -52,14 +52,15 @@ A governança do projeto (visão de produto, arquitetura, contratos, decisões, 
 
 ## Banco de dados
 
-O MySQL do Finanhouse **já existe** na Clever Cloud — não é um banco a ser criado do zero. Ele é tratado como **não descartável e potencialmente contendo estrutura ou dados**, ainda não inspecionados nesta sessão. Regras vigentes até que uma inspeção somente leitura seja realizada:
+**Estado atual (Bloco 11):** a infraestrutura MySQL ativa do Finanhouse é o **Aiven for MySQL** (projeto `finanhouse`, serviço `finanhouse-mysql`, MySQL 8.4) — ver `Docs/02_architecture/decisoes_tecnicas.md` (DT-07) e `Docs/03_contracts/contrato_banco_dados.md`. A Clever Cloud (histórico abaixo) deixou de ser a infraestrutura ativa. Desenvolvimento e produção usam bancos e usuários totalmente separados (`finanhouse_dev`/`finanhouse_dev_app` e, no futuro, `finanhouse_prod`/usuário exclusivo); nenhuma instância local de MySQL é usada. Toda conexão exige TLS com certificado CA (`rejectUnauthorized: true`, `DATABASE_SSL_MODE=verify_identity`) — configuração centralizada e validada em `apps/api/src/config/database-config.ts`. Em 2026-07-30 o proprietário validou manualmente a conexão real com `npm run db:check` — TLS ativo confirmado (MySQL `8.4.8`, banco `finanhouse_dev`, usuário `finanhouse_dev_app`). **Nenhuma migration foi aplicada e nenhum seed foi executado ainda**: essa continua sendo a próxima etapa pendente, sujeita a autorização e execução separadas.
 
-- Não presumir banco vazio nem preenchido.
-- Não criar outro banco.
-- Não recriar nem sobrescrever o banco existente.
-- Nenhuma migration, seed, `CREATE TABLE`, `DROP`, `TRUNCATE`, `ALTER`, `DELETE`, `UPDATE`, `INSERT` ou sincronização automática de schema (ORM push) antes do inventário do estado atual.
-- Credenciais do banco nunca entram no Git, logs, documentação ou saída pública.
-- A escolha da biblioteca de acesso (ORM vs. driver puro, ex.: Drizzle + mysql2 vs. mysql2 puro) é uma **decisão pendente**, registrada em `Docs/04_governance/registro_decisoes.md`, a ser tomada somente após o inventário do banco existente.
+Regras vigentes, válidas para qualquer provedor:
+
+- Nenhuma migration, seed, `CREATE TABLE`, `DROP`, `TRUNCATE`, `ALTER`, `DELETE`, `UPDATE`, `INSERT` ou sincronização automática de schema (`drizzle-kit push`) sem autorização explícita e sem uma verificação de conectividade bem-sucedida antes.
+- Credenciais do banco nunca entram no Git, logs, documentação ou saída pública; certificados CA nunca são versionados.
+- Ambiente de desenvolvimento nunca aponta para o banco de produção, e vice-versa (validado antes de qualquer conexão).
+
+**Histórico — Clever Cloud (Blocos 02–04):** o MySQL da Clever Cloud foi inspecionado (somente leitura) e confirmado vazio; um schema foi modelado (Drizzle + mysql2, ADR-001) e uma migration inicial foi gerada e revisada, mas nunca aplicada. A verificação de TLS/SSL da Clever Cloud foi diagnosticada como incompatível com a política de produção e nunca corrigida — essa foi a motivação direta da troca para o Aiven no Bloco 11.
 
 ## Estado atual
 
