@@ -37,14 +37,16 @@ describe('App', () => {
     expect(screen.getAllByText(/seguro do carro/).length).toBeGreaterThan(0)
   })
 
-  it('mantém a sidebar em modo tipográfico e mostra a logo oficial no hero', () => {
+  it('exibe a marca oficial duas vezes: institucional na sidebar e decorativa no hero', () => {
     renderWithProviders(<App />)
-    // Sidebar continua sem imagem (modo tipográfico) — nenhuma versão compacta oficial existe ainda.
-    expect(screen.getByText('Finanhouse')).toBeTruthy()
-    expect(screen.queryByRole('img', { name: 'Finanhouse' })).toBeNull()
-    // Hero renderiza a logo oficial completa (imagem real, não texto/ícone inventado).
+    // Sidebar: ocorrência institucional permanente, imagem real (não mais modo tipográfico).
+    const sidebarImage = screen.getByRole('img', { name: 'Finanhouse' })
+    expect(sidebarImage.getAttribute('src')).toMatch(/finanhouse-logo-hero/)
+    // Hero: ocorrência decorativa, imagem real com o slogan completo no alt.
     const heroImage = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
     expect(heroImage.tagName).toBe('IMG')
+    // As duas são elementos <img> distintos — nunca a mesma ocorrência duplicada por engano.
+    expect(sidebarImage).not.toBe(heroImage)
   })
 
   it('nunca renderiza NaN ou Infinity em nenhum valor', () => {

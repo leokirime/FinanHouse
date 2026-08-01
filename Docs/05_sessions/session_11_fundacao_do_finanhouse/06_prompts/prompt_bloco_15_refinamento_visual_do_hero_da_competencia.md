@@ -11,7 +11,7 @@ Antes de qualquer ação, leia:
 
 ## 2. Objetivo
 
-Corrigir o hero da competência mensal no dashboard: a competência deve ser o elemento principal; a logo vira um elemento decorativo pequeno no canto superior direito, sem coluna nem painel de fundo próprios.
+Corrigir o hero da competência mensal no dashboard: a competência deve ser o elemento principal; a logo vira um elemento decorativo pequeno no canto superior esquerdo, sem coluna nem painel de fundo próprios. _(Posição corrigida durante o Bloco 16 — a versão original deste prompt orientava "canto superior direito"; ver seção 17.)_
 
 ## 3. Escopo
 
@@ -50,7 +50,7 @@ A logo nunca é distorcida, recolorida, cortada ou usada como plano de fundo CSS
 ## 10. Tarefas
 
 1. Diagnosticar a estrutura atual e o asset de logo (confirmar transparência real via inspeção binária, não só pelo preview visual).
-2. Remover o painel/coluna da logo; reposicionar como elemento decorativo absoluto no canto superior direito (150–210px desktop).
+2. Remover o painel/coluna da logo; reposicionar como elemento decorativo absoluto no canto superior esquerdo (150–210px desktop; corrigido no Bloco 16 — ver seção 17).
 3. Ajustar responsividade (tablet reduz gradualmente; mobile 90–120px, sem sobreposição, sem rolagem horizontal).
 4. Remover tokens órfãos e atualizar a documentação de design system.
 5. Atualizar/criar testes; validar build/lint/typecheck/test/DDAE.
@@ -91,3 +91,7 @@ fix(web): reposicionar marca no hero da competência
 ## 16. Regra de Não Commit Automático
 
 **Não faça commit automaticamente sem confirmação do usuário.** Sugira o commit acima e aguarde aprovação explícita antes de executar `git add`, `git commit` ou `git push`.
+
+## 17. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-07-31)
+
+Este prompt originalmente orientava posicionar a logo no canto superior **direito** — orientação incorreta, esclarecida pelo proprietário durante o Bloco 16. A posição correta é o canto superior **esquerdo**. A correção foi aplicada como parte do trabalho do Bloco 16 (commit `fix(web): posicionar marca no canto superior esquerdo`), sem reabrir este bloco nem reescrever os commits já publicados do Bloco 15.

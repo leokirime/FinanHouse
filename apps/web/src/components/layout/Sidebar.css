@@ -13,6 +13,17 @@
   padding-inline: var(--fh-space-2);
 }
 
+.fh-sidebar__brand-link {
+  display: inline-block;
+  line-height: 0;
+}
+
+.fh-sidebar__brand-link:focus-visible {
+  outline: 2px solid var(--fh-purple-strong);
+  outline-offset: 4px;
+  border-radius: var(--fh-radius-sm);
+}
+
 .fh-sidebar__nav {
   flex: 1;
 }

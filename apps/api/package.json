@@ -16,11 +16,13 @@
     "db:seed:dev": "tsx scripts/db-seed-dev.ts",
     "db:audit:schema": "tsx scripts/db-audit-schema.ts",
     "db:audit:responsible-member": "tsx scripts/db-audit-responsible-member-integrity.ts",
-    "db:smoke:repositories": "tsx scripts/db-smoke-repositories.ts"
+    "db:smoke:repositories": "tsx scripts/db-smoke-repositories.ts",
+    "db:smoke:http": "tsx scripts/db-smoke-http.ts"
   },
   "dependencies": {
     "@finanhouse/domain": "*",
     "drizzle-orm": "^0.45.2",
+    "fastify": "^5.11.0",
     "mysql2": "^3.23.1"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router'
+import { Link, NavLink } from 'react-router'
+import finanhouseLogoHero from '../../../../../assets/images/finanhouse-logo-hero.png'
 import { Brand } from '../brand/Brand.tsx'
 import './Sidebar.css'
 
@@ -30,7 +31,9 @@ export function Sidebar() {
   return (
     <aside className="fh-sidebar" aria-label="Barra lateral">
       <div className="fh-sidebar__brand">
-        <Brand />
+        <Link to="/" className="fh-sidebar__brand-link" aria-label="Ir para a visão geral do FinanHouse">
+          <Brand logoSrc={finanhouseLogoHero} size="sidebar" />
+        </Link>
       </div>
       <nav className="fh-sidebar__nav" aria-label="Áreas do Finanhouse">
         <ul>

@@ -7,7 +7,7 @@
 .fh-hero__logo {
   position: absolute;
   top: var(--fh-space-6);
-  right: var(--fh-space-6);
+  left: var(--fh-space-6);
   width: clamp(150px, 18vw, 210px);
   height: auto;
   object-fit: contain;
@@ -19,6 +19,7 @@
   flex-direction: column;
   justify-content: center;
   gap: var(--fh-space-4);
+  margin-left: 250px;
   max-width: calc(100% - 250px);
 }
 
@@ -71,11 +72,12 @@
 
   .fh-hero__logo {
     top: var(--fh-space-5);
-    right: var(--fh-space-5);
+    left: var(--fh-space-5);
     width: clamp(130px, 16vw, 170px);
   }
 
   .fh-hero__info {
+    margin-left: 200px;
     max-width: calc(100% - 200px);
   }
 }
@@ -87,14 +89,15 @@
   }
 
   .fh-hero__logo {
-    top: var(--fh-space-4);
-    right: var(--fh-space-4);
+    position: static;
+    display: block;
     width: clamp(90px, 28vw, 120px);
+    margin: 0 0 var(--fh-space-4);
   }
 
   .fh-hero__info {
+    margin-left: 0;
     max-width: 100%;
-    padding-top: 88px;
   }
 
   .fh-hero__status {

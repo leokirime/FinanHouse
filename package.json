@@ -31,6 +31,7 @@
     "db:audit:schema": "npm run db:audit:schema --workspace=api --",
     "db:audit:responsible-member": "npm run db:audit:responsible-member --workspace=api --",
     "db:smoke:repositories": "npm run db:smoke:repositories --workspace=api",
+    "db:smoke:http": "npm run db:smoke:http --workspace=api",
     "typecheck:api-scripts": "npm run typecheck:scripts --workspace=api"
   }
 }

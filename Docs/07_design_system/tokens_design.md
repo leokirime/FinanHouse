@@ -65,7 +65,7 @@ Escala base 4px: `--fh-space-1` (4px) até `--fh-space-12` (48px) — `1, 2, 3, 
 
 - [x] Todo valor visual usado mais de uma vez no código tem um token correspondente aqui.
 - [x] Nenhum componente usa valor de cor/espaçamento hardcoded quando um token equivalente já existe (exceção: cores semânticas de status específicas de badges, que herdam diretamente dos tokens de cor via seletor `data-tone`).
-- [x] A logo oficial foi adicionada. Os tokens `--fh-brand-surface`/`--fh-brand-surface-border`, criados quando a logo ainda ocupava uma coluna própria no hero, foram removidos no Bloco 15 — a imagem (RGBA, transparência real) passou a ser exibida diretamente sobre o card, sem superfície própria, como elemento decorativo pequeno no canto superior direito.
+- [x] A logo oficial foi adicionada. Os tokens `--fh-brand-surface`/`--fh-brand-surface-border`, criados quando a logo ainda ocupava uma coluna própria no hero, foram removidos no Bloco 15 — a imagem (RGBA, transparência real) passou a ser exibida diretamente sobre o card, sem superfície própria, como elemento decorativo pequeno no canto superior esquerdo (posição corrigida retrospectivamente no Bloco 16; a implementação original do Bloco 15 usou o canto superior direito).
 
 ## 8. Perguntas Orientadoras
 
