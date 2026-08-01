@@ -8,6 +8,22 @@
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
 
+### DT-12 — Corte direto do frontend demonstrativo para a API HTTP local
+
+- **Data:** 2026-08-01
+- **Contexto:** o Bloco 16 (DT-11) implementou a API HTTP real, mas o frontend continuava em modo demonstrativo (`FinanceDemoProvider`, estado em memória inicializado por fixtures). Manter os dois modos simultaneamente (demo + real) duplicaria a superfície de estado e de testes indefinidamente, sem necessidade — o proprietário decidiu não manter fallback demonstrativo em runtime.
+- **Decisão:** o frontend passa a consumir exclusivamente a API HTTP real (`apps/web/src/api/**`, `FinanceProvider`). Não há modo híbrido, não há seletor demo/real, não há fallback silencioso para fixtures quando a API falha. Especificamente:
+  - Nenhum fallback demonstrativo em runtime: falha de conectividade, timeout ou configuração ausente aparecem como erro explícito (`FinanceStatusScreen`), nunca como dados fictícios.
+  - Carregamento inicial é representado visualmente (`status: 'loading'`) antes de qualquer rota montar.
+  - Mutações (`dispatch`) aguardam a resposta HTTP real antes de fechar diálogos/confirmar sucesso — nunca otimistas.
+  - Após uma mutação aprovada, a lista de movimentações é recarregada da API (fonte de verdade sempre o servidor, nunca um estado local "espelhado").
+  - Git é o mecanismo de reversão desta integração — não há bandeira de configuração para voltar ao modo demonstrativo.
+  - Autenticação real permanece pendente: `createdByUserId` é resolvido como o membro com `role: 'owner'` do household configurado (`VITE_FINANHOUSE_HOUSEHOLD_ID`), não um usuário autenticado.
+  - O household é resolvido por configuração local (`VITE_FINANHOUSE_HOUSEHOLD_ID`, `apps/web/.env.local`, nunca commitado) — nunca hardcoded no código-fonte, nunca presumido como `1`.
+  - Planejamento usa movimentações reais com `status: 'planned'`/`'pending'` (via `financial_entries`, já com porta e endpoints reais desde o Bloco 16). Somente a definição de **limites máximos por categoria** permanece pendente — não existe tabela nem endpoint de orçamento; nenhuma migration foi criada neste bloco para isso.
+- **Consequências:** `FinanceDemoProvider`/`financeDemoReducer`/`data/dashboard-fixtures.ts` foram removidos do runtime; a mesma lógica de transição (delegando sempre a `@finanhouse/domain`) foi portada para `apps/web/src/state/test-support/` como infraestrutura exclusiva de teste (`FinanceTestProvider`), nunca importada por `main.tsx`. Um script de bootstrap estrutural (`apps/api/scripts/db-bootstrap-household.ts`) cria o household/membros/categorias iniciais em `finanhouse_dev` — operação permanente, distinta de qualquer smoke-test sintético com rollback (Blocos 13/14/16).
+- **Não é uma decisão de arquitetura pronta para produção:** a API continua local, sem autenticação real; a integração assume um único household residencial, sem multiusuário concorrente.
+
 ### DT-11 — API HTTP financeira local com injeção de dependência
 
 - **Data:** 2026-08-01

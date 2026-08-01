@@ -75,11 +75,6 @@ describe('Sidebar', () => {
     }
   })
 
-  it('exibe o indicador de ambiente de demonstração', () => {
-    renderWithProviders(<Sidebar />)
-    expect(screen.getByText(/Dados simulados/)).toBeTruthy()
-  })
-
   it('renderiza a marca institucional (imagem real) no topo, antes dos itens de navegação', () => {
     const { container } = renderWithProviders(<Sidebar />)
     const image = screen.getByRole('img', { name: 'Finanhouse' })

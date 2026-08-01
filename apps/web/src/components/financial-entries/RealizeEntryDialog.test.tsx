@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { FIXTURE_CURRENT_PERIOD_ID, fixtureFinancialEntries } from '../../data/dashboard-fixtures.ts'
+import { FIXTURE_CURRENT_PERIOD_ID, fixtureFinancialEntries } from '../../state/test-support/finance-test-fixtures.ts'
 import { fireEvent, renderWithProviders, screen } from '../../test-utils.tsx'
 import { RealizeEntryDialog } from './RealizeEntryDialog.tsx'
 

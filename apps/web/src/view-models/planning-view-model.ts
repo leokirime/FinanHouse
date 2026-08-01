@@ -1,10 +1,12 @@
 import {
   addMoney,
   buildCategoryBudgetSummaries,
+  subtractMoney,
   type Category,
   type CategoryBudget,
   type CategoryBudgetStatus,
   type FinancialEntry,
+  type FinancialEntryType,
   type Money,
   type MonthlyPeriod,
   ZERO_MONEY,
@@ -240,9 +242,15 @@ function buildChart(rows: CategoryBudgetRowViewModel[]): PlanningChartViewModel 
   return { title: 'Consumo do limite por categoria', summary, bars }
 }
 
-function buildEntryRows(entries: FinancialEntry[], categories: Category[], periodId: number, status: 'planned' | 'pending'): PlanningEntryRowViewModel[] {
+export function buildEntryRows(
+  entries: FinancialEntry[],
+  categories: Category[],
+  periodId: number,
+  status: 'planned' | 'pending',
+  entryType: FinancialEntryType = 'expense',
+): PlanningEntryRowViewModel[] {
   return entries
-    .filter((entry) => entry.periodId === periodId && entry.entryType === 'expense' && entry.status === status)
+    .filter((entry) => entry.periodId === periodId && entry.entryType === entryType && entry.status === status)
     .map((entry) => ({
       id: entry.id,
       categoryName: categoryName(categories, entry.categoryId),
@@ -250,6 +258,49 @@ function buildEntryRows(entries: FinancialEntry[], categories: Category[], perio
       amountLabel: formatMoneyPtBr(entry.expectedAmount),
       dueDateLabel: entry.dueDate ? formatDatePtBrShort(entry.dueDate) : null,
     }))
+}
+
+export interface PlanningRealSummaryViewModel {
+  incomePlanned: PlanningValueViewModel
+  incomePending: PlanningValueViewModel
+  incomeProjected: PlanningValueViewModel
+  expensePlanned: PlanningValueViewModel
+  expensePending: PlanningValueViewModel
+  expenseRealized: PlanningValueViewModel
+  expenseProjected: PlanningValueViewModel
+  projectedBalance: PlanningValueViewModel
+}
+
+/**
+ * Resumo do Planejamento usando exclusivamente movimentações reais
+ * (`planned`/`pending`/`realized`, nunca `cancelled`) — não depende de
+ * `CategoryBudget` (limite por categoria, ainda sem persistência própria).
+ * Receita vem direto das movimentações; despesa reaproveita o resumo por
+ * categoria já calculado por `buildCategoryBudgetSummaries` (sempre chamado
+ * aqui com `budgets: []`).
+ */
+export function buildPlanningRealSummary(entries: FinancialEntry[], periodId: number, expenseSummary: PlanningSummaryViewModel): PlanningRealSummaryViewModel {
+  let incomePlanned = ZERO_MONEY
+  let incomePending = ZERO_MONEY
+  for (const entry of entries) {
+    if (entry.periodId !== periodId || entry.entryType !== 'income') continue
+    if (entry.status === 'planned') incomePlanned = addMoney(incomePlanned, entry.expectedAmount)
+    else if (entry.status === 'pending') incomePending = addMoney(incomePending, entry.expectedAmount)
+  }
+
+  const incomeProjected = addMoney(incomePlanned, incomePending)
+  const projectedBalance = subtractMoney(incomeProjected, expenseSummary.totalProjected.raw)
+
+  return {
+    incomePlanned: value(incomePlanned),
+    incomePending: value(incomePending),
+    incomeProjected: value(incomeProjected),
+    expensePlanned: expenseSummary.totalPlanned,
+    expensePending: expenseSummary.totalPending,
+    expenseRealized: expenseSummary.totalRealized,
+    expenseProjected: expenseSummary.totalProjected,
+    projectedBalance: value(projectedBalance),
+  }
 }
 
 function emptyViewModel(options: PlanningPeriodOptionViewModel[], title: string, description: string): PlanningViewModel {

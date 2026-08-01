@@ -1,19 +1,19 @@
-import type { FinanceDemoContextValue } from '../state/finance-demo-context.ts'
-import type { FinanceDemoState } from '../state/finance-demo-types.ts'
+import type { FinanceContextValue } from '../state/finance-context.ts'
+import type { FinanceReadyState } from '../state/finance-types.ts'
 import { fireEvent, render, renderWithProviders, screen, within } from '../test-utils.tsx'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import { ComparisonPage } from './ComparisonPage.tsx'
-import { FinanceDemoContext } from '../state/finance-demo-context.ts'
-import { createInitialFinanceDemoState } from '../state/finance-demo-initial-state.ts'
+import { FinanceContext } from '../state/finance-context.ts'
+import { createTestFinanceState } from '../state/test-support/finance-test-fixtures.ts'
 
-function renderWithState(state: FinanceDemoState) {
-  const value: FinanceDemoContextValue = { state, dispatch: vi.fn() }
+function renderWithState(state: FinanceReadyState) {
+  const value: FinanceContextValue = { state, dispatch: vi.fn() }
   return render(
     <MemoryRouter initialEntries={['/comparativo']}>
-      <FinanceDemoContext.Provider value={value}>
+      <FinanceContext.Provider value={value}>
         <ComparisonPage />
-      </FinanceDemoContext.Provider>
+      </FinanceContext.Provider>
     </MemoryRouter>,
   )
 }
@@ -57,7 +57,7 @@ describe('ComparisonPage', () => {
   })
 
   it('renderiza estado vazio com menos de duas competências', () => {
-    const state = createInitialFinanceDemoState()
+    const state = createTestFinanceState()
     renderWithState({ ...state, periods: [state.periods[0]!], currentPeriodId: state.periods[0]!.id, previousPeriodId: state.periods[0]!.id })
     expect(screen.getByText('Comparativo indisponível')).toBeTruthy()
     expect(screen.getByText(/ao menos duas competências/)).toBeTruthy()

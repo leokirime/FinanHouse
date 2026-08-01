@@ -11,7 +11,7 @@ import {
   fixtureMonthlyPeriods,
   FIXTURE_CURRENT_PERIOD_ID,
   FIXTURE_PREVIOUS_PERIOD_ID,
-} from '../data/dashboard-fixtures.ts'
+} from '../state/test-support/finance-test-fixtures.ts'
 import { buildComparisonPeriodOptions, buildComparisonViewModel } from './comparison-view-model.ts'
 
 function period(id: number, referenceMonth: string): MonthlyPeriod {

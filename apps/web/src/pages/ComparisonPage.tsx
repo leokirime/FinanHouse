@@ -6,7 +6,7 @@ import { ComparisonSummaryCard } from '../components/comparison/ComparisonSummar
 import { NewAndEndedExpenses } from '../components/comparison/NewAndEndedExpenses.tsx'
 import { PeriodComparisonSelector } from '../components/comparison/PeriodComparisonSelector.tsx'
 import { PlannedVsRealized } from '../components/comparison/PlannedVsRealized.tsx'
-import { useFinanceDemo } from '../hooks/use-finance-demo.ts'
+import { useReadyFinance } from '../hooks/use-finance.ts'
 import { buildComparisonPeriodOptions, buildComparisonViewModel } from '../view-models/comparison-view-model.ts'
 import './ComparisonPage.css'
 
@@ -15,7 +15,7 @@ function nextDifferentPeriodId(ids: number[], selectedId: number | null): number
 }
 
 export function ComparisonPage() {
-  const { state } = useFinanceDemo()
+  const { state } = useReadyFinance()
   const periodOptions = useMemo(() => buildComparisonPeriodOptions(state.periods), [state.periods])
   const periodIds = useMemo(() => periodOptions.map((option) => option.id), [periodOptions])
   const [basePeriodId, setBasePeriodId] = useState<number | null>(state.currentPeriodId)
@@ -32,7 +32,10 @@ export function ComparisonPage() {
     setComparedPeriodId((current) => {
       const base = basePeriodId !== null && periodIds.includes(basePeriodId) ? basePeriodId : (state.currentPeriodId ?? periodIds[0] ?? null)
       if (current !== null && periodIds.includes(current) && current !== base) return current
-      const preferred = state.previousPeriodId !== base && periodIds.includes(state.previousPeriodId) ? state.previousPeriodId : null
+      const preferred =
+        state.previousPeriodId !== null && state.previousPeriodId !== base && periodIds.includes(state.previousPeriodId)
+          ? state.previousPeriodId
+          : null
       return preferred ?? nextDifferentPeriodId(periodIds, base)
     })
   }, [basePeriodId, periodIds, state.currentPeriodId, state.previousPeriodId])

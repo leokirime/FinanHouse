@@ -1,19 +1,22 @@
 import { render, type RenderOptions } from '@testing-library/react'
 import type { ReactElement, ReactNode } from 'react'
 import { MemoryRouter } from 'react-router'
-import { FinanceDemoProvider } from './state/FinanceDemoProvider.tsx'
+import type { FinanceState } from './state/finance-types.ts'
+import { FinanceTestProvider } from './state/test-support/FinanceTestProvider.tsx'
 
 export interface RenderWithProvidersOptions extends Omit<RenderOptions, 'wrapper'> {
   initialEntries?: string[]
+  /** Estado financeiro inicial — padrão: fixtures de teste com `status: 'ready'` (ver `finance-test-fixtures.ts`). */
+  financeState?: FinanceState
 }
 
-/** Envolve o componente testado com o roteador (em memória) e o estado demonstrativo — use sempre que o componente ou algum descendente usar `react-router` ou `useFinanceDemo()`. */
+/** Envolve o componente testado com o roteador (em memória) e o estado financeiro de teste — use sempre que o componente ou algum descendente usar `react-router` ou `useFinance()`/`useReadyFinance()`. */
 export function renderWithProviders(ui: ReactElement, options: RenderWithProvidersOptions = {}) {
-  const { initialEntries, ...renderOptions } = options
+  const { initialEntries, financeState, ...renderOptions } = options
   return render(ui, {
     wrapper: ({ children }: { children: ReactNode }) => (
       <MemoryRouter initialEntries={initialEntries ?? ['/']}>
-        <FinanceDemoProvider>{children}</FinanceDemoProvider>
+        <FinanceTestProvider initialState={financeState}>{children}</FinanceTestProvider>
       </MemoryRouter>
     ),
     ...renderOptions,

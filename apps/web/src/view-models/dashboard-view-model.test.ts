@@ -5,7 +5,7 @@ import {
   fixtureCategories,
   fixtureFinancialEntries,
   fixtureMonthlyPeriods,
-} from '../data/dashboard-fixtures.ts'
+} from '../state/test-support/finance-test-fixtures.ts'
 import { buildDashboardViewModel } from './dashboard-view-model.ts'
 
 describe('buildDashboardViewModel', () => {

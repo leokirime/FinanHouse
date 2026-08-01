@@ -6,14 +6,14 @@ import { FinancialEntryFilters } from '../components/financial-entries/Financial
 import { FinancialEntryForm } from '../components/financial-entries/FinancialEntryForm.tsx'
 import { FinancialEntryList } from '../components/financial-entries/FinancialEntryList.tsx'
 import { RealizeEntryDialog } from '../components/financial-entries/RealizeEntryDialog.tsx'
-import { useFinanceDemo } from '../hooks/use-finance-demo.ts'
+import { useReadyFinance } from '../hooks/use-finance.ts'
 import { DEFAULT_FINANCIAL_ENTRIES_FILTERS, filterFinancialEntries, type FinancialEntriesFilters } from '../view-models/financial-entries-view-model.ts'
 import './FinancialEntriesPage.css'
 
 type DialogState = { kind: 'create' } | { kind: 'edit'; entry: FinancialEntry } | { kind: 'realize'; entry: FinancialEntry } | { kind: 'cancel'; entry: FinancialEntry } | null
 
 export function FinancialEntriesPage() {
-  const { state, dispatch } = useFinanceDemo()
+  const { state, dispatch } = useReadyFinance()
   const [filters, setFilters] = useState<FinancialEntriesFilters>(DEFAULT_FINANCIAL_ENTRIES_FILTERS)
   const [dialog, setDialog] = useState<DialogState>(null)
 
@@ -31,9 +31,6 @@ export function FinancialEntriesPage() {
       <div className="fh-card fh-card--elevated fh-financial-entries-page__intro">
         <div>
           <h2>Movimentações</h2>
-          <p className="fh-text-secondary">
-            <span aria-hidden="true">●</span> Modo demonstrativo: alterações válidas somente durante esta sessão.
-          </p>
         </div>
         <button type="button" className="fh-financial-entries-page__new" onClick={() => setDialog({ kind: 'create' })}>
           Nova movimentação

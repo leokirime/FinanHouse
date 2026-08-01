@@ -3,10 +3,9 @@ import { fireEvent, renderWithProviders, screen, within } from '../test-utils.ts
 import { FinancialEntriesPage } from './FinancialEntriesPage.tsx'
 
 describe('FinancialEntriesPage', () => {
-  it('renderiza a página com título e indicador de modo demonstrativo', () => {
+  it('renderiza a página com título', () => {
     renderWithProviders(<FinancialEntriesPage />)
     expect(screen.getByRole('heading', { name: 'Movimentações' })).toBeTruthy()
-    expect(screen.getByText(/Modo demonstrativo/)).toBeTruthy()
   })
 
   it('lista as movimentações da competência atual', () => {
@@ -39,7 +38,7 @@ describe('FinancialEntriesPage', () => {
     fireEvent.change(dialog.getByLabelText('Valor previsto'), { target: { value: '45.00' } })
     fireEvent.click(dialog.getByRole('button', { name: 'Adicionar movimentação' }))
 
-    expect(screen.getByText('Movimentação adicionada à sessão demonstrativa.')).toBeTruthy()
+    expect(screen.queryByRole('dialog')).toBeNull()
     expect(screen.getByText('Presente de teste')).toBeTruthy()
   })
 

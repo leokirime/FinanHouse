@@ -2,8 +2,12 @@ import type { PlanningEntryRowViewModel } from '../../view-models/planning-view-
 import './Planning.css'
 
 export interface PlanningEntriesProps {
+  title: string
+  headingId: string
   plannedEntries: PlanningEntryRowViewModel[]
   pendingEntries: PlanningEntryRowViewModel[]
+  plannedEmptyText: string
+  pendingEmptyText: string
 }
 
 function EntryList({ title, entries, emptyText }: { title: string; entries: PlanningEntryRowViewModel[]; emptyText: string }) {
@@ -30,14 +34,14 @@ function EntryList({ title, entries, emptyText }: { title: string; entries: Plan
   )
 }
 
-/** Contexto de quais movimentações compõem os totais "pendente"/"planejado" dos cards acima — nenhum total é recalculado aqui, apenas listado. */
-export function PlanningEntries({ plannedEntries, pendingEntries }: PlanningEntriesProps) {
+/** Contexto de quais movimentações compõem os totais "pendente"/"planejado" dos cards acima — nenhum total é recalculado aqui, apenas listado. Reaproveitado para receitas e despesas previstas. */
+export function PlanningEntries({ title, headingId, plannedEntries, pendingEntries, plannedEmptyText, pendingEmptyText }: PlanningEntriesProps) {
   return (
-    <section className="fh-card fh-planning-section fh-planning-entries" aria-labelledby="planning-entries-heading">
-      <h2 id="planning-entries-heading">Despesas planejadas e pendentes</h2>
+    <section className="fh-card fh-planning-section fh-planning-entries" aria-labelledby={headingId}>
+      <h2 id={headingId}>{title}</h2>
       <div className="fh-planning-entries__grid">
-        <EntryList title="Pendentes" entries={pendingEntries} emptyText="Nenhuma despesa pendente nesta competência." />
-        <EntryList title="Planejadas" entries={plannedEntries} emptyText="Nenhuma despesa planejada nesta competência." />
+        <EntryList title="Pendentes" entries={pendingEntries} emptyText={pendingEmptyText} />
+        <EntryList title="Planejadas" entries={plannedEntries} emptyText={plannedEmptyText} />
       </div>
     </section>
   )

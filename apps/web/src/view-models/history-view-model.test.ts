@@ -8,7 +8,7 @@ import {
   fixtureMonthlyPeriods,
   FIXTURE_CURRENT_PERIOD_ID,
   FIXTURE_PREVIOUS_PERIOD_ID,
-} from '../data/dashboard-fixtures.ts'
+} from '../state/test-support/finance-test-fixtures.ts'
 import { buildAvailableHistoryYears, buildHistoryViewModel, DEFAULT_HISTORY_FILTERS, sortPeriodsByReferenceMonthDesc } from './history-view-model.ts'
 
 function period(id: number, referenceMonth: string, status: MonthlyPeriod['status'] = 'closed'): MonthlyPeriod {

@@ -55,11 +55,6 @@ export function Sidebar() {
           )}
         </ul>
       </nav>
-      <div className="fh-sidebar__footer">
-        <span className="fh-badge fh-sidebar__demo-badge">
-          <span aria-hidden="true">●</span> Dados simulados
-        </span>
-      </div>
     </aside>
   )
 }

@@ -1,7 +1,7 @@
 import { formatMoney, parseMoney, type FinancialEntry, type FinancialEntryType } from '@finanhouse/domain'
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
-import { fixtureMemberLabels } from '../../data/dashboard-fixtures.ts'
-import { useFinanceDemo } from '../../hooks/use-finance-demo.ts'
+import { useId, useState, type FormEvent } from 'react'
+import { useMutationDialog } from '../../hooks/use-mutation-dialog.ts'
+import { useReadyFinance } from '../../hooks/use-finance.ts'
 import { EntryDialog } from './EntryDialog.tsx'
 import './FinancialEntryForm.css'
 
@@ -15,12 +15,13 @@ export interface FinancialEntryFormProps {
 /**
  * Formulário de criação e edição de movimentações. Toda validação de
  * negócio (valor positivo, duas casas decimais, categoria/membro ativos,
- * competência aberta) é feita por `@finanhouse/domain` dentro do reducer —
- * este componente só converte texto em `Money` via `parseMoney` (a mesma
- * função do domínio) e monta a ação a despachar.
+ * competência aberta) é feita pela API — este componente só converte texto
+ * em `Money` via `parseMoney` (a mesma função do domínio), despacha a ação e
+ * aguarda a resposta real antes de fechar (nunca confirma sucesso antes da
+ * resposta HTTP).
  */
 export function FinancialEntryForm({ mode, entry, onClose }: FinancialEntryFormProps) {
-  const { state, dispatch } = useFinanceDemo()
+  const { state, dispatch } = useReadyFinance()
   const titleId = useId()
   const errorId = useId()
   const amountErrorId = useId()
@@ -35,21 +36,14 @@ export function FinancialEntryForm({ mode, entry, onClose }: FinancialEntryFormP
   const [notes, setNotes] = useState(entry?.notes ?? '')
   const [amountError, setAmountError] = useState<string | null>(null)
 
-  const pendingSubmitRef = useRef(false)
-
-  useEffect(() => {
-    if (!pendingSubmitRef.current) return
-    pendingSubmitRef.current = false
-    if (state.actionError === null) {
-      onClose()
-    }
-  }, [state, onClose])
+  const { markSubmitted } = useMutationDialog({ state, onSuccess: onClose })
 
   const availableCategories = state.categories.filter((category) => category.entryType === entryType && category.status === 'active')
   const availableMembers = state.members.filter((member) => member.status === 'active')
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (state.pendingAction) return
     setAmountError(null)
 
     let expectedAmount
@@ -62,7 +56,7 @@ export function FinancialEntryForm({ mode, entry, onClose }: FinancialEntryFormP
 
     if (categoryId === '') return
 
-    pendingSubmitRef.current = true
+    markSubmitted()
 
     if (mode === 'create') {
       dispatch({
@@ -187,7 +181,7 @@ export function FinancialEntryForm({ mode, entry, onClose }: FinancialEntryFormP
               <option value="">Nenhum</option>
               {availableMembers.map((member) => (
                 <option key={member.id} value={member.id}>
-                  {fixtureMemberLabels[member.id] ?? `Membro #${member.id}`}
+                  Membro #{member.id}
                 </option>
               ))}
             </select>
@@ -206,11 +200,11 @@ export function FinancialEntryForm({ mode, entry, onClose }: FinancialEntryFormP
         )}
 
         <div className="fh-entry-form__actions">
-          <button type="button" className="fh-entry-form__secondary" onClick={onClose}>
+          <button type="button" className="fh-entry-form__secondary" onClick={onClose} disabled={state.pendingAction}>
             Cancelar
           </button>
-          <button type="submit" className="fh-entry-form__primary">
-            {mode === 'create' ? 'Adicionar movimentação' : 'Salvar alterações'}
+          <button type="submit" className="fh-entry-form__primary" disabled={state.pendingAction} aria-busy={state.pendingAction}>
+            {state.pendingAction ? 'Salvando…' : mode === 'create' ? 'Adicionar movimentação' : 'Salvar alterações'}
           </button>
         </div>
       </form>

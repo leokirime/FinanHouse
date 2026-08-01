@@ -1,21 +1,18 @@
 import { useMemo, useState } from 'react'
-import { CategoryBudgetForm } from '../components/planning/CategoryBudgetForm.tsx'
-import { CategoryBudgetList } from '../components/planning/CategoryBudgetList.tsx'
-import { PlanningChart } from '../components/planning/PlanningChart.tsx'
+import { FinancialEntryForm } from '../components/financial-entries/FinancialEntryForm.tsx'
+import { CategoryDistributionList } from '../components/planning/CategoryDistributionList.tsx'
 import { PlanningEmptyState } from '../components/planning/PlanningEmptyState.tsx'
 import { PlanningEntries } from '../components/planning/PlanningEntries.tsx'
-import { PlanningSummary } from '../components/planning/PlanningSummary.tsx'
+import { PlanningRealSummary } from '../components/planning/PlanningRealSummary.tsx'
 import './PlanningPage.css'
-import { useFinanceDemo } from '../hooks/use-finance-demo.ts'
-import { buildPlanningPeriodOptions, buildPlanningViewModel, type CategoryBudgetRowViewModel } from '../view-models/planning-view-model.ts'
-
-type DialogState = { kind: 'create'; categoryId?: number } | { kind: 'edit'; row: CategoryBudgetRowViewModel } | null
+import { useReadyFinance } from '../hooks/use-finance.ts'
+import { buildEntryRows, buildPlanningPeriodOptions, buildPlanningRealSummary, buildPlanningViewModel } from '../view-models/planning-view-model.ts'
 
 export function PlanningPage() {
-  const { state, dispatch } = useFinanceDemo()
+  const { state, dispatch } = useReadyFinance()
   const periodOptions = useMemo(() => buildPlanningPeriodOptions(state.periods), [state.periods])
   const [selectedPeriodId, setSelectedPeriodId] = useState<number | null>(state.currentPeriodId)
-  const [dialog, setDialog] = useState<DialogState>(null)
+  const [creatingEntry, setCreatingEntry] = useState(false)
 
   const effectiveSelectedPeriodId =
     selectedPeriodId !== null && periodOptions.some((option) => option.id === selectedPeriodId) ? selectedPeriodId : (periodOptions[0]?.id ?? null)
@@ -27,21 +24,35 @@ export function PlanningPage() {
         selectedPeriodId: effectiveSelectedPeriodId,
         categories: state.categories,
         entries: state.entries,
-        budgets: state.categoryBudgets,
+        // Limites por categoria ainda não têm persistência própria (DT-12) — a distribuição
+        // reflete somente a soma de movimentações reais, nunca um `CategoryBudget` fictício.
+        budgets: [],
       }),
-    [state.periods, effectiveSelectedPeriodId, state.categories, state.entries, state.categoryBudgets],
+    [state.periods, effectiveSelectedPeriodId, state.categories, state.entries],
   )
 
-  const canCreateBudget = effectiveSelectedPeriodId === state.currentPeriodId
+  const realSummary = useMemo(
+    () => (viewModel.summary && effectiveSelectedPeriodId !== null ? buildPlanningRealSummary(state.entries, effectiveSelectedPeriodId, viewModel.summary) : null),
+    [state.entries, effectiveSelectedPeriodId, viewModel.summary],
+  )
+
+  const incomePlannedEntries = useMemo(
+    () => (effectiveSelectedPeriodId !== null ? buildEntryRows(state.entries, state.categories, effectiveSelectedPeriodId, 'planned', 'income') : []),
+    [state.entries, state.categories, effectiveSelectedPeriodId],
+  )
+  const incomePendingEntries = useMemo(
+    () => (effectiveSelectedPeriodId !== null ? buildEntryRows(state.entries, state.categories, effectiveSelectedPeriodId, 'pending', 'income') : []),
+    [state.entries, state.categories, effectiveSelectedPeriodId],
+  )
+
+  const canCreateEntry = effectiveSelectedPeriodId === state.currentPeriodId
 
   return (
     <div className="fh-planning-page">
       <div className="fh-card fh-card--elevated fh-planning-page__intro">
         <div>
           <h2>Planejamento</h2>
-          <p className="fh-text-secondary">
-            <span aria-hidden="true">●</span> Modo demonstrativo: limites válidos somente durante esta sessão.
-          </p>
+          <p className="fh-text-secondary">Contas previstas da competência — receitas e despesas planejadas ou pendentes.</p>
         </div>
 
         <label className="fh-planning-page__period-select">
@@ -62,11 +73,11 @@ export function PlanningPage() {
         <button
           type="button"
           className="fh-planning-page__new"
-          onClick={() => setDialog({ kind: 'create' })}
-          disabled={!canCreateBudget}
-          title={canCreateBudget ? undefined : 'Novos limites só podem ser criados na competência atual.'}
+          onClick={() => setCreatingEntry(true)}
+          disabled={!canCreateEntry}
+          title={canCreateEntry ? undefined : 'Novas contas previstas só podem ser criadas na competência atual.'}
         >
-          Definir limite
+          Adicionar conta prevista
         </button>
       </div>
 
@@ -88,32 +99,31 @@ export function PlanningPage() {
         <>
           <p className="fh-visually-hidden">{viewModel.accessibleSummary}</p>
 
-          {viewModel.summary && <PlanningSummary summary={viewModel.summary} />}
+          {realSummary && <PlanningRealSummary summary={realSummary} />}
 
-          <CategoryBudgetList
-            rows={viewModel.rows}
-            onEditLimit={(row) => setDialog({ kind: 'edit', row })}
-            onDefineLimit={(row) => canCreateBudget && setDialog({ kind: 'create', categoryId: row.categoryId })}
+          <CategoryDistributionList rows={viewModel.rows} />
+
+          <PlanningEntries
+            title="Receitas previstas"
+            headingId="planning-income-entries-heading"
+            plannedEntries={incomePlannedEntries}
+            pendingEntries={incomePendingEntries}
+            plannedEmptyText="Nenhuma receita planejada nesta competência."
+            pendingEmptyText="Nenhuma receita pendente nesta competência."
           />
 
-          <PlanningChart chart={viewModel.chart} />
-
-          <PlanningEntries plannedEntries={viewModel.plannedEntries} pendingEntries={viewModel.pendingEntries} />
+          <PlanningEntries
+            title="Despesas previstas"
+            headingId="planning-expense-entries-heading"
+            plannedEntries={viewModel.plannedEntries}
+            pendingEntries={viewModel.pendingEntries}
+            plannedEmptyText="Nenhuma despesa planejada nesta competência."
+            pendingEmptyText="Nenhuma despesa pendente nesta competência."
+          />
         </>
       )}
 
-      {dialog?.kind === 'create' && (
-        <CategoryBudgetForm mode="create" initialCategoryId={dialog.categoryId} onClose={() => setDialog(null)} />
-      )}
-      {dialog?.kind === 'edit' && dialog.row.budgetId !== null && (
-        <CategoryBudgetForm
-          mode="edit"
-          budgetId={dialog.row.budgetId}
-          initialCategoryId={dialog.row.categoryId}
-          initialLimitAmountCents={dialog.row.limit?.raw}
-          onClose={() => setDialog(null)}
-        />
-      )}
+      {creatingEntry && <FinancialEntryForm mode="create" onClose={() => setCreatingEntry(false)} />}
     </div>
   )
 }

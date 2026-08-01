@@ -11,6 +11,7 @@ const SCRIPTS = [
   'db-seed-dev.ts',
   'db-audit-schema.ts',
   'db-audit-responsible-member-integrity.ts',
+  'db-bootstrap-household.ts',
 ]
 
 /**

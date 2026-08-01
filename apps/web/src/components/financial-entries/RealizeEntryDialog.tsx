@@ -1,6 +1,7 @@
 import { formatMoney, parseMoney, type FinancialEntry } from '@finanhouse/domain'
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
-import { useFinanceDemo } from '../../hooks/use-finance-demo.ts'
+import { useState, useId, type FormEvent } from 'react'
+import { useMutationDialog } from '../../hooks/use-mutation-dialog.ts'
+import { useReadyFinance } from '../../hooks/use-finance.ts'
 import { EntryDialog } from './EntryDialog.tsx'
 import './FinancialEntryForm.css'
 
@@ -15,7 +16,7 @@ export interface RealizeEntryDialogProps {
  * automaticamente a partir do valor previsto.
  */
 export function RealizeEntryDialog({ entry, onClose }: RealizeEntryDialogProps) {
-  const { state, dispatch } = useFinanceDemo()
+  const { state, dispatch } = useReadyFinance()
   const titleId = useId()
   const errorId = useId()
   const amountErrorId = useId()
@@ -25,18 +26,12 @@ export function RealizeEntryDialog({ entry, onClose }: RealizeEntryDialogProps) 
   const [realizationDate, setRealizationDate] = useState('')
   const [amountError, setAmountError] = useState<string | null>(null)
   const [dateError, setDateError] = useState<string | null>(null)
-  const pendingSubmitRef = useRef(false)
 
-  useEffect(() => {
-    if (!pendingSubmitRef.current) return
-    pendingSubmitRef.current = false
-    if (state.actionError === null) {
-      onClose()
-    }
-  }, [state, onClose])
+  const { markSubmitted } = useMutationDialog({ state, onSuccess: onClose })
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
+    if (state.pendingAction) return
     setAmountError(null)
     setDateError(null)
 
@@ -52,7 +47,7 @@ export function RealizeEntryDialog({ entry, onClose }: RealizeEntryDialogProps) 
       return
     }
 
-    pendingSubmitRef.current = true
+    markSubmitted()
     dispatch({ type: 'REALIZE', id: entry.id, actualAmount, realizationDate })
   }
 
@@ -106,11 +101,11 @@ export function RealizeEntryDialog({ entry, onClose }: RealizeEntryDialogProps) 
         )}
 
         <div className="fh-entry-form__actions">
-          <button type="button" className="fh-entry-form__secondary" onClick={onClose}>
+          <button type="button" className="fh-entry-form__secondary" onClick={onClose} disabled={state.pendingAction}>
             Cancelar
           </button>
-          <button type="submit" className="fh-entry-form__primary">
-            Confirmar realização
+          <button type="submit" className="fh-entry-form__primary" disabled={state.pendingAction} aria-busy={state.pendingAction}>
+            {state.pendingAction ? 'Confirmando…' : 'Confirmar realização'}
           </button>
         </div>
       </form>
