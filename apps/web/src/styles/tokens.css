@@ -34,11 +34,6 @@
   --fh-expense: #f2718a;
   --fh-warning: #f5b95c;
 
-  /* Superfície de marca — usada apenas no hero, para preservar a legibilidade
-     do wordmark escuro da logo oficial sobre o fundo preto do dashboard. */
-  --fh-brand-surface: #f4f1f8;
-  --fh-brand-surface-border: rgba(155, 93, 229, 0.22);
-
   /* Raios */
   --fh-radius-sm: 8px;
   --fh-radius-md: 14px;
