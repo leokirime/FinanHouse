@@ -1,27 +1,27 @@
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
-import { FinanceDemoContext, type FinanceDemoContextValue } from '../state/finance-demo-context.ts'
-import { createInitialFinanceDemoState } from '../state/finance-demo-initial-state.ts'
-import type { FinanceDemoState } from '../state/finance-demo-types.ts'
+import { FinanceContext, type FinanceContextValue } from '../state/finance-context.ts'
+import type { FinanceReadyState } from '../state/finance-types.ts'
+import { createTestFinanceState } from '../state/test-support/finance-test-fixtures.ts'
 import { fireEvent, render, renderWithProviders, screen, within } from '../test-utils.tsx'
 import { HistoryPage } from './HistoryPage.tsx'
 
-function renderWithState(state: FinanceDemoState) {
-  const value: FinanceDemoContextValue = { state, dispatch: vi.fn() }
+function renderWithState(state: FinanceReadyState) {
+  const value: FinanceContextValue = { state, dispatch: vi.fn() }
   return render(
     <MemoryRouter initialEntries={['/historico']}>
-      <FinanceDemoContext.Provider value={value}>
+      <FinanceContext.Provider value={value}>
         <HistoryPage />
-      </FinanceDemoContext.Provider>
+      </FinanceContext.Provider>
     </MemoryRouter>,
   )
 }
 
 describe('HistoryPage', () => {
-  it('renderiza a página com título e indicador de modo demonstrativo', () => {
+  it('renderiza a página com título e indicação de consulta somente leitura', () => {
     renderWithProviders(<HistoryPage />, { initialEntries: ['/historico'] })
     expect(screen.getByRole('heading', { name: 'Histórico' })).toBeTruthy()
-    expect(screen.getByText(/Modo demonstrativo/)).toBeTruthy()
+    expect(screen.getByText(/somente leitura/)).toBeTruthy()
   })
 
   it('lista as competências da mais recente para a mais antiga', () => {
@@ -75,7 +75,7 @@ describe('HistoryPage', () => {
   })
 
   it('estado vazio quando não há nenhuma competência', () => {
-    const state = createInitialFinanceDemoState()
+    const state = createTestFinanceState()
     renderWithState({ ...state, periods: [] })
     expect(screen.getByText('Histórico indisponível')).toBeTruthy()
   })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CATEGORY_FOOD, fixtureCategories, fixtureFinancialEntries, FIXTURE_CURRENT_PERIOD_ID } from '../data/dashboard-fixtures.ts'
+import { CATEGORY_FOOD, fixtureCategories, fixtureFinancialEntries, FIXTURE_CURRENT_PERIOD_ID } from '../state/test-support/finance-test-fixtures.ts'
 import {
   buildFinancialEntryRow,
   DEFAULT_FINANCIAL_ENTRIES_FILTERS,

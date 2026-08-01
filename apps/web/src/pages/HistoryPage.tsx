@@ -5,12 +5,12 @@ import { HistoricalEntries } from '../components/history/HistoricalEntries.tsx'
 import { HistoricalPeriodSummary } from '../components/history/HistoricalPeriodSummary.tsx'
 import { HistoricalStatusBreakdown } from '../components/history/HistoricalStatusBreakdown.tsx'
 import { PeriodHistoryList } from '../components/history/PeriodHistoryList.tsx'
-import { useFinanceDemo } from '../hooks/use-finance-demo.ts'
+import { useReadyFinance } from '../hooks/use-finance.ts'
 import { buildHistoryViewModel, DEFAULT_HISTORY_FILTERS, type HistoryFilters as HistoryFiltersState } from '../view-models/history-view-model.ts'
 import './HistoryPage.css'
 
 export function HistoryPage() {
-  const { state } = useFinanceDemo()
+  const { state } = useReadyFinance()
   const [filters, setFilters] = useState<HistoryFiltersState>(DEFAULT_HISTORY_FILTERS)
   const [selectedPeriodId, setSelectedPeriodId] = useState<number | null>(state.currentPeriodId)
 
@@ -32,7 +32,7 @@ export function HistoryPage() {
         <div>
           <h2>Histórico</h2>
           <p className="fh-text-secondary">
-            <span aria-hidden="true">●</span> Modo demonstrativo: consulta somente leitura das competências e movimentações desta sessão.
+            <span aria-hidden="true">●</span> Consulta somente leitura das competências e movimentações reais.
           </p>
         </div>
       </div>

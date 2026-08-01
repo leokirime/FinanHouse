@@ -1,4 +1,4 @@
-import { parseMoney, type FinancialEntry, type MonthlyPeriod } from '@finanhouse/domain'
+import { parseMoney, type CategoryBudget, type FinancialEntry, type MonthlyPeriod } from '@finanhouse/domain'
 import { describe, expect, it } from 'vitest'
 import {
   CATEGORY_FOOD,
@@ -7,17 +7,30 @@ import {
   CATEGORY_LEISURE,
   CATEGORY_TRANSPORT,
   fixtureCategories,
-  fixtureCategoryBudgets,
   fixtureFinancialEntries,
   fixtureMonthlyPeriods,
   FIXTURE_CURRENT_PERIOD_ID,
+  FIXTURE_HOUSEHOLD_ID,
   FIXTURE_PREVIOUS_PERIOD_ID,
-} from '../data/dashboard-fixtures.ts'
+} from '../state/test-support/finance-test-fixtures.ts'
 import { buildPlanningPeriodOptions, buildPlanningViewModel } from './planning-view-model.ts'
 
 function period(id: number, referenceMonth: string): MonthlyPeriod {
   return { id, householdId: 1, referenceMonth, status: 'open', closedAt: null, closedByUserId: null }
 }
+
+/**
+ * `buildPlanningViewModel` continua suportando limites por categoria como
+ * função pura genérica (a app real sempre chama com `budgets: []`, ver
+ * DT-12/`PlanningPage.tsx`) — estas fixtures são locais a este arquivo de
+ * teste, cobrindo os quatro estados possíveis (`healthy`/`attention`/`exceeded`/`unplanned`).
+ */
+const fixtureCategoryBudgets: CategoryBudget[] = [
+  { id: 1, householdId: FIXTURE_HOUSEHOLD_ID, periodId: FIXTURE_CURRENT_PERIOD_ID, categoryId: CATEGORY_HOUSING, limitAmount: 200000n },
+  { id: 2, householdId: FIXTURE_HOUSEHOLD_ID, periodId: FIXTURE_CURRENT_PERIOD_ID, categoryId: CATEGORY_FOOD, limitAmount: 150000n },
+  { id: 3, householdId: FIXTURE_HOUSEHOLD_ID, periodId: FIXTURE_CURRENT_PERIOD_ID, categoryId: CATEGORY_TRANSPORT, limitAmount: 30000n },
+  { id: 4, householdId: FIXTURE_HOUSEHOLD_ID, periodId: FIXTURE_PREVIOUS_PERIOD_ID, categoryId: CATEGORY_HOUSING, limitAmount: 180000n },
+]
 
 describe('buildPlanningPeriodOptions', () => {
   it('ordena competências da mais recente para a mais antiga', () => {

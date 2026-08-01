@@ -4,14 +4,14 @@ import { BrowserRouter } from 'react-router'
 import './styles/global.css'
 import './styles/utilities.css'
 import App from './App.tsx'
-import { FinanceDemoProvider } from './state/FinanceDemoProvider.tsx'
+import { FinanceProvider } from './state/FinanceProvider.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <FinanceDemoProvider>
+      <FinanceProvider>
         <App />
-      </FinanceDemoProvider>
+      </FinanceProvider>
     </BrowserRouter>
   </StrictMode>,
 )

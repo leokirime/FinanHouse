@@ -1,27 +1,27 @@
 import { describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router'
 import { fireEvent, render, renderWithProviders, screen, within } from '../test-utils.tsx'
-import { FinanceDemoContext, type FinanceDemoContextValue } from '../state/finance-demo-context.ts'
-import { createInitialFinanceDemoState } from '../state/finance-demo-initial-state.ts'
-import type { FinanceDemoState } from '../state/finance-demo-types.ts'
+import { FinanceContext, type FinanceContextValue } from '../state/finance-context.ts'
+import type { FinanceReadyState } from '../state/finance-types.ts'
+import { createTestFinanceState } from '../state/test-support/finance-test-fixtures.ts'
 import { PlanningPage } from './PlanningPage.tsx'
 
-function renderWithState(state: FinanceDemoState) {
-  const value: FinanceDemoContextValue = { state, dispatch: vi.fn() }
+function renderWithState(state: FinanceReadyState) {
+  const value: FinanceContextValue = { state, dispatch: vi.fn() }
   return render(
     <MemoryRouter initialEntries={['/planejamento']}>
-      <FinanceDemoContext.Provider value={value}>
+      <FinanceContext.Provider value={value}>
         <PlanningPage />
-      </FinanceDemoContext.Provider>
+      </FinanceContext.Provider>
     </MemoryRouter>,
   )
 }
 
 describe('PlanningPage', () => {
-  it('renderiza a página com título e indicador de modo demonstrativo', () => {
+  it('renderiza a página com título e descrição', () => {
     renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
     expect(screen.getByRole('heading', { name: 'Planejamento' })).toBeTruthy()
-    expect(screen.getByText(/Modo demonstrativo/)).toBeTruthy()
+    expect(screen.getByText(/Contas previstas da competência/)).toBeTruthy()
   })
 
   it('seleciona por padrão a competência atual', () => {
@@ -29,80 +29,59 @@ describe('PlanningPage', () => {
     expect(screen.getByLabelText('Competência')).toHaveProperty('value', '7')
   })
 
-  it('mostra as categorias com status esperados vindos das fixtures', () => {
+  it('mostra os cards de receita/despesa prevista e saldo projetado', () => {
     renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
+    expect(screen.getByText('Receita prevista')).toBeTruthy()
+    expect(screen.getByText('Despesa prevista')).toBeTruthy()
+    expect(screen.getByText('Saldo projetado')).toBeTruthy()
+  })
+
+  it('mostra a distribuição de despesas previstas por categoria com aviso sobre limites futuros', () => {
+    renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
+    expect(screen.getByText('Despesas previstas por categoria')).toBeTruthy()
     expect(screen.getAllByText('Moradia').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Excedido').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Em atenção').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Saudável').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Sem planejamento').length).toBeGreaterThan(0)
+    expect(screen.getByText(/Limites por categoria serão adicionados em uma próxima evolução/)).toBeTruthy()
   })
 
-  it('cria um novo limite através do formulário', () => {
+  it('nunca mostra rótulos de status de limite (healthy/attention/exceeded não existem mais nesta página)', () => {
     renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
-    fireEvent.click(screen.getAllByRole('button', { name: 'Definir limite' })[0]!)
-    const dialog = within(screen.getByRole('dialog'))
-
-    fireEvent.change(dialog.getByLabelText('Categoria'), { target: { value: '6' } }) // Lazer
-    fireEvent.change(dialog.getByLabelText('Limite mensal'), { target: { value: '300.00' } })
-    fireEvent.click(dialog.getByRole('button', { name: 'Definir limite' }))
-
-    expect(screen.getByText('Planejamento atualizado somente nesta sessão demonstrativa.')).toBeTruthy()
+    expect(screen.queryByText('Excedido')).toBeNull()
+    expect(screen.queryByText('Em atenção')).toBeNull()
+    expect(screen.queryByText('Saudável')).toBeNull()
   })
 
-  it('rejeita valor com mais de duas casas decimais no formulário', () => {
+  it('mostra receitas e despesas previstas/pendentes da competência selecionada', () => {
     renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
-    fireEvent.click(screen.getAllByRole('button', { name: 'Definir limite' })[0]!)
-    const dialog = within(screen.getByRole('dialog'))
-
-    fireEvent.change(dialog.getByLabelText('Categoria'), { target: { value: '6' } })
-    fireEvent.change(dialog.getByLabelText('Limite mensal'), { target: { value: '10.999' } })
-    fireEvent.click(dialog.getByRole('button', { name: 'Definir limite' }))
-
-    expect(screen.getByText(/Informe um valor válido/)).toBeTruthy()
-  })
-
-  it('edita um limite existente através da lista', () => {
-    renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
-    const editButtons = screen.getAllByRole('button', { name: 'Editar limite' })
-    fireEvent.click(editButtons[0]!)
-    const dialog = within(screen.getByRole('dialog'))
-
-    fireEvent.change(dialog.getByLabelText('Limite mensal'), { target: { value: '999.00' } })
-    fireEvent.click(dialog.getByRole('button', { name: 'Salvar alterações' }))
-
-    expect(screen.getByText('Planejamento atualizado somente nesta sessão demonstrativa.')).toBeTruthy()
-  })
-
-  it('remove um limite temporariamente pela lista', () => {
-    renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
-    const removeButtons = screen.getAllByRole('button', { name: 'Remover limite' })
-    fireEvent.click(removeButtons[0]!)
-    expect(screen.getByText('Planejamento atualizado somente nesta sessão demonstrativa.')).toBeTruthy()
-  })
-
-  it('categoria "sem planejamento" oferece ação de definir limite', () => {
-    renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
-    const row = screen.getByText('Lazer').closest('tr')!
-    expect(within(row).getByRole('button', { name: 'Definir limite' })).toBeTruthy()
-  })
-
-  it('mostra despesas planejadas e pendentes da competência selecionada', () => {
-    renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
-    expect(screen.getByText('Despesas planejadas e pendentes')).toBeTruthy()
+    expect(screen.getByText('Receitas previstas')).toBeTruthy()
+    expect(screen.getByText('Despesas previstas')).toBeTruthy()
     expect(screen.getByText('Viagem de fim de semana (planejada)')).toBeTruthy()
     expect(screen.getByText('Parcela do seguro do carro')).toBeTruthy()
+    expect(screen.getByText('Projeto freelance (fatura enviada)')).toBeTruthy()
   })
 
-  it('desabilita "Definir limite" ao visualizar uma competência diferente da atual', () => {
+  it('cria uma conta prevista através do formulário reaproveitado de Movimentações', () => {
+    renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar conta prevista' }))
+    const dialog = within(screen.getByRole('dialog'))
+
+    fireEvent.change(dialog.getByLabelText('Descrição'), { target: { value: 'Internet de agosto' } })
+    fireEvent.change(dialog.getByLabelText('Categoria'), { target: { value: '3' } }) // Moradia
+    fireEvent.change(dialog.getByLabelText('Valor previsto'), { target: { value: '120.00' } })
+    fireEvent.click(dialog.getByRole('button', { name: 'Adicionar movimentação' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByText('Internet de agosto')).toBeTruthy()
+  })
+
+  it('desabilita "Adicionar conta prevista" ao visualizar uma competência diferente da atual', () => {
     renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
     fireEvent.change(screen.getByLabelText('Competência'), { target: { value: '6' } })
-    const newButton = screen.getAllByRole('button', { name: 'Definir limite' })[0] as HTMLButtonElement
+    const newButton = screen.getByRole('button', { name: 'Adicionar conta prevista' }) as HTMLButtonElement
     expect(newButton.disabled).toBe(true)
   })
 
   it('renderiza estado vazio quando não há nenhuma competência', () => {
-    const state = createInitialFinanceDemoState()
+    const state = createTestFinanceState()
     renderWithState({ ...state, periods: [] })
     expect(screen.getByText('Planejamento indisponível')).toBeTruthy()
   })
@@ -120,15 +99,15 @@ describe('PlanningPage', () => {
     expect(document.body.textContent).not.toContain('Infinity')
   })
 
-  it('estrutura responsiva: células da tabela têm data-label para empilhamento em telas estreitas', () => {
+  it('estrutura responsiva: células da tabela de distribuição têm data-label para empilhamento em telas estreitas', () => {
     renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
     const cell = document.querySelector('.fh-planning-table [data-label="Categoria"]')
     expect(cell).toBeTruthy()
   })
 
-  it('o diálogo de limite tem papel acessível e fecha com Escape', () => {
+  it('o diálogo de nova conta prevista tem papel acessível e fecha com Escape', () => {
     renderWithProviders(<PlanningPage />, { initialEntries: ['/planejamento'] })
-    fireEvent.click(screen.getAllByRole('button', { name: 'Definir limite' })[0]!)
+    fireEvent.click(screen.getByRole('button', { name: 'Adicionar conta prevista' }))
     const dialog = screen.getByRole('dialog')
     expect(dialog.getAttribute('aria-modal')).toBe('true')
     fireEvent.keyDown(document, { key: 'Escape' })

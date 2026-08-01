@@ -1,5 +1,4 @@
 import type { Category, FinancialEntry, FinancialEntryStatus, FinancialEntryType } from '@finanhouse/domain'
-import { fixtureMemberLabels } from '../data/dashboard-fixtures.ts'
 import { formatDatePtBrShort } from '../utils/format-date-pt-br.ts'
 import { formatMoneyPtBr } from '../utils/format-money-pt-br.ts'
 
@@ -81,7 +80,7 @@ export function buildFinancialEntryRow(entry: FinancialEntry, categories: Catego
     actualAmountLabel: entry.actualAmount !== null ? formatMoneyPtBr(entry.actualAmount) : null,
     dueDateLabel: entry.dueDate ? formatDatePtBrShort(entry.dueDate) : null,
     realizationDateLabel: entry.realizationDate ? formatDatePtBrShort(entry.realizationDate) : null,
-    responsibleLabel: entry.responsibleMemberId !== null ? (fixtureMemberLabels[entry.responsibleMemberId] ?? null) : null,
+    responsibleLabel: entry.responsibleMemberId !== null ? `Membro #${entry.responsibleMemberId}` : null,
     canEdit: editable,
     canMarkPending: entry.status === 'planned',
     canRealize: entry.status === 'planned' || entry.status === 'pending',

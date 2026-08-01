@@ -1,6 +1,8 @@
-# Estado Temporário do Frontend (Modo Demonstrativo)
+# Estado Temporário do Frontend (Modo Demonstrativo) — RETIRADO NO BLOCO 17
 
-> Projeto: FinanHouse · Gerado no Bloco 07 (`bloco_07_movimentacoes_funcionais_com_estado_em_memoria`) · 2026-07-25
+> Projeto: FinanHouse · Gerado no Bloco 07 (`bloco_07_movimentacoes_funcionais_com_estado_em_memoria`) · 2026-07-25 · Retirado em 2026-08-01 (`bloco_17_integracao_direta_do_frontend_com_a_api_real`)
+
+> **Este documento descreve arquitetura histórica, removida do runtime no Bloco 17.** `FinanceDemoProvider`, `financeDemoReducer` e `data/dashboard-fixtures.ts` foram removidos de `apps/web/src` — o frontend real consome exclusivamente a API HTTP (DT-12, `Docs/03_contracts/contrato_frontend_backend.md`). A mesma lógica de transição (delegando a `@finanhouse/domain`) foi portada para `apps/web/src/state/test-support/` como infraestrutura **exclusiva de teste**, nunca importada por `main.tsx`. O texto abaixo é preservado como registro histórico do Bloco 07 — não reflete o estado atual do código.
 
 > Este documento descreve o estado financeiro compartilhado que torna o dashboard e a página de Movimentações interativos, **inteiramente em memória do navegador**. Não representa nem deve ser lido como evidência de persistência real — não há banco de dados, API HTTP nem armazenamento local envolvidos.
 

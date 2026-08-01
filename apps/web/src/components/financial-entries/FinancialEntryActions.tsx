@@ -1,4 +1,4 @@
-import { useFinanceDemo } from '../../hooks/use-finance-demo.ts'
+import { useReadyFinance } from '../../hooks/use-finance.ts'
 import type { FinancialEntryRowViewModel } from '../../view-models/financial-entries-view-model.ts'
 import './FinancialEntryActions.css'
 
@@ -10,7 +10,7 @@ export interface FinancialEntryActionsProps {
 }
 
 export function FinancialEntryActions({ row, onEdit, onRealize, onCancel }: FinancialEntryActionsProps) {
-  const { dispatch } = useFinanceDemo()
+  const { dispatch } = useReadyFinance()
 
   return (
     <div className="fh-entry-actions">

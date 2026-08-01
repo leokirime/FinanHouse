@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FIXTURE_CURRENT_PERIOD_ID, fixtureCategories, fixtureFinancialEntries } from '../../data/dashboard-fixtures.ts'
+import { FIXTURE_CURRENT_PERIOD_ID, fixtureCategories, fixtureFinancialEntries } from '../../state/test-support/finance-test-fixtures.ts'
 import { renderWithProviders, screen } from '../../test-utils.tsx'
 import { FinancialEntryList } from './FinancialEntryList.tsx'
 

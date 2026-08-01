@@ -1,6 +1,7 @@
 import type { FinancialEntry } from '@finanhouse/domain'
-import { useEffect, useId, useRef } from 'react'
-import { useFinanceDemo } from '../../hooks/use-finance-demo.ts'
+import { useId } from 'react'
+import { useMutationDialog } from '../../hooks/use-mutation-dialog.ts'
+import { useReadyFinance } from '../../hooks/use-finance.ts'
 import { EntryDialog } from './EntryDialog.tsx'
 import './FinancialEntryForm.css'
 
@@ -10,20 +11,14 @@ export interface CancelEntryDialogProps {
 }
 
 export function CancelEntryDialog({ entry, onClose }: CancelEntryDialogProps) {
-  const { state, dispatch } = useFinanceDemo()
+  const { state, dispatch } = useReadyFinance()
   const titleId = useId()
-  const pendingSubmitRef = useRef(false)
 
-  useEffect(() => {
-    if (!pendingSubmitRef.current) return
-    pendingSubmitRef.current = false
-    if (state.actionError === null) {
-      onClose()
-    }
-  }, [state, onClose])
+  const { markSubmitted } = useMutationDialog({ state, onSuccess: onClose })
 
   function handleConfirm() {
-    pendingSubmitRef.current = true
+    if (state.pendingAction) return
+    markSubmitted()
     dispatch({ type: 'CANCEL', id: entry.id })
   }
 
@@ -42,11 +37,17 @@ export function CancelEntryDialog({ entry, onClose }: CancelEntryDialogProps) {
         )}
 
         <div className="fh-entry-form__actions">
-          <button type="button" className="fh-entry-form__secondary" onClick={onClose} autoFocus>
+          <button type="button" className="fh-entry-form__secondary" onClick={onClose} autoFocus disabled={state.pendingAction}>
             Voltar
           </button>
-          <button type="button" className="fh-entry-form__primary fh-entry-form__primary--danger" onClick={handleConfirm}>
-            Confirmar cancelamento
+          <button
+            type="button"
+            className="fh-entry-form__primary fh-entry-form__primary--danger"
+            onClick={handleConfirm}
+            disabled={state.pendingAction}
+            aria-busy={state.pendingAction}
+          >
+            {state.pendingAction ? 'Cancelando…' : 'Confirmar cancelamento'}
           </button>
         </div>
       </div>

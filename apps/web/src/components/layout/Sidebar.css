@@ -74,15 +74,6 @@
   padding: 1px var(--fh-space-2);
 }
 
-.fh-sidebar__footer {
-  padding-inline: var(--fh-space-2);
-}
-
-.fh-sidebar__demo-badge {
-  color: var(--fh-purple-strong);
-  border-color: var(--fh-purple-border);
-}
-
 @media (max-width: 1023px) {
   .fh-sidebar {
     width: 100%;
@@ -109,10 +100,6 @@
   .fh-sidebar__nav-item {
     width: max-content;
     white-space: nowrap;
-  }
-
-  .fh-sidebar__footer {
-    padding-inline: 0;
   }
 }
 
