@@ -8,6 +8,24 @@
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
 
+### DT-11 — API HTTP financeira local com injeção de dependência
+
+- **Data:** 2026-07-31
+- **Contexto:** o Bloco 14 (DT-10) implementou os repositórios Drizzle reais, mas nenhuma camada HTTP conectava os serviços de aplicação já existentes (`apps/api/src/application/services/`) a uma API real — a API tinha apenas `GET /health` sobre `node:http` puro, sem framework, sem roteador, sem parsing/validação de corpo. Nenhum framework HTTP estava instalado no projeto.
+- **Decisão:** adotado **Fastify 5.11.0** como camada HTTP (`apps/api/src/http/`), com uma fábrica pura `createHttpApp({ repositories, logger, runtimeMode, readiness })` (`app.ts`) separada do bootstrap runtime (`server.ts`, que lê `.env.local`, cria o pool real e efetivamente escuta uma porta). A fábrica:
+  - recebe as quatro portas já existentes (`FinancialEntryRepository`, `MonthlyPeriodRepository`, `CategoryRepository`, `HouseholdMemberRepository`) por injeção — nunca instancia repositório concreto, nunca cria pool, nunca lê `.env.local`;
+  - **recusa `runtimeMode: 'production'`** de forma explícita e testada — a API não implementa autenticação real neste bloco, e executá-la em produção sem controle de acesso exporia dados financeiros;
+  - expõe 21 rotas sob `/api/v1/households/:householdId/...` (`categories`, `members`, `periods` com 4 ações de transição, `entries` com 6 ações de transição), todas reaproveitando os serviços de aplicação já existentes — nenhuma regra de domínio duplicada em handler;
+  - traduz erros via um handler central que mapeia toda a hierarquia de `DomainError` (404/409/422 conforme o caso) e `PersistenceError` (409/422/503/500, DT-10), preservando o desembrulhamento de `DrizzleQueryError.cause`;
+  - nunca expõe a coluna auxiliar `responsible_member_household_id` (DT-09) nos DTOs de resposta;
+  - recebe dinheiro exclusivamente como string decimal (`"10.00"`, nunca `number` JSON) e converte via `parseMoney`/`formatMoney` (`@finanhouse/domain`) — nunca `parseFloat`;
+  - exige bind estritamente local (`127.0.0.1`, nunca configurável, nunca `0.0.0.0`) e CORS restrito a `http://127.0.0.1:5173`/`http://localhost:5173` (nunca wildcard).
+- **Correção real encontrada durante a implementação:** o Fastify usa `removeAdditional: true` por padrão no AJV — removeria silenciosamente campos desconhecidos do corpo (incluindo um `householdId` concorrente enviado no corpo, tentando contornar o escopo da URL) em vez de rejeitá-los. Corrigido com `ajv.customOptions.removeAdditional: false` na criação da instância Fastify, validado por testes reais via `app.inject()` confirmando rejeição (400) e ausência de efeito colateral (nenhum dado salvo).
+- **Motivos:** Fastify oferece validação de schema via AJV nativamente (sem dependência extra para validação estrutural), suporta injeção de dependência limpa via fábrica, e `app.inject()` permite testar rotas reais sem abrir socket de rede nem conexão de banco; manter a fábrica pura separada do bootstrap runtime permite testar toda a superfície HTTP com repositórios em memória, sem qualquer efeito colateral.
+- **Alternativas consideradas:** Express — descartado por exigir bibliotecas adicionais para validação de schema equivalente; manter `node:http` puro com roteamento manual — descartado por não escalar para 21 rotas com validação estruturada sem reimplementar, na prática, um roteador e um validador.
+- **Consequências:** RF-05 avança (infraestrutura + schema + repositórios + API HTTP v1 concluídos), mas não é declarado concluído — integração do frontend com a API e autenticação real continuam pendentes; o modo demonstrativo do frontend foi preservado sem alteração; nenhuma rota HTTP deste bloco é acessível publicamente (bind local, sem autenticação) — não deve ser apresentada como pronta para exposição externa em nenhum ambiente até que a autenticação real exista.
+- **Status:** Vigente
+
 ### DT-10 — Repositórios Drizzle reais
 
 - **Data:** 2026-07-31

@@ -1,7 +1,6 @@
-import { createServer } from './server.js'
+import { startHttpServer } from './http/server.js'
 
-const port = process.env.PORT ? Number(process.env.PORT) : 3001
-
-createServer().listen(port, () => {
-  console.log(`finanhouse-api listening on port ${port}`)
+startHttpServer().catch((error) => {
+  console.error('Falha ao iniciar o servidor HTTP.', error instanceof Error ? error.message : String(error))
+  process.exitCode = 1
 })
