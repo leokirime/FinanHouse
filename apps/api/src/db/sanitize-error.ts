@@ -1,7 +1,10 @@
 /**
  * Reduz um erro de driver (mysql2/Drizzle) a uma categoria genérica, sem
  * nunca ecoar a mensagem original — que pode conter host, usuário ou
- * fragmentos de configuração de conexão.
+ * fragmentos de configuração de conexão. Vive em `src/` (não em
+ * `scripts/lib/`) porque também é reaproveitada pelos repositórios Drizzle
+ * reais (`apps/api/src/infrastructure/repositories/drizzle/`), que não podem
+ * importar de `scripts/` (fora de `rootDir` do build de `src/`).
  */
 export function categorizeConnectionError(message: string): string {
   const lower = message.toLowerCase()

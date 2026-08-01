@@ -17,7 +17,7 @@ import { drizzle } from 'drizzle-orm/mysql2'
 import { migrate } from 'drizzle-orm/mysql2/migrator'
 import mysql from 'mysql2/promise'
 import { DatabaseConfigError, resolveDatabaseConfig } from '../src/config/database-config.js'
-import { categorizeConnectionError } from './lib/sanitize-error.js'
+import { categorizeConnectionError } from '../src/db/sanitize-error.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ENV_LOCAL_PATH = path.resolve(__dirname, '../.env.local')

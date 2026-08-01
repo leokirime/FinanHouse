@@ -15,7 +15,8 @@
     "db:migrate": "tsx scripts/db-migrate.ts",
     "db:seed:dev": "tsx scripts/db-seed-dev.ts",
     "db:audit:schema": "tsx scripts/db-audit-schema.ts",
-    "db:audit:responsible-member": "tsx scripts/db-audit-responsible-member-integrity.ts"
+    "db:audit:responsible-member": "tsx scripts/db-audit-responsible-member-integrity.ts",
+    "db:smoke:repositories": "tsx scripts/db-smoke-repositories.ts"
   },
   "dependencies": {
     "@finanhouse/domain": "*",

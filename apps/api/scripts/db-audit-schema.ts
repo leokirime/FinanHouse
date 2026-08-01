@@ -24,7 +24,7 @@ import {
   parseAuditPhase,
   SchemaAuditError,
 } from '../src/db/schema-audit.js'
-import { categorizeConnectionError } from './lib/sanitize-error.js'
+import { categorizeConnectionError } from '../src/db/sanitize-error.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ENV_LOCAL_PATH = path.resolve(__dirname, '../.env.local')
