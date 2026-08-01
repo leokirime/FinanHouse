@@ -1,6 +1,6 @@
 # Tokens de Design
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: FinanHouse · Atualizado em: 2026-07-31
 
 > Tokens são a fonte única da verdade para valores visuais. Se um valor não está aqui como token, ele não deveria estar hardcoded em um componente.
 
@@ -28,8 +28,6 @@ Implementados em `apps/web/src/styles/tokens.css` (Bloco 06) como propriedades C
 | `--fh-income` | `#4fd1a5` | Destaque pontual de receita (nunca dominante) |
 | `--fh-expense` | `#f2718a` | Destaque pontual de despesa |
 | `--fh-warning` | `#f5b95c` | Pendências / competência em revisão |
-| `--fh-brand-surface` | `#f4f1f8` | Superfície clara atrás da logo oficial no hero (o wordmark tem parte escura — precisa de fundo claro para ficar legível sobre o dashboard preto) |
-| `--fh-brand-surface-border` | `rgba(155,93,229,0.22)` | Borda discreta da superfície de marca |
 
 ## 3. Espaçamento
 
@@ -67,7 +65,7 @@ Escala base 4px: `--fh-space-1` (4px) até `--fh-space-12` (48px) — `1, 2, 3, 
 
 - [x] Todo valor visual usado mais de uma vez no código tem um token correspondente aqui.
 - [x] Nenhum componente usa valor de cor/espaçamento hardcoded quando um token equivalente já existe (exceção: cores semânticas de status específicas de badges, que herdam diretamente dos tokens de cor via seletor `data-tone`).
-- [x] A logo oficial foi adicionada; a única cor adicional que ela exigiu (`--fh-brand-surface`) já foi registrada como token.
+- [x] A logo oficial foi adicionada. Os tokens `--fh-brand-surface`/`--fh-brand-surface-border`, criados quando a logo ainda ocupava uma coluna própria no hero, foram removidos no Bloco 15 — a imagem (RGBA, transparência real) passou a ser exibida diretamente sobre o card, sem superfície própria, como elemento decorativo pequeno no canto superior direito.
 
 ## 8. Perguntas Orientadoras
 

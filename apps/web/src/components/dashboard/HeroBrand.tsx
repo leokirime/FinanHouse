@@ -11,13 +11,11 @@ export function HeroBrand({ overview }: HeroBrandProps) {
 
   return (
     <section className="fh-card fh-card--elevated fh-hero" aria-labelledby="hero-heading">
-      <div className="fh-hero__brand-surface">
-        <img
-          src={finanhouseLogoHero}
-          alt="Finanhouse — Casa, evolução e equilíbrio"
-          className="fh-hero__logo"
-        />
-      </div>
+      <img
+        src={finanhouseLogoHero}
+        alt="Finanhouse — Casa, evolução e equilíbrio"
+        className="fh-hero__logo"
+      />
 
       <div className="fh-hero__info">
         <div>

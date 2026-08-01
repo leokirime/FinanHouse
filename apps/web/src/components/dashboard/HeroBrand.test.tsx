@@ -50,4 +50,22 @@ describe('HeroBrand', () => {
     expect(src.startsWith('https://')).toBe(false)
     expect(src.startsWith('data:')).toBe(false)
   })
+
+  it('não existe mais o painel que reservava uma coluna própria para a imagem', () => {
+    const { container } = render(<HeroBrand overview={overview} />)
+    expect(container.querySelector('.fh-hero__brand-surface')).toBeNull()
+  })
+
+  it('a imagem carrega a classe de posicionamento decorativo (fh-hero__logo)', () => {
+    render(<HeroBrand overview={overview} />)
+    const image = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
+    expect(image.className).toContain('fh-hero__logo')
+  })
+
+  it('a descrição da competência é exibida junto do título e do status', () => {
+    render(<HeroBrand overview={overview} />)
+    expect(
+      screen.getByText('A competência está em revisão — confira as movimentações pendentes antes de fechar o mês.'),
+    ).toBeTruthy()
+  })
 })
