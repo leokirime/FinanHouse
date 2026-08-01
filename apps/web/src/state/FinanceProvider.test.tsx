@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
-import type { ReactNode } from 'react'
+import { StrictMode, type ReactNode } from 'react'
 import { getCurrentReferenceMonth, getPreviousReferenceMonth } from '../utils/reference-month.ts'
 import { useFinance } from '../hooks/use-finance.ts'
 import { FinanceProvider } from './FinanceProvider.tsx'
@@ -35,6 +35,14 @@ function createFetchMock(routes: RouteMap) {
 
 function wrapper({ children }: { children: ReactNode }) {
   return <FinanceProvider>{children}</FinanceProvider>
+}
+
+function strictWrapper({ children }: { children: ReactNode }) {
+  return (
+    <StrictMode>
+      <FinanceProvider>{children}</FinanceProvider>
+    </StrictMode>
+  )
 }
 
 beforeEach(() => {
@@ -296,5 +304,139 @@ describe('FinanceProvider — mutações reais', () => {
 
     expect(postSpy).toHaveBeenCalledTimes(1)
     pending.resolve?.()
+  })
+})
+
+describe('FinanceProvider loading lifecycle regressions', () => {
+  it('em React.StrictMode, o cleanup da primeira execucao nao bloqueia a segunda carga e termina em "ready"', async () => {
+    function abortableResponse(response: Response, init: RequestInit): Promise<Response> {
+      return new Promise((resolve, reject) => {
+        init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once: true })
+        queueMicrotask(() => {
+          if (init.signal?.aborted) {
+            reject(new DOMException('Aborted', 'AbortError'))
+            return
+          }
+          resolve(response)
+        })
+      })
+    }
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string | URL, init: RequestInit = {}) => {
+        const parsed = new URL(String(url))
+        const key = `${init.method ?? 'GET'} ${parsed.pathname}${parsed.search}`
+        if (key === 'GET /api/v1/households/1/categories') return abortableResponse(jsonResponse({ data: [CATEGORY] }), init)
+        if (key === 'GET /api/v1/households/1/members') return abortableResponse(jsonResponse({ data: [OWNER_MEMBER] }), init)
+        if (key === 'GET /api/v1/households/1/periods') return abortableResponse(jsonResponse({ data: [PREVIOUS_PERIOD, CURRENT_PERIOD] }), init)
+        if (key === 'GET /api/v1/households/1/entries') return abortableResponse(jsonResponse({ data: [] }), init)
+        throw new Error(`rota inesperada: ${key}`)
+      }),
+    )
+
+    const { result } = renderHook(() => useFinance(), { wrapper: strictWrapper })
+    await waitFor(() => expect(result.current.state.status).toBe('ready'))
+
+    if (result.current.state.status !== 'ready') throw new Error('esperado ready')
+    expect(result.current.state.categories).toEqual([CATEGORY])
+  })
+
+  it('requisicao cancelada por uma nova carga nao fica presa em "loading" nem vira erro visivel', async () => {
+    let loadCycle = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string | URL, init: RequestInit = {}) => {
+        const parsed = new URL(String(url))
+        const key = `${init.method ?? 'GET'} ${parsed.pathname}${parsed.search}`
+        if (key === 'GET /api/v1/households/1/categories') loadCycle += 1
+
+        if (loadCycle === 1) {
+          return new Promise<Response>((_resolve, reject) => {
+            init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+          })
+        }
+
+        if (key === 'GET /api/v1/households/1/categories') return Promise.resolve(jsonResponse({ data: [CATEGORY] }))
+        if (key === 'GET /api/v1/households/1/members') return Promise.resolve(jsonResponse({ data: [OWNER_MEMBER] }))
+        if (key === 'GET /api/v1/households/1/periods') return Promise.resolve(jsonResponse({ data: [PREVIOUS_PERIOD, CURRENT_PERIOD] }))
+        if (key === 'GET /api/v1/households/1/entries') return Promise.resolve(jsonResponse({ data: [] }))
+        return Promise.reject(new Error(`rota inesperada: ${key}`))
+      }),
+    )
+
+    const { result } = renderHook(() => useFinance(), { wrapper })
+    act(() => {
+      result.current.dispatch({ type: 'RETRY' })
+    })
+
+    await waitFor(() => expect(result.current.state.status).toBe('ready'))
+    expect(loadCycle).toBe(2)
+  })
+
+  it('execucao antiga nao sobrescreve a carga mais recente, mesmo se responder depois', async () => {
+    const firstCategories = {
+      resolve: null as ((response: Response) => void) | null,
+    }
+    const newestCategory = { ...CATEGORY, id: 4, name: 'Moradia atualizada' }
+    let fetchCall = 0
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((url: string | URL, init: RequestInit = {}) => {
+        fetchCall += 1
+        const call = fetchCall
+        const parsed = new URL(String(url))
+        const key = `${init.method ?? 'GET'} ${parsed.pathname}${parsed.search}`
+
+        if (call === 1 && key === 'GET /api/v1/households/1/categories') {
+          return new Promise<Response>((resolve) => {
+            firstCategories.resolve = resolve
+          })
+        }
+
+        if (call === 2 && key === 'GET /api/v1/households/1/members') return Promise.resolve(jsonResponse({ data: [OWNER_MEMBER] }))
+        if (call === 3 && key === 'GET /api/v1/households/1/periods') return Promise.resolve(jsonResponse({ data: [PREVIOUS_PERIOD, CURRENT_PERIOD] }))
+        if (call === 4 && key === 'GET /api/v1/households/1/categories') return Promise.resolve(jsonResponse({ data: [newestCategory] }))
+        if (call === 5 && key === 'GET /api/v1/households/1/members') return Promise.resolve(jsonResponse({ data: [OWNER_MEMBER] }))
+        if (call === 6 && key === 'GET /api/v1/households/1/periods') return Promise.resolve(jsonResponse({ data: [PREVIOUS_PERIOD, CURRENT_PERIOD] }))
+        if (call === 7 && key === 'GET /api/v1/households/1/entries') return Promise.resolve(jsonResponse({ data: [] }))
+        if (call === 8 && key === 'GET /api/v1/households/1/entries') return Promise.resolve(jsonResponse({ data: [] }))
+        return Promise.reject(new Error(`rota inesperada na chamada ${call}: ${key}`))
+      }),
+    )
+
+    const { result } = renderHook(() => useFinance(), { wrapper })
+    act(() => {
+      result.current.dispatch({ type: 'RETRY' })
+    })
+    await waitFor(() => expect(result.current.state.status).toBe('ready'))
+
+    act(() => {
+      firstCategories.resolve?.(jsonResponse({ data: [CATEGORY] }))
+    })
+    await waitFor(() => expect(fetchCall).toBe(8))
+
+    if (result.current.state.status !== 'ready') throw new Error('esperado ready')
+    expect(result.current.state.categories).toEqual([newestCategory])
+  })
+
+  it('desmontagem real cancela a carga em andamento antes que ela atualize estado depois do unmount', () => {
+    const signals: AbortSignal[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn((_url: string | URL, init: RequestInit = {}) => {
+        if (init.signal) signals.push(init.signal)
+        return new Promise<Response>((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+        })
+      }),
+    )
+
+    const { unmount } = renderHook(() => useFinance(), { wrapper })
+    unmount()
+
+    expect(signals.length).toBeGreaterThan(0)
+    expect(signals.every((signal) => signal.aborted)).toBe(true)
   })
 })

@@ -81,8 +81,8 @@ function safeActionErrorMessage(error: unknown): string {
  */
 export function FinanceProvider({ children }: FinanceProviderProps) {
   const [state, dispatchInternal] = useReducer(internalReducer, { status: 'loading' })
+  const [loadAttempt, requestLoad] = useReducer((attempt: number) => attempt + 1, 0)
   const requestIdRef = useRef(0)
-  const abortControllerRef = useRef<AbortController | null>(null)
   const mountedRef = useRef(true)
   /**
    * Guarda síncrona contra duplo envio. `state.pendingAction` sozinho não
@@ -93,66 +93,69 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
    */
   const pendingActionRef = useRef(false)
 
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
       mountedRef.current = false
-      abortControllerRef.current?.abort()
-    },
-    [],
-  )
-
-  const loadAll = useCallback(async () => {
-    const requestId = ++requestIdRef.current
-    abortControllerRef.current?.abort()
-    const controller = new AbortController()
-    abortControllerRef.current = controller
-
-    dispatchInternal({ kind: 'LOAD_START' })
-
-    try {
-      const config = resolveApiConfig()
-      const [categories, members, periods] = await Promise.all([
-        listCategories(config, controller.signal),
-        listMembers(config, controller.signal),
-        listPeriods(config, controller.signal),
-      ])
-
-      const currentReferenceMonth = getCurrentReferenceMonth()
-      let currentPeriod = periods.find((period) => period.referenceMonth === currentReferenceMonth) ?? null
-      if (!currentPeriod) {
-        currentPeriod = await ensurePeriod(config, currentReferenceMonth, controller.signal)
-      }
-      const allPeriods = periods.some((period) => period.id === currentPeriod!.id) ? periods : [...periods, currentPeriod]
-
-      const previousReferenceMonth = getPreviousReferenceMonth(currentReferenceMonth)
-      const previousPeriod = allPeriods.find((period) => period.referenceMonth === previousReferenceMonth) ?? null
-
-      const entries = await listEntries(config, { signal: controller.signal })
-
-      if (requestIdRef.current !== requestId || !mountedRef.current) return
-
-      dispatchInternal({
-        kind: 'LOAD_SUCCESS',
-        payload: {
-          categories,
-          members,
-          periods: allPeriods,
-          entries,
-          currentPeriodId: currentPeriod.id,
-          previousPeriodId: previousPeriod?.id ?? null,
-        },
-      })
-    } catch (error) {
-      if (requestIdRef.current !== requestId || !mountedRef.current) return
-      if (error instanceof ApiError && error.kind === 'cancelled') return
-      const apiError = error instanceof ApiError ? error : new ApiError('unexpected_response', 'Falha inesperada ao carregar os dados.')
-      dispatchInternal({ kind: 'LOAD_FAILURE', error: apiError })
     }
   }, [])
 
   useEffect(() => {
-    loadAll()
-  }, [loadAll])
+    const requestId = ++requestIdRef.current
+    const controller = new AbortController()
+    let active = true
+
+    dispatchInternal({ kind: 'LOAD_START' })
+
+    async function loadAll() {
+      try {
+        const config = resolveApiConfig()
+        const [categories, members, periods] = await Promise.all([
+          listCategories(config, controller.signal),
+          listMembers(config, controller.signal),
+          listPeriods(config, controller.signal),
+        ])
+
+        const currentReferenceMonth = getCurrentReferenceMonth()
+        let currentPeriod = periods.find((period) => period.referenceMonth === currentReferenceMonth) ?? null
+        if (!currentPeriod) {
+          currentPeriod = await ensurePeriod(config, currentReferenceMonth, controller.signal)
+        }
+        const allPeriods = periods.some((period) => period.id === currentPeriod!.id) ? periods : [...periods, currentPeriod]
+
+        const previousReferenceMonth = getPreviousReferenceMonth(currentReferenceMonth)
+        const previousPeriod = allPeriods.find((period) => period.referenceMonth === previousReferenceMonth) ?? null
+
+        const entries = await listEntries(config, { signal: controller.signal })
+
+        if (!active || controller.signal.aborted || requestIdRef.current !== requestId) return
+
+        dispatchInternal({
+          kind: 'LOAD_SUCCESS',
+          payload: {
+            categories,
+            members,
+            periods: allPeriods,
+            entries,
+            currentPeriodId: currentPeriod.id,
+            previousPeriodId: previousPeriod?.id ?? null,
+          },
+        })
+      } catch (error) {
+        if (!active || controller.signal.aborted || requestIdRef.current !== requestId) return
+        if (error instanceof ApiError && error.kind === 'cancelled') return
+        const apiError = error instanceof ApiError ? error : new ApiError('unexpected_response', 'Falha inesperada ao carregar os dados.')
+        dispatchInternal({ kind: 'LOAD_FAILURE', error: apiError })
+      }
+    }
+
+    void loadAll()
+
+    return () => {
+      active = false
+      controller.abort()
+    }
+  }, [loadAttempt])
 
   const dispatch = useCallback(
     (action: FinanceAction) => {
@@ -165,7 +168,7 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
         return
       }
       if (action.type === 'RETRY') {
-        loadAll()
+        requestLoad()
         return
       }
 
@@ -232,7 +235,7 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
         }
       })()
     },
-    [state, loadAll],
+    [state],
   )
 
   return <FinanceContext.Provider value={{ state, dispatch }}>{children}</FinanceContext.Provider>
