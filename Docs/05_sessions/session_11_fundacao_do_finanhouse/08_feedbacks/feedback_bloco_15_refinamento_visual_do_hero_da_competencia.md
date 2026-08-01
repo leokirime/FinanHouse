@@ -1,6 +1,6 @@
 # Feedback — Bloco 15: Refinamento visual do hero da competência
 
-> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-07-31
+> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-08-01
 
 ## 1. Resumo Executivo
 
@@ -121,7 +121,7 @@ fix(web): reposicionar marca no hero da competência
 
 _Lembrete: este commit não é executado automaticamente — exige confirmação explícita do usuário._
 
-## 19. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-07-31)
+## 19. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-08-01)
 
 A implementação original deste bloco (commits `9ab913e`/`17fb9ba`, já publicados em `main`) posicionou a logo no **canto superior direito**, seguindo a orientação recebida naquele momento. Durante o desenvolvimento do Bloco 16, o proprietário esclareceu que a posição correta sempre foi o **canto superior esquerdo** — uma orientação anterior incorreta, não uma mudança de requisito funcional. A correção foi incorporada ao trabalho do Bloco 16 (sem reabrir este bloco, sem reescrever os commits `9ab913e`/`17fb9ba` já publicados):
 

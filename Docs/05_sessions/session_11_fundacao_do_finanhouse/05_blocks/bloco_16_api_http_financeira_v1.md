@@ -1,6 +1,6 @@
 # Bloco 16 — API HTTP financeira v1
 
-> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-07-31
+> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-08-01
 
 ## 1. Objetivo
 

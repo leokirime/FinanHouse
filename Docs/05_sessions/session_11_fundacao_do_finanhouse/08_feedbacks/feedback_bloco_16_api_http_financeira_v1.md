@@ -1,6 +1,6 @@
 # Feedback — Bloco 16: API HTTP financeira v1
 
-> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-07-31
+> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-08-01
 
 ## 1. Resumo Executivo
 
@@ -74,9 +74,10 @@ npx ddae-engine feedback create --block bloco_16_api_http_financeira_v1 --sessio
 
 ## 8. Testes Realizados
 
-- 71 testes novos na API HTTP (`app.test.ts`, `server.test.ts`, `routes/*.test.ts`, `schemas/common.test.ts`): criação sem efeitos colaterais, recusa de `production`, `/health`/`/ready` (com dependência falsa), CORS (origem permitida/negada/preflight), IDs válidos/inválidos, isolamento por household em leitura e escrita, dinheiro como string (número JSON rejeitado), datas/enums inválidos, campos desconhecidos rejeitados (incluindo confirmação de que nada é salvo), CRUD completo de competências e movimentações, todas as transições de estado, erro de domínio/conflito de escopo sanitizado (não 500), erro de conexão (503) e erro inesperado (500) sanitizados, ausência da coluna auxiliar nos DTOs.
-- 3 testes comportamentais adicionais (`server.test.ts`) usando mocks/spies + importação dinâmica, confirmando que importar `http/server.ts` não chama `process.loadEnvFile`, não cria pool, não instancia `createHttpApp`.
-- 7 testes visuais novos (`HeroBrand.test.tsx`) e 6 (`Brand.test.tsx` +2, `Sidebar.test.tsx` +4) da correção retrospectiva do Bloco 15, mais reescrita de 1 teste em `App.test.tsx`.
+- 77 testes adicionados no conjunto do trabalho: 64 na API e 13 no frontend, elevando o total de 661 para 738.
+- API (64 novos, 254 → 318; inclui os 3 testes comportamentais de `server.test.ts` com mocks/spies + importação dinâmica): `app.test.ts`, `server.test.ts`, `routes/*.test.ts`, `schemas/common.test.ts` — criação sem efeitos colaterais, recusa de `production`, `/health`/`/ready` (com dependência falsa), CORS (origem permitida/negada/preflight), IDs válidos/inválidos, isolamento por household em leitura e escrita, dinheiro como string (número JSON rejeitado), datas/enums inválidos, campos desconhecidos rejeitados (incluindo confirmação de que nada é salvo), CRUD completo de competências e movimentações, todas as transições de estado, erro de domínio/conflito de escopo sanitizado (não 500), erro de conexão (503) e erro inesperado (500) sanitizados, ausência da coluna auxiliar nos DTOs.
+- Web (13 novos, 254 → 267) da correção retrospectiva do Bloco 15: 7 em `HeroBrand.test.tsx`, 6 em `Brand.test.tsx` (+2) e `Sidebar.test.tsx` (+4), mais reescrita de 1 teste existente em `App.test.tsx` (não contabilizado como novo).
+- Domain: inalterado, 153 testes.
 - Suíte completa: 738 testes (318 api / 267 web / 153 domain), todos verdes.
 - Smoke-test transacional real contra `finanhouse_dev` (`db-smoke-http.ts`): `GET /health`, criação idempotente de competência via `PUT`, criação de movimentação (com e sem responsável, dinheiro como string confirmado), leitura após escrita, rejeição de responsável de outro household via HTTP (409), isolamento de leitura entre households, transição de estado (`mark-pending`) — todos aprovados na única execução realizada; rollback intencional confirmado; zero dado residual.
 
@@ -96,7 +97,7 @@ Registradas em `Docs/02_architecture/decisoes_tecnicas.md`, DT-11 — adoção d
 ## 11. Problemas Encontrados
 
 1. **`removeAdditional: true` (padrão do Fastify/AJV):** campos desconhecidos no corpo — incluindo um `householdId` concorrente tentando contornar o escopo da URL — eram removidos silenciosamente em vez de rejeitados, apesar de `additionalProperties: false` nos schemas. Confirmado por teste isolado (script `tsx` descartável) antes de qualquer suposição. Corrigido com `ajv.customOptions.removeAdditional: false` na criação da instância Fastify (`app.ts`), validado por testes reais via `app.inject()`.
-2. **Falta o script `db:smoke:http` no `package.json` raiz** (só havia sido adicionado em `apps/api/package.json`) — descoberto ao tentar rodar `npm run db:smoke:http` na raiz após a autorização; corrigido antes de reexecutar (mudança puramente de wiring, sem alterar o comportamento do script já revisado no checkpoint).
+2. **Falta o script `db:smoke:http` no `package.json` raiz** (só havia sido adicionado em `apps/api/package.json`) — a primeira tentativa, `CONFIRM_HTTP_SMOKE=true npm run db:smoke:http` na raiz após a autorização, falhou com "Missing script: db:smoke:http"; nenhuma conexão transacional ou escrita foi iniciada nessa tentativa (falha puramente de wiring do npm, anterior a qualquer conexão com o banco). O wrapper `"db:smoke:http": "npm run db:smoke:http --workspace=api"` foi adicionado ao `package.json` raiz sem alterar o comportamento do script já revisado no checkpoint. Depois disso ocorreu uma única execução real do smoke, aprovada em todos os passos, com rollback confirmado e zero dado residual (detalhada na seção 8).
 
 ## 12. Correções Aplicadas Durante o Bloco
 

@@ -92,6 +92,6 @@ fix(web): reposicionar marca no hero da competência
 
 **Não faça commit automaticamente sem confirmação do usuário.** Sugira o commit acima e aguarde aprovação explícita antes de executar `git add`, `git commit` ou `git push`.
 
-## 17. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-07-31)
+## 17. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-08-01)
 
 Este prompt originalmente orientava posicionar a logo no canto superior **direito** — orientação incorreta, esclarecida pelo proprietário durante o Bloco 16. A posição correta é o canto superior **esquerdo**. A correção foi aplicada como parte do trabalho do Bloco 16 (commit `fix(web): posicionar marca no canto superior esquerdo`), sem reabrir este bloco nem reescrever os commits já publicados do Bloco 15.

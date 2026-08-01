@@ -1,6 +1,6 @@
 # Bloco 15 — Refinamento visual do hero da competência
 
-> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-07-31
+> Sessão: 11 (fundacao_do_finanhouse) · Projeto: FinanHouse · Atualizado em: 2026-08-01
 
 ## 1. Objetivo
 
@@ -95,6 +95,6 @@ Gerado via `ddae-engine feedback create --block bloco_15_refinamento_visual_do_h
 fix(web): reposicionar marca no hero da competência
 ```
 
-## 18. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-07-31)
+## 18. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-08-01)
 
 A implementação original deste bloco (commits `9ab913e`/`17fb9ba`) posicionou a logo no **canto superior direito**, seguindo a orientação fornecida naquele momento. Durante o desenvolvimento do Bloco 16, o proprietário esclareceu que a posição desejada sempre foi o **canto superior esquerdo** — orientação anterior incorreta, não uma mudança de requisito. A correção foi incorporada ao trabalho do Bloco 16 (sem reabrir um bloco novo, sem reescrever os commits já publicados do Bloco 15): `.fh-hero__logo` passou de `right` para `left`; `.fh-hero__info` passou a usar `margin-left` (não apenas `max-width`) para se deslocar para a direita da logo; no mobile, a logo deixou de ser `position: absolute` e passou a `position: static`, no fluxo normal, antes do conteúdo. O painel branco removido neste bloco **continua removido**; o asset (`assets/images/finanhouse-logo-hero.png`) **não foi alterado**; nenhuma regra funcional foi tocada. Commit da correção: `fix(web): posicionar marca no canto superior esquerdo` (branch do Bloco 16).

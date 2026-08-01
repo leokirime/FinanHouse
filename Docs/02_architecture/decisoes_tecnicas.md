@@ -1,6 +1,6 @@
 # Decisões Técnicas
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-31
+> Projeto: FinanHouse · Atualizado em: 2026-08-01
 
 > Registre apenas decisões caras de reverter (troca de framework, modelo de dados, estratégia de autenticação, etc.) — não decisões triviais de estilo de código.
 
@@ -10,7 +10,7 @@ Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão an
 
 ### DT-11 — API HTTP financeira local com injeção de dependência
 
-- **Data:** 2026-07-31
+- **Data:** 2026-08-01
 - **Contexto:** o Bloco 14 (DT-10) implementou os repositórios Drizzle reais, mas nenhuma camada HTTP conectava os serviços de aplicação já existentes (`apps/api/src/application/services/`) a uma API real — a API tinha apenas `GET /health` sobre `node:http` puro, sem framework, sem roteador, sem parsing/validação de corpo. Nenhum framework HTTP estava instalado no projeto.
 - **Decisão:** adotado **Fastify 5.11.0** como camada HTTP (`apps/api/src/http/`), com uma fábrica pura `createHttpApp({ repositories, logger, runtimeMode, readiness })` (`app.ts`) separada do bootstrap runtime (`server.ts`, que lê `.env.local`, cria o pool real e efetivamente escuta uma porta). A fábrica:
   - recebe as quatro portas já existentes (`FinancialEntryRepository`, `MonthlyPeriodRepository`, `CategoryRepository`, `HouseholdMemberRepository`) por injeção — nunca instancia repositório concreto, nunca cria pool, nunca lê `.env.local`;

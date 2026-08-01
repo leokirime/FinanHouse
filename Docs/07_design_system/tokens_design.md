@@ -1,6 +1,6 @@
 # Tokens de Design
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-31
+> Projeto: FinanHouse · Atualizado em: 2026-08-01
 
 > Tokens são a fonte única da verdade para valores visuais. Se um valor não está aqui como token, ele não deveria estar hardcoded em um componente.
 

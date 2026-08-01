@@ -1,6 +1,6 @@
 # Contrato da API HTTP
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-31
+> Projeto: FinanHouse · Atualizado em: 2026-08-01
 
 > Este contrato descreve a API HTTP implementada no Bloco 16 (DT-11). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (ainda um template — a integração real do frontend com esta API é um bloco futuro, fora do escopo do Bloco 16).
 
