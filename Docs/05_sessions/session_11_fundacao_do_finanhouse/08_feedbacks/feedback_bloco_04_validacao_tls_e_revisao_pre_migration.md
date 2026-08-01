@@ -96,7 +96,7 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- `financial_entries.responsible_member_id` sem FK composta protegendo consistência com household — pendência registrada no Bloco 03, não resolvida aqui (fora de escopo). Única pendência P2 deste bloco ainda aberta — ver histórico abaixo para o item já encerrado.
+_Nenhuma pendência P2 aberta neste momento._ Todas as pendências P2 originalmente registradas neste bloco foram encerradas — ver "Histórico de Pendências Encerradas" abaixo.
 
 ### P3 — Melhoria Recomendada
 
@@ -111,6 +111,7 @@ _Nenhuma pendência opcional identificada._
 _Seção adicionada em 2026-07-31 durante a reconciliação documental pós-Bloco 12. O item abaixo estava registrado como pendência P2 aberta no momento em que este feedback foi originalmente escrito (2026-07-25); nenhum resultado é reescrito como se já fosse conhecido naquela data — apenas o encerramento é registrado agora, com a data real em que ocorreu._
 
 - **Validação TLS estrita (`rejectUnauthorized: true`) não concluída com sucesso contra a Clever Cloud; causa do `HANDSHAKE_SSL_ERROR` nunca confirmada; resposta oficial da Clever Cloud nunca chegou** — esta era a "fonte única" da pendência de TLS/aplicação de migration citada também no feedback do Bloco 03. Em vez de aguardar indefinidamente uma resposta da Clever Cloud, o proprietário decidiu trocar de provedor: **Aiven for MySQL** substituiu a Clever Cloud na arquitetura ativa (Bloco 11, DT-07). TLS foi validado com sucesso contra o Aiven em **2026-07-30** (`db:check` real, `rejectUnauthorized: true`, verificação de hostname padrão). A migration inicial foi aplicada em **2026-07-31** (Bloco 12, DT-08), destravada por essa validação. Ambos os itens estão encerrados.
+- **`financial_entries.responsible_member_id` sem FK composta protegendo consistência com household** — registrada no Bloco 03, citada aqui como fora de escopo deste bloco. **Encerrada em 2026-07-31** (Bloco 13, DT-09): coluna auxiliar `responsible_member_household_id`, FK composta com `ON DELETE RESTRICT` e `CHECK` de consistência, aplicadas via migration incremental a `finanhouse_dev`.
 
 ## 14. Riscos Restantes
 

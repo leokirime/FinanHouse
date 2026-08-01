@@ -54,16 +54,17 @@ async function main(): Promise<void> {
 
   console.log(`Aplicando migrations versionadas em: ${config.provider}/${config.environment}/${config.database}`)
 
-  const connection = await mysql.createConnection({
-    host: config.host,
-    port: config.port,
-    user: config.user,
-    password: config.password,
-    database: config.database,
-    ssl: config.ssl,
-  })
-
+  let connection: mysql.Connection | undefined
   try {
+    connection = await mysql.createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+      database: config.database,
+      ssl: config.ssl,
+    })
+
     const db = drizzle(connection)
     await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER })
     console.log('\nMigrations aplicadas com sucesso.')
@@ -72,7 +73,7 @@ async function main(): Promise<void> {
     console.error(`\nFalha ao aplicar migrations. Categoria: ${categorizeConnectionError(message)}`)
     process.exitCode = 1
   } finally {
-    await connection.end()
+    await connection?.end()
   }
 }
 

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm'
-import { bigint, check, mysqlTable, timestamp, uniqueIndex, varchar } from 'drizzle-orm/mysql-core'
+import { bigint, check, mysqlTable, timestamp, unique, uniqueIndex, varchar } from 'drizzle-orm/mysql-core'
 import { households } from './households.js'
 import { users } from './users.js'
 
@@ -27,6 +27,9 @@ export const householdMembers = mysqlTable(
   },
   (table) => [
     uniqueIndex('household_members_household_user_unique').on(table.householdId, table.userId),
+    // Necessária como alvo da foreign key composta financial_entries_responsible_member_household_fk
+    // (garante no banco que o membro responsável de uma movimentação pertence ao mesmo household).
+    unique('household_members_id_household_id_unique').on(table.id, table.householdId),
     check('household_members_role_check', sql`${table.role} in ('owner', 'member')`),
     check('household_members_status_check', sql`${table.status} in ('active', 'inactive')`),
   ],

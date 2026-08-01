@@ -1,0 +1,7 @@
+ALTER TABLE `financial_entries` DROP FOREIGN KEY `financial_entries_responsible_member_id_household_members_id_fk`;
+--> statement-breakpoint
+ALTER TABLE `financial_entries` ADD `responsible_member_household_id` bigint unsigned;--> statement-breakpoint
+ALTER TABLE `household_members` ADD CONSTRAINT `household_members_id_household_id_unique` UNIQUE(`id`,`household_id`);--> statement-breakpoint
+ALTER TABLE `financial_entries` ADD CONSTRAINT `financial_entries_responsible_member_household_check` CHECK ((`financial_entries`.`responsible_member_id` is null and `financial_entries`.`responsible_member_household_id` is null) or (`financial_entries`.`responsible_member_id` is not null and `financial_entries`.`responsible_member_household_id` = `financial_entries`.`household_id`));--> statement-breakpoint
+ALTER TABLE `financial_entries` ADD CONSTRAINT `financial_entries_responsible_member_household_fk` FOREIGN KEY (`responsible_member_id`,`responsible_member_household_id`) REFERENCES `household_members`(`id`,`household_id`) ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX `financial_entries_responsible_member_household_idx` ON `financial_entries` (`responsible_member_id`,`responsible_member_household_id`);

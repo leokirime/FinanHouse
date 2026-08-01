@@ -92,7 +92,8 @@ Receitas e despesas previstas ou realizadas.
 | household_id | BIGINT UNSIGNED | FK → households.id, RESTRICT |
 | period_id | BIGINT UNSIGNED | FK composta (period_id, household_id) → monthly_periods(id, household_id), RESTRICT |
 | category_id | BIGINT UNSIGNED | FK composta (category_id, household_id) → categories(id, household_id), RESTRICT |
-| responsible_member_id | BIGINT UNSIGNED | FK simples → household_members.id, SET NULL, opcional (não composta — ver abaixo) |
+| responsible_member_id | BIGINT UNSIGNED | FK composta (responsible_member_id, responsible_member_household_id) → household_members(id, household_id), RESTRICT, opcional (DT-09) |
+| responsible_member_household_id | BIGINT UNSIGNED | opcional; espelha household_id quando responsible_member_id está preenchido; CHECK garante a sincronia (DT-09) |
 | created_by_user_id | BIGINT UNSIGNED | FK → users.id, RESTRICT |
 | entry_type | VARCHAR(10) | `income`/`expense`, CHECK |
 | status | VARCHAR(10) | `planned`/`pending`/`realized`/`cancelled`, CHECK |
@@ -108,7 +109,7 @@ Receitas e despesas previstas ou realizadas.
 
 `period_id` e `category_id` são protegidos por **foreign keys compostas** — `(period_id, household_id)` referenciando `monthly_periods(id, household_id)`, e `(category_id, household_id)` referenciando `categories(id, household_id)`. Isso impede, no próprio MySQL, que uma movimentação use um período ou categoria de outro núcleo doméstico — não depende apenas da aplicação se comportar corretamente.
 
-`responsible_member_id` **não** tem FK composta equivalente: o MySQL proíbe `ON DELETE SET NULL` em qualquer foreign key composta que inclua uma coluna `NOT NULL` (`household_id` é `NOT NULL`), então uma FK composta `(responsible_member_id, household_id)` com `SET NULL` seria rejeitada pelo banco. A consistência "responsável pertence ao mesmo household" para esta coluna permanece responsabilidade da camada de serviço — registrado como pendência P2 no feedback do Bloco 03.
+`responsible_member_id` **também** é protegido por FK composta desde o Bloco 13 (DT-09): como `household_id` é `NOT NULL`, uma FK composta direta `(responsible_member_id, household_id)` com `SET NULL` seria rejeitada pelo MySQL. A solução foi adicionar uma coluna auxiliar nullable `responsible_member_household_id` (espelhando `household_id` apenas quando há responsável definido, garantido por uma `CHECK`) e referenciar essa coluna auxiliar na FK composta, com `ON DELETE RESTRICT` (não `SET NULL` — o MySQL 8 proíbe `CHECK` sobre coluna também modificada por `SET NULL`/`CASCADE` em FK, erro `3823`). Ver `database/proposed-schema/relacionamentos.md` para o detalhamento completo.
 
 `created_by_user_id` e `closed_by_user_id` (em `monthly_periods`) também não têm validação de household no banco — decisão explícita de manter na camada de serviço por ora, já que um usuário pode pertencer a múltiplos households e a modelagem de "member" já cobre o vínculo usuário↔household.
 
@@ -128,7 +129,7 @@ Todo valor monetário é `DECIMAL(13,2)`, nunca `FLOAT`/`DOUBLE` (evita erro de 
 
 ## Política de exclusão
 
-- `RESTRICT` em todas as FKs (simples e compostas) que apontam para registros financeiros ou suas dependências diretas (households, categories, monthly_periods, financial_entries, users quando referenciado como criador).
-- `CASCADE` apenas em `household_members` (tabela puramente associativa) — remover um household ou um user remove os vínculos, não os dados financeiros.
-- `SET NULL` nas referências opcionais de coluna única (`monthly_periods.closed_by_user_id`, `financial_entries.responsible_member_id`) — nenhuma delas é composta, por isso `SET NULL` é permitido pelo MySQL.
-- Categorias e membros preferem status `inactive` a exclusão física.
+- `RESTRICT` em todas as FKs (simples e compostas) que apontam para registros financeiros ou suas dependências diretas (households, categories, monthly_periods, financial_entries, household_members quando referenciado como responsável, users quando referenciado como criador).
+- `CASCADE` apenas em `household_members` quando referenciada a partir de `households`/`users` (tabela puramente associativa) — remover um household ou um user remove os vínculos, não os dados financeiros.
+- `SET NULL` apenas na referência opcional de coluna única `monthly_periods.closed_by_user_id` (não composta, por isso `SET NULL` é permitido pelo MySQL). `financial_entries.responsible_member_id` usa `RESTRICT`, não `SET NULL`, desde o Bloco 13 (DT-09) — é uma FK composta, e o MySQL proíbe `SET NULL`/`CASCADE` em FK sobre coluna também usada em `CHECK` constraint.
+- Categorias e membros preferem status `inactive` a exclusão física — reforçado pelo `RESTRICT` acima: excluir fisicamente um membro ainda referenciado por uma movimentação é bloqueado, não silenciosamente ignorado.

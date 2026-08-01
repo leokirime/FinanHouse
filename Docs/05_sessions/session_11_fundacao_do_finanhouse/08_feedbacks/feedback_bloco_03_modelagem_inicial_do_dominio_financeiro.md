@@ -150,7 +150,7 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- `financial_entries.responsible_member_id` não tem FK composta protegendo a consistência com `household_id` — MySQL proíbe `ON DELETE SET NULL` em FK composta com coluna `NOT NULL`. Consistência permanece responsabilidade da camada de serviço (ver `database/proposed-schema/relacionamentos.md`). Única pendência P2 deste bloco ainda aberta — ver histórico abaixo para os itens já encerrados.
+_Nenhuma pendência P2 aberta neste momento._ Todas as pendências P2 originalmente registradas neste bloco foram encerradas — ver "Histórico de Pendências Encerradas" abaixo.
 
 ### P3 — Melhoria Recomendada
 
@@ -168,6 +168,7 @@ _Seção adicionada em 2026-07-31 durante a reconciliação documental pós-Bloc
 
 - **Verificação de TLS/SSL entre a aplicação e o MySQL** — estava aberta neste bloco, investigada no Bloco 04 (TLS estrito não funcional contra a Clever Cloud) e **encerrada em 2026-07-30**, após a migração de infraestrutura para o Aiven (Bloco 11, DT-07) e validação real de `db:check`. Ver `Docs/02_architecture/decisoes_tecnicas.md` (DT-07) e `Docs/03_contracts/contrato_banco_dados.md`.
 - **Aplicação da migration inicial (`0000_initial_financial_domain.sql`)** — estava pendente de revisão e autorização explícita, bloqueada pela pendência de TLS acima. **Encerrada em 2026-07-31** (Bloco 12, DT-08): aplicada uma única vez ao banco `finanhouse_dev`, com autorização explícita do proprietário, seis tabelas criadas, journal registrado, todas as tabelas vazias.
+- **`financial_entries.responsible_member_id` sem FK composta protegendo a consistência com `household_id`** — estava aberta neste bloco desde a modelagem original. **Encerrada em 2026-07-31** (Bloco 13, DT-09): coluna auxiliar `responsible_member_household_id`, FK composta `(responsible_member_id, responsible_member_household_id) → household_members(id, household_id)` com `ON DELETE RESTRICT` (não `SET NULL` — incompatível com a `CHECK` de consistência, erro MySQL 3823) e `CHECK` de consistência, aplicadas via migration incremental a `finanhouse_dev`.
 - ~~Commit e push deste bloco dependem de nova autorização explícita~~ — resolvido ainda em 2026-07-25: branch `feat/session-11-bloco-03-modelagem-dominio` commitada, publicada e mesclada à `main` no commit `a73b610`.
 
 ## 14. Riscos Restantes

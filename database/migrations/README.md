@@ -11,8 +11,9 @@ Regras:
 
 ## Status
 
-- `0000_initial_financial_domain.sql` — migration inicial (6 tabelas: `users`, `households`, `household_members`, `categories`, `monthly_periods`, `financial_entries`), incluindo foreign keys compostas de `financial_entries` para garantir no banco que período e categoria pertencem ao mesmo household. **Gerada e revisada em 2026-07-25, ainda não aplicada.**
-- O banco real na Clever Cloud **permanece vazio** — ver `database/current-schema/`. Nenhuma migration foi aplicada.
+- `0000_initial_financial_domain.sql` — migration inicial (6 tabelas: `users`, `households`, `household_members`, `categories`, `monthly_periods`, `financial_entries`), incluindo foreign keys compostas de `financial_entries` para garantir no banco que período e categoria pertencem ao mesmo household. Gerada e revisada em 2026-07-25. **Aplicada em 2026-07-31 ao banco real `finanhouse_dev` (Aiven)** — Bloco 12, DT-08. Não aplicada em nenhum banco de produção.
+- `0001_responsible_member_household_integrity.sql` — migration incremental: coluna auxiliar `responsible_member_household_id`, FK composta `(responsible_member_id, responsible_member_household_id) → household_members(id, household_id)` com `ON DELETE RESTRICT`, `CHECK` de consistência, `unique(id, household_id)` em `household_members`. Gerada e revisada em 2026-07-31. **Aplicada em 2026-07-31 ao banco real `finanhouse_dev` (Aiven)** — Bloco 13, DT-09, após recuperação de uma tentativa anterior que ficou parcialmente aplicada (erro MySQL `3823`; ver DT-09 para o detalhamento completo do incidente). Não aplicada em nenhum banco de produção.
+- `finanhouse_prod` (Aiven) continua inexistente — nenhuma migration foi aplicada em produção.
 
 ## Dependências de desenvolvimento — vulnerabilidades conhecidas (P3)
 

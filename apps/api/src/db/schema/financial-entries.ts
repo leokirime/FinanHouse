@@ -22,14 +22,18 @@ export const financialEntries = mysqlTable(
     // que substituem e superam uma FK simples nessas duas colunas.
     periodId: bigint('period_id', { mode: 'number', unsigned: true }).notNull(),
     categoryId: bigint('category_id', { mode: 'number', unsigned: true }).notNull(),
-    // Sem FK composta: MySQL proíbe ON DELETE SET NULL em qualquer FK composta que inclua
-    // uma coluna NOT NULL (household_id o é). A consistência "responsável pertence ao mesmo
-    // household" desta coluna permanece responsabilidade da camada de serviço — ver
-    // Docs/03_contracts/contrato_banco_dados.md, seção 2, e pendência P2 no feedback do Bloco 03.
-    responsibleMemberId: bigint('responsible_member_id', { mode: 'number', unsigned: true }).references(
-      () => householdMembers.id,
-      { onDelete: 'set null' },
-    ),
+    // responsible_member_id não usa .references() single-column: a integridade "pertence ao
+    // mesmo household" é imposta pela foreign key composta abaixo
+    // (financial_entries_responsible_member_household_fk), igual ao padrão já usado para
+    // period_id/category_id. Não referencia household_id diretamente (NOT NULL) porque o MySQL
+    // proíbe ON DELETE SET NULL em FK composta com coluna NOT NULL — por isso existe a coluna
+    // auxiliar nullable responsible_member_household_id abaixo, mantida em sincronia com
+    // household_id pela CHECK constraint (ver Docs/02_architecture/decisoes_tecnicas.md, DT-09).
+    responsibleMemberId: bigint('responsible_member_id', { mode: 'number', unsigned: true }),
+    // Espelha household_id apenas quando responsible_member_id está preenchido — detalhe de
+    // persistência, não faz parte do modelo de domínio público. Preenchida/mantida pela camada
+    // de persistência (repositório), nunca editada manualmente fora dela.
+    responsibleMemberHouseholdId: bigint('responsible_member_household_id', { mode: 'number', unsigned: true }),
     createdByUserId: bigint('created_by_user_id', { mode: 'number', unsigned: true })
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
@@ -56,6 +60,11 @@ export const financialEntries = mysqlTable(
     index('financial_entries_entry_type_idx').on(table.entryType),
     index('financial_entries_due_date_idx').on(table.dueDate),
     index('financial_entries_realization_date_idx').on(table.realizationDate),
+    // Colunas filhas da FK composta financial_entries_responsible_member_household_fk.
+    index('financial_entries_responsible_member_household_idx').on(
+      table.responsibleMemberId,
+      table.responsibleMemberHouseholdId,
+    ),
     check('financial_entries_entry_type_check', sql`${table.entryType} in ('income', 'expense')`),
     check(
       'financial_entries_status_check',
@@ -65,6 +74,13 @@ export const financialEntries = mysqlTable(
     check(
       'financial_entries_actual_amount_positive',
       sql`${table.actualAmount} is null or ${table.actualAmount} > 0`,
+    ),
+    // Garante que responsible_member_household_id só é preenchido junto com
+    // responsible_member_id, e sempre igual ao household_id da própria movimentação — impede
+    // associar um membro responsável de outro household (ver DT-09).
+    check(
+      'financial_entries_responsible_member_household_check',
+      sql`(${table.responsibleMemberId} is null and ${table.responsibleMemberHouseholdId} is null) or (${table.responsibleMemberId} is not null and ${table.responsibleMemberHouseholdId} = ${table.householdId})`,
     ),
     // Foreign keys compostas: garantem no próprio banco que a movimentação usa um período
     // e uma categoria do MESMO household — não apenas um período/categoria que exista em
@@ -78,6 +94,19 @@ export const financialEntries = mysqlTable(
       name: 'financial_entries_category_household_fk',
       columns: [table.categoryId, table.householdId],
       foreignColumns: [categories.id, categories.householdId],
+    }).onDelete('restrict'),
+    // FK composta: garante no próprio banco que o membro responsável pertence ao mesmo
+    // household da movimentação. Referencia a coluna auxiliar responsible_member_household_id
+    // (nullable), não household_id diretamente. RESTRICT, não SET NULL: o MySQL 8 proíbe uma
+    // CHECK constraint referenciar qualquer coluna que também seja alvo de SET NULL/CASCADE em
+    // FK (erro 3823, ER_CHECK_CONSTRAINT_CLAUSE_USING_FK_REFER_ACTION_COLUMN) — SET NULL aqui
+    // seria incompatível com a CHECK abaixo. RESTRICT bloqueia a exclusão física de um
+    // household_member ainda referenciado; sem impacto prático, já que household_members usa
+    // exclusão lógica (status/removed_at), nunca DELETE físico. Ver DT-09.
+    foreignKey({
+      name: 'financial_entries_responsible_member_household_fk',
+      columns: [table.responsibleMemberId, table.responsibleMemberHouseholdId],
+      foreignColumns: [householdMembers.id, householdMembers.householdId],
     }).onDelete('restrict'),
   ],
 )
