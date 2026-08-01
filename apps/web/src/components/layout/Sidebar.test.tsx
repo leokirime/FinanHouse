@@ -79,4 +79,35 @@ describe('Sidebar', () => {
     renderWithProviders(<Sidebar />)
     expect(screen.getByText(/Dados simulados/)).toBeTruthy()
   })
+
+  it('renderiza a marca institucional (imagem real) no topo, antes dos itens de navegação', () => {
+    const { container } = renderWithProviders(<Sidebar />)
+    const image = screen.getByRole('img', { name: 'Finanhouse' })
+    expect(image.getAttribute('src')).toMatch(/finanhouse-logo-hero/)
+
+    // Ordem no DOM: a marca (dentro de .fh-sidebar__brand) vem antes de .fh-sidebar__nav.
+    const brandBlock = container.querySelector('.fh-sidebar__brand')
+    const navBlock = container.querySelector('.fh-sidebar__nav')
+    expect(brandBlock).not.toBeNull()
+    expect(navBlock).not.toBeNull()
+    const position = brandBlock!.compareDocumentPosition(navBlock!)
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  })
+
+  it('a marca institucional é um link acessível para a visão geral ("/")', () => {
+    renderWithProviders(<Sidebar />)
+    const brandLink = screen.getByRole('link', { name: 'Ir para a visão geral do FinanHouse' })
+    expect(brandLink.getAttribute('href')).toBe('/')
+  })
+
+  it('a marca da sidebar usa a variante "sidebar" (dimensionamento próprio), não a classe absoluta do hero', () => {
+    const { container } = renderWithProviders(<Sidebar />)
+    expect(container.querySelector('.fh-brand[data-size="sidebar"]')).not.toBeNull()
+    expect(container.querySelector('.fh-hero__logo')).toBeNull()
+  })
+
+  it('não existe painel branco (fh-hero__brand-surface, herdado do antigo hero) na sidebar', () => {
+    const { container } = renderWithProviders(<Sidebar />)
+    expect(container.querySelector('.fh-hero__brand-surface')).toBeNull()
+  })
 })

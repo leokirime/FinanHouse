@@ -19,4 +19,16 @@ describe('Brand', () => {
     render(<Brand compact />)
     expect(screen.getByText('FH')).toBeTruthy()
   })
+
+  it('usa o tamanho "default" quando size não é informado', () => {
+    const { container } = render(<Brand logoSrc="/assets/brand/logo.svg" />)
+    expect(container.querySelector('.fh-brand')?.getAttribute('data-size')).toBe('default')
+  })
+
+  it('aplica data-size="sidebar" quando size="sidebar" é passado, sem alterar a lógica de renderização', () => {
+    const { container } = render(<Brand logoSrc="/assets/brand/logo.svg" size="sidebar" />)
+    expect(container.querySelector('.fh-brand')?.getAttribute('data-size')).toBe('sidebar')
+    const image = screen.getByRole('img', { name: 'Finanhouse' })
+    expect(image.getAttribute('src')).toBe('/assets/brand/logo.svg')
+  })
 })

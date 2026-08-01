@@ -4,7 +4,7 @@
 
 ## 1. Objetivo
 
-Corrigir o hero da competência mensal no dashboard para que a movimentação seja o elemento principal e a logo vire um elemento decorativo pequeno no canto superior direito, sem coluna própria nem painel de fundo.
+Corrigir o hero da competência mensal no dashboard para que a movimentação seja o elemento principal e a logo vire um elemento decorativo pequeno no canto superior esquerdo, sem coluna própria nem painel de fundo. _(Posição corrigida durante o Bloco 16 — ver seção 18. A implementação original deste bloco usou o canto superior direito.)_
 
 ## 2. Contexto
 
@@ -17,7 +17,7 @@ A imagem da marca (`HeroBrand.tsx`) era tratada como coluna estrutural principal
 ## 4. Escopo
 
 - Remover a estrutura em duas colunas e o painel `.fh-hero__brand-surface`.
-- Reposicionar a logo como elemento decorativo (`position: absolute`, canto superior direito, 150–210px no desktop).
+- Reposicionar a logo como elemento decorativo (`position: absolute`, canto superior esquerdo — corrigido no Bloco 16, ver seção 18 —, 150–210px no desktop).
 - Ajustar responsividade (tablet reduz gradualmente; mobile 90–120px, sem sobreposição, sem rolagem horizontal).
 - Remover os tokens de design órfãos (`--fh-brand-surface`, `--fh-brand-surface-border`).
 - Atualizar testes do `HeroBrand` e a documentação de identidade visual/tokens.
@@ -55,7 +55,7 @@ Nenhuma — ajuste isolado sobre um componente já existente, sem dependência d
 
 - [x] A competência mensal é o elemento visualmente principal do hero.
 - [x] A logo não ocupa mais uma coluna própria nem tem painel de fundo.
-- [x] A logo fica no canto superior direito, 150–210px no desktop.
+- [x] A logo fica no canto superior esquerdo (corrigido no Bloco 16 — ver seção 18), 150–210px no desktop.
 - [x] Título, descrição, status e botões preservados sem alteração de comportamento.
 - [x] Responsivo em desktop/tablet/mobile, sem sobreposição nem rolagem horizontal.
 - [x] Nenhuma regra financeira, estado, rota, API ou persistência alterada.
@@ -94,3 +94,7 @@ Gerado via `ddae-engine feedback create --block bloco_15_refinamento_visual_do_h
 ```
 fix(web): reposicionar marca no hero da competência
 ```
+
+## 18. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-07-31)
+
+A implementação original deste bloco (commits `9ab913e`/`17fb9ba`) posicionou a logo no **canto superior direito**, seguindo a orientação fornecida naquele momento. Durante o desenvolvimento do Bloco 16, o proprietário esclareceu que a posição desejada sempre foi o **canto superior esquerdo** — orientação anterior incorreta, não uma mudança de requisito. A correção foi incorporada ao trabalho do Bloco 16 (sem reabrir um bloco novo, sem reescrever os commits já publicados do Bloco 15): `.fh-hero__logo` passou de `right` para `left`; `.fh-hero__info` passou a usar `margin-left` (não apenas `max-width`) para se deslocar para a direita da logo; no mobile, a logo deixou de ser `position: absolute` e passou a `position: static`, no fluxo normal, antes do conteúdo. O painel branco removido neste bloco **continua removido**; o asset (`assets/images/finanhouse-logo-hero.png`) **não foi alterado**; nenhuma regra funcional foi tocada. Commit da correção: `fix(web): posicionar marca no canto superior esquerdo` (branch do Bloco 16).

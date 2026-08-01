@@ -4,16 +4,16 @@
 
 ## 1. Resumo Executivo
 
-O hero da competência mensal (`HeroBrand.tsx`) usava um grid de duas colunas em que a logo, envolvida por um painel `.fh-hero__brand-surface` (fundo quase-branco `#f4f1f8`, borda, sombra), ocupava ~40% da seção — o "grande retângulo branco" relatado. Corrigido removendo o grid e o painel; a logo agora é um elemento decorativo `position: absolute` no canto superior direito (150–210px desktop, reduzindo por breakpoint até 90–120px no mobile), e a competência (título, descrição, status, ação) passa a ser o único conteúdo em fluxo normal. Durante o diagnóstico, uma suposição inicial errada (a imagem teria fundo opaco embutido, exigindo um asset alternativo) foi corrigida por inspeção binária direta do PNG: o arquivo tem canal alfa real (RGBA), então a imagem existente já era adequada — o problema era inteiramente estrutural (o painel), não do asset. Os tokens de design órfãos (`--fh-brand-surface`/`--fh-brand-surface-border`) foram removidos. Nenhuma regra funcional, estado, rota, API ou dado foi alterado.
+O hero da competência mensal (`HeroBrand.tsx`) usava um grid de duas colunas em que a logo, envolvida por um painel `.fh-hero__brand-surface` (fundo quase-branco `#f4f1f8`, borda, sombra), ocupava ~40% da seção — o "grande retângulo branco" relatado. Corrigido removendo o grid e o painel; a logo agora é um elemento decorativo `position: absolute` no canto superior esquerdo (150–210px desktop, reduzindo por breakpoint até 90–120px no mobile), e a competência (título, descrição, status, ação) passa a ser o único conteúdo em fluxo normal, deslocado para a direita da logo. Durante o diagnóstico, uma suposição inicial errada (a imagem teria fundo opaco embutido, exigindo um asset alternativo) foi corrigida por inspeção binária direta do PNG: o arquivo tem canal alfa real (RGBA), então a imagem existente já era adequada — o problema era inteiramente estrutural (o painel), não do asset. Os tokens de design órfãos (`--fh-brand-surface`/`--fh-brand-surface-border`) foram removidos. Nenhuma regra funcional, estado, rota, API ou dado foi alterado. **Nota:** a posição original implementada foi o canto superior direito; corrigida para o canto superior esquerdo durante o Bloco 16, após esclarecimento do proprietário — ver seção 19.
 
 ## 2. Objetivo do Bloco
 
-Corrigir o hero da competência mensal no dashboard para que a movimentação seja o elemento principal e a logo vire um elemento decorativo pequeno no canto superior direito, sem coluna própria nem painel de fundo.
+Corrigir o hero da competência mensal no dashboard para que a movimentação seja o elemento principal e a logo vire um elemento decorativo pequeno no canto superior esquerdo, sem coluna própria nem painel de fundo. _(Ver seção 19 — a posição foi corrigida de direito para esquerdo durante o Bloco 16.)_
 
 ## 3. Escopo Implementado
 
 - Remoção do grid de duas colunas (`.fh-hero`) e do painel `.fh-hero__brand-surface`.
-- Logo reposicionada com `position: absolute`, canto superior direito, `clamp(150px, 18vw, 210px)` no desktop.
+- Logo reposicionada com `position: absolute`, canto superior esquerdo (corrigido no Bloco 16 — ver seção 19), `clamp(150px, 18vw, 210px)` no desktop.
 - Responsividade ajustada: tablet (`clamp(130px, 16vw, 170px)`) e mobile (`clamp(90px, 28vw, 120px)`, com `padding-top` no conteúdo para evitar sobreposição).
 - Remoção dos tokens `--fh-brand-surface`/`--fh-brand-surface-border` de `tokens.css`.
 - Atualização de `Docs/07_design_system/identidade_visual.md` e `tokens_design.md`.
@@ -120,3 +120,14 @@ fix(web): reposicionar marca no hero da competência
 ```
 
 _Lembrete: este commit não é executado automaticamente — exige confirmação explícita do usuário._
+
+## 19. Correção Retrospectiva (aplicada durante o Bloco 16, 2026-07-31)
+
+A implementação original deste bloco (commits `9ab913e`/`17fb9ba`, já publicados em `main`) posicionou a logo no **canto superior direito**, seguindo a orientação recebida naquele momento. Durante o desenvolvimento do Bloco 16, o proprietário esclareceu que a posição correta sempre foi o **canto superior esquerdo** — uma orientação anterior incorreta, não uma mudança de requisito funcional. A correção foi incorporada ao trabalho do Bloco 16 (sem reabrir este bloco, sem reescrever os commits `9ab913e`/`17fb9ba` já publicados):
+
+- `.fh-hero__logo`: `right` → `left`.
+- `.fh-hero__info`: passou a usar `margin-left` (além de `max-width`) para se deslocar corretamente para a direita da logo.
+- Mobile: a logo deixou de usar `position: absolute` e passou a `position: static`, no fluxo normal, antes do conteúdo — simplificação que também eliminou a necessidade do `padding-top` usado na primeira versão.
+- 7 testes novos em `HeroBrand.test.tsx`, incluindo leitura controlada do CSS para confirmar que a regra de `.fh-hero__logo` usa `left` e nenhum bloco do arquivo usa `right` para a logo.
+
+O painel branco removido neste bloco **continua removido**; o asset (`assets/images/finanhouse-logo-hero.png`) **não foi alterado nem regenerado**; nenhuma regra funcional, estado, rota, API ou persistência foi tocada. Commit da correção: `fix(web): posicionar marca no canto superior esquerdo` (branch `feat/session-11-bloco-16-api-http-financeira`, integrado junto do Bloco 16).

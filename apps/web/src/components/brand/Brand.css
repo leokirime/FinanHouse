@@ -18,3 +18,23 @@
   height: 32px;
   width: auto;
 }
+
+/* Variante da navegação lateral: ocorrência institucional maior, largura
+   controlada em vez de altura fixa — ver Sidebar.tsx/.css. */
+.fh-brand[data-size='sidebar'] .fh-brand__logo {
+  height: auto;
+  width: min(160px, 100%);
+  object-fit: contain;
+}
+
+@media (max-width: 1023px) {
+  .fh-brand[data-size='sidebar'] .fh-brand__logo {
+    width: min(120px, 100%);
+  }
+}
+
+@media (max-width: 480px) {
+  .fh-brand[data-size='sidebar'] .fh-brand__logo {
+    width: min(96px, 100%);
+  }
+}
