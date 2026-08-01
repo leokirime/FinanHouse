@@ -116,11 +116,36 @@ describe('schema proposto — fundação', () => {
     expect(categoryFk?.onDelete).toBe('restrict')
   })
 
-  it('financial_entries.responsible_member_id permanece FK SIMPLES com SET NULL (não composta — ver Docs/03_contracts/contrato_banco_dados.md)', () => {
+  it('financial_entries.responsible_member_id é protegido por FK COMPOSTA (responsible_member_id/responsible_member_household_id + household_members), com RESTRICT (DT-09)', () => {
     const { foreignKeys } = getTableConfig(financialEntries)
     const memberFk = foreignKeys.find((f) => f.reference().columns.some((c) => c.name === 'responsible_member_id'))
-    expect(memberFk?.reference().columns.map((c) => c.name)).toEqual(['responsible_member_id'])
-    expect(memberFk?.onDelete).toBe('set null')
+    expect(memberFk?.reference().columns.map((c) => c.name).sort()).toEqual([
+      'responsible_member_household_id',
+      'responsible_member_id',
+    ])
+    expect(memberFk?.reference().foreignColumns.map((c) => c.name).sort()).toEqual(['household_id', 'id'])
+    expect(memberFk?.reference().foreignTable).toBe(householdMembers)
+    // RESTRICT, não SET NULL: o MySQL 8 proíbe uma CHECK constraint referenciar coluna que
+    // também é alvo de SET NULL/CASCADE em FK (erro 3823) — ver DT-09.
+    expect(memberFk?.onDelete).toBe('restrict')
+  })
+
+  it('financial_entries.responsible_member_id e responsible_member_household_id são nullable (a movimentação pode não ter responsável definido)', () => {
+    const { columns } = getTableConfig(financialEntries)
+    const responsibleMemberId = columns.find((c) => c.name === 'responsible_member_id')
+    const responsibleMemberHouseholdId = columns.find((c) => c.name === 'responsible_member_household_id')
+    expect(responsibleMemberId?.notNull).toBe(false)
+    expect(responsibleMemberHouseholdId?.notNull).toBe(false)
+  })
+
+  it('household_members tem unique(id, household_id) para servir de alvo da FK composta do membro responsável', () => {
+    expect(uniqueConstraintColumnSets(householdMembers)).toContain('household_id,id')
+  })
+
+  it('financial_entries declara CHECK garantindo que responsible_member_household_id só existe junto com responsible_member_id e é sempre igual a household_id', () => {
+    const { checks } = getTableConfig(financialEntries)
+    const consistencyCheck = checks.find((c) => c.name === 'financial_entries_responsible_member_household_check')
+    expect(consistencyCheck).toBeDefined()
   })
 
   it('status de financial_entries usa o vocabulário previsto/realizado (nunca "paid")', () => {

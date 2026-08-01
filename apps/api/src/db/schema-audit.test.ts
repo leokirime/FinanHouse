@@ -161,7 +161,14 @@ describe('apps/api/scripts/db-audit-schema.ts — não contém comandos destruti
     expect(source).toMatch(/SELECT COUNT\(\*\)/)
   })
 
-  it('fecha a conexão em finally', () => {
-    expect(source).toMatch(/finally\s*\{\s*await connection\.end\(\)/)
+  it('fecha a conexão em finally, tolerando conexão nunca estabelecida', () => {
+    expect(source).toMatch(/finally\s*\{\s*await connection\?\.end\(\)/)
+  })
+
+  it('estabelece a conexão dentro do try — uma falha de conexão nunca deve escapar sem ser sanitizada', () => {
+    const tryIndex = source.indexOf('try {')
+    const createConnectionIndex = source.indexOf('mysql.createConnection(')
+    expect(tryIndex).toBeGreaterThan(-1)
+    expect(createConnectionIndex).toBeGreaterThan(tryIndex)
   })
 })

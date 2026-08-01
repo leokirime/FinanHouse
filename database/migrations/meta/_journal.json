@@ -8,6 +8,13 @@
       "when": 1785002913238,
       "tag": "0000_initial_financial_domain",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1785543203759,
+      "tag": "0001_responsible_member_household_integrity",
+      "breakpoints": true
     }
   ]
 }

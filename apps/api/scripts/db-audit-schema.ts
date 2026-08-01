@@ -72,16 +72,17 @@ async function main(): Promise<void> {
   console.log(`Ambiente: ${config.environment}`)
   console.log(`Banco: ${config.database}`)
 
-  const connection = await mysql.createConnection({
-    host: config.host,
-    port: config.port,
-    user: config.user,
-    password: config.password,
-    database: config.database,
-    ssl: config.ssl,
-  })
-
+  let connection: mysql.Connection | undefined
   try {
+    connection = await mysql.createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+      database: config.database,
+      ssl: config.ssl,
+    })
+
     const [cipherRows] = (await connection.query("SHOW SESSION STATUS LIKE 'Ssl_cipher'")) as [
       Array<{ Value: string }>,
       unknown,
@@ -138,7 +139,7 @@ async function main(): Promise<void> {
     console.error(`\nFalha na auditoria. Categoria: ${categorizeConnectionError(message)}`)
     process.exitCode = 1
   } finally {
-    await connection.end()
+    await connection?.end()
   }
 }
 

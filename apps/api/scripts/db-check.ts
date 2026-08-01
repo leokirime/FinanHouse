@@ -48,16 +48,17 @@ async function main(): Promise<void> {
   console.log(`Ambiente: ${config.environment}`)
   console.log(`Banco configurado: ${config.database}`)
 
-  const connection = await mysql.createConnection({
-    host: config.host,
-    port: config.port,
-    user: config.user,
-    password: config.password,
-    database: config.database,
-    ssl: config.ssl,
-  })
-
+  let connection: mysql.Connection | undefined
   try {
+    connection = await mysql.createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+      database: config.database,
+      ssl: config.ssl,
+    })
+
     const [okRows] = (await connection.query('SELECT 1 AS ok')) as [Array<{ ok: number }>, unknown]
     console.log(`Conectividade: ${okRows[0]?.ok === 1 ? 'sucesso' : 'falha'}`)
 
@@ -81,7 +82,7 @@ async function main(): Promise<void> {
     console.error(`\nFalha na verificação. Categoria: ${categorizeConnectionError(message)}`)
     process.exitCode = 1
   } finally {
-    await connection.end()
+    await connection?.end()
   }
 }
 
