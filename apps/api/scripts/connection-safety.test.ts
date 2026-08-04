@@ -12,6 +12,7 @@ const SCRIPTS = [
   'db-audit-schema.ts',
   'db-audit-responsible-member-integrity.ts',
   'db-bootstrap-household.ts',
+  'db-audit-category-budgets.ts',
 ]
 
 /**

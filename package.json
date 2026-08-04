@@ -30,8 +30,10 @@
     "db:seed:dev": "npm run db:seed:dev --workspace=api",
     "db:audit:schema": "npm run db:audit:schema --workspace=api --",
     "db:audit:responsible-member": "npm run db:audit:responsible-member --workspace=api --",
+    "db:audit:category-budgets": "npm run db:audit:category-budgets --workspace=api --",
     "db:smoke:repositories": "npm run db:smoke:repositories --workspace=api",
     "db:smoke:http": "npm run db:smoke:http --workspace=api",
+    "db:smoke:category-budgets": "npm run db:smoke:category-budgets --workspace=api",
     "db:bootstrap:household": "npm run db:bootstrap:household --workspace=api",
     "typecheck:api-scripts": "npm run typecheck:scripts --workspace=api"
   }

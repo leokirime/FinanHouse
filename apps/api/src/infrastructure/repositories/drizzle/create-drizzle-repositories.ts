@@ -1,9 +1,11 @@
 import type {
+  CategoryBudgetRepository,
   CategoryRepository,
   FinancialEntryRepository,
   HouseholdMemberRepository,
   MonthlyPeriodRepository,
 } from '../../../application/ports/index.js'
+import { DrizzleCategoryBudgetRepository } from './drizzle-category-budget-repository.js'
 import { DrizzleCategoryRepository } from './drizzle-category-repository.js'
 import { DrizzleFinancialEntryRepository } from './drizzle-financial-entry-repository.js'
 import { DrizzleHouseholdMemberRepository } from './drizzle-household-member-repository.js'
@@ -15,6 +17,7 @@ export interface DrizzleRepositories {
   periods: MonthlyPeriodRepository
   categories: CategoryRepository
   members: HouseholdMemberRepository
+  budgets: CategoryBudgetRepository
 }
 
 /**
@@ -32,5 +35,6 @@ export function createDrizzleRepositories(db: DrizzleDb): DrizzleRepositories {
     periods: new DrizzleMonthlyPeriodRepository(db),
     categories: new DrizzleCategoryRepository(db),
     members: new DrizzleHouseholdMemberRepository(db),
+    budgets: new DrizzleCategoryBudgetRepository(db),
   }
 }

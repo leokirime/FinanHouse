@@ -1,3 +1,4 @@
+export type { CategoryBudgetRepository } from './category-budget-repository.js'
 export type { CategoryRepository } from './category-repository.js'
 export type { FinancialEntryRepository } from './financial-entry-repository.js'
 export type { HouseholdMemberRepository } from './household-member-repository.js'

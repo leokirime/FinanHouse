@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { categoryFromDto, financialEntryFromDto, moneyFromDto, moneyToDto } from './financial-api.mappers.ts'
+import { categoryBudgetFromDto, categoryFromDto, financialEntryFromDto, moneyFromDto, moneyToDto } from './financial-api.mappers.ts'
 
 describe('fronteira dinheiro (string decimal ↔ Money/bigint)', () => {
   it('moneyFromDto converte "1000.00" em 100000n (centavos)', () => {
@@ -44,5 +44,12 @@ describe('categoryFromDto', () => {
   it('mapeia campos 1:1 (camelCase já compatível com o domínio)', () => {
     const category = categoryFromDto({ id: 3, householdId: 1, name: 'Moradia', entryType: 'expense', status: 'active' })
     expect(category).toEqual({ id: 3, householdId: 1, name: 'Moradia', entryType: 'expense', status: 'active' })
+  })
+})
+
+describe('categoryBudgetFromDto', () => {
+  it('mapeia campos 1:1 e converte limitAmount de string para Money (Bloco 18)', () => {
+    const budget = categoryBudgetFromDto({ id: 1, householdId: 1, periodId: 7, categoryId: 3, limitAmount: '2000.00' })
+    expect(budget).toEqual({ id: 1, householdId: 1, periodId: 7, categoryId: 3, limitAmount: 200000n })
   })
 })

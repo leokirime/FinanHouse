@@ -46,14 +46,14 @@ src/
 └── App.tsx                # gateia loading/erro do FinanceProvider; rotas (react-router)
 ```
 
-Status (Bloco 17 — `bloco_17_integracao_direta_do_frontend_com_a_api_real`): frontend integrado diretamente à **API HTTP real** (Bloco 16) — nenhum fallback demonstrativo em runtime (DT-12). O antigo modo demonstrativo (`FinanceDemoProvider`, fixtures) foi removido do runtime; a mesma lógica de transição foi portada para `state/test-support/` como infraestrutura exclusiva de teste. Configuração local via `apps/web/.env.local` (`VITE_API_BASE_URL`, `VITE_FINANHOUSE_HOUSEHOLD_ID`, nunca commitado).
+Status (Bloco 17 — `bloco_17_integracao_direta_do_frontend_com_a_api_real`): frontend integrado diretamente à **API HTTP real** (Bloco 16) — nenhum fallback demonstrativo em runtime (DT-12). O antigo modo demonstrativo (`FinanceDemoProvider`, fixtures) foi removido do runtime; a mesma lógica de transição foi portada para `state/test-support/` como infraestrutura exclusiva de teste. Configuração local via `apps/web/.env.local` (`VITE_API_BASE_URL`, `VITE_FINANHOUSE_HOUSEHOLD_ID`, nunca commitado). Desde o Bloco 18 (DT-13), a Planejamento também consome `.../periods/:referenceMonth/budgets` via um hook dedicado (`hooks/use-period-budgets.ts`, fora de `FinanceProvider` — só a Planejamento usa limites) para definir/editar/remover limites mensais por categoria; a migration `0002_category_budgets.sql` foi aplicada a `finanhouse_dev` em 2026-08-04, com autorização explícita do proprietário.
 
 ## Rotas funcionais
 
 - `/` — visão geral da competência civil atual, dados reais da API.
 - `/movimentacoes` — criação, edição e transições de movimentações reais via API.
 - `/comparativo` — seleção de duas competências reais, indicadores comparativos, categorias, despesas novas/encerradas, previsto versus realizado e gráfico SVG leve.
-- `/planejamento` — contas previstas da competência (receitas/despesas `planned`/`pending`) via movimentações reais; **limites por categoria (orçamento) ainda não têm persistência própria** — a página mostra a distribuição por categoria calculada das movimentações reais, com aviso explícito sobre a evolução futura dos limites.
+- `/planejamento` — contas previstas da competência (receitas/despesas `planned`/`pending`) via movimentações reais; limites mensais por categoria definidos/editados/removidos via API real (Bloco 18, DT-13) — nunca em memória.
 - `/historico` — consulta somente leitura de competências e movimentações reais: lista de competências (filtro por ano/status), resumo financeiro e contagem por status, movimentações filtráveis por status; nunca despacha nenhuma ação.
 
 Todas as páginas usam `useReadyFinance()` (`hooks/use-finance.ts`) — só montam depois que `FinanceProvider` termina a carga inicial (`App.tsx` gateia `loading`/`error` com `FinanceStatusScreen`, nunca renderizando dados fictícios em caso de falha).

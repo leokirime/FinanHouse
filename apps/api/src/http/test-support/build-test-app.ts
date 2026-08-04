@@ -1,4 +1,5 @@
 import {
+  InMemoryCategoryBudgetRepository,
   InMemoryCategoryRepository,
   InMemoryFinancialEntryRepository,
   InMemoryHouseholdMemberRepository,
@@ -17,6 +18,7 @@ export interface TestRepositories {
   periods: InMemoryMonthlyPeriodRepository
   categories: InMemoryCategoryRepository
   members: InMemoryHouseholdMemberRepository
+  budgets: InMemoryCategoryBudgetRepository
 }
 
 /** Repositórios em memória — nunca abrem conexão real; usados só em testes. */
@@ -26,6 +28,7 @@ export function buildTestRepositories(): TestRepositories {
     periods: new InMemoryMonthlyPeriodRepository(),
     categories: new InMemoryCategoryRepository(),
     members: new InMemoryHouseholdMemberRepository(),
+    budgets: new InMemoryCategoryBudgetRepository(),
   }
 }
 

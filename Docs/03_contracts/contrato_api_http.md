@@ -1,8 +1,8 @@
 # Contrato da API HTTP
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-01
+> Projeto: FinanHouse · Atualizado em: 2026-08-04
 
-> Este contrato descreve a API HTTP implementada no Bloco 16 (DT-11). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (ainda um template — a integração real do frontend com esta API é um bloco futuro, fora do escopo do Bloco 16).
+> Este contrato descreve a API HTTP implementada a partir do Bloco 16 (DT-11), estendida nos Blocos 17 (movimentações reais no frontend) e 18 (limites mensais por categoria, DT-13). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (Bloco 17 em diante — como o frontend consome esta API, sem repetir o wire format).
 
 ## 1. Objetivo
 
@@ -10,7 +10,7 @@ Definir sem ambiguidade as rotas, formatos de entrada/saída, códigos HTTP e re
 
 ## 2. Estado Atual
 
-**Execução exclusivamente local.** A API não implementa autenticação real (ver `Docs/03_contracts/contrato_autenticacao.md`) — por isso `createHttpApp` recusa `runtimeMode: 'production'`, o bootstrap (`http/server.ts`) só faz bind em `127.0.0.1` (nunca `0.0.0.0`, nunca configurável) e o CORS aceita apenas `http://127.0.0.1:5173`/`http://localhost:5173` (nunca wildcard). **Esta API nunca deve ser apresentada como pronta para exposição pública** enquanto essas condições não mudarem. O frontend ainda não está integrado a ela — continua em modo demonstrativo (`Docs/02_architecture/estado_temporario_frontend.md`).
+**Execução exclusivamente local.** A API não implementa autenticação real (ver `Docs/03_contracts/contrato_autenticacao.md`) — por isso `createHttpApp` recusa `runtimeMode: 'production'`, o bootstrap (`http/server.ts`) só faz bind em `127.0.0.1` (nunca `0.0.0.0`, nunca configurável) e o CORS aceita apenas `http://127.0.0.1:5173`/`http://localhost:5173` (nunca wildcard). **Esta API nunca deve ser apresentada como pronta para exposição pública** enquanto essas condições não mudarem. Desde o Bloco 17 o frontend real (`apps/web`) consome esta API diretamente, sem modo demonstrativo (DT-12, `Docs/03_contracts/contrato_frontend_backend.md`); o Bloco 18 estendeu essa integração aos limites mensais por categoria (`.../budgets`, DT-13).
 
 ## 3. Prefixo e Escopo
 
@@ -67,6 +67,16 @@ Um recurso pertencente a outro household nunca é retornado nem alterado: sempre
 | POST | `.../entries/:entryId/correct-to-planned` | `pending` → `planned` (correção). |
 | POST | `.../entries/:entryId/reopen` | `cancelled` → `planned` (reativação). |
 
+### Limites mensais por categoria (Bloco 18, DT-13)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `.../periods/:referenceMonth/budgets` | Lista os limites definidos para a competência (`YYYY-MM-01`). 404 se a competência não existir. |
+| PUT | `.../periods/:referenceMonth/budgets/:categoryId` | Idempotente: 201 se cria (`PutCategoryBudgetService`), 200 se já existe (atualiza `limitAmount`). Corpo: `{ limitAmount }`. |
+| DELETE | `.../periods/:referenceMonth/budgets/:categoryId` | Remove o limite da categoria nessa competência. 204. 404 se não existir. |
+
+Regras de domínio reaproveitadas sem duplicação: categoria precisa ser `expense`/`active` (senão 422, `CategoryEntryTypeMismatchError`/`InactiveCategoryError`); competência `closed` bloqueia criação/edição/remoção (422, mesma regra de `assertPeriodAllowsBudgetChanges` usada por movimentações); categoria ou competência de outro household nunca é 404 — sempre 409 `DOMAIN_CONFLICT` (seção 3, mesmo padrão de `financial_entries`). Limite mensal e movimentações (`planned`/`pending`/`realized`) são independentes — remover ou nunca definir um limite não afeta o registro de movimentações da categoria.
+
 Todas as rotas reaproveitam os serviços de aplicação já existentes (`apps/api/src/application/services/`) — nenhuma regra de domínio é duplicada nos handlers HTTP.
 
 ## 5. Inputs
@@ -95,6 +105,12 @@ Exemplo — `POST .../entries`:
   "dueDate": "2026-08-05",
   "notes": null
 }
+```
+
+Exemplo — `PUT .../periods/:referenceMonth/budgets/:categoryId`:
+
+```json
+{ "limitAmount": "2000.00" }
 ```
 
 ## 6. Outputs
@@ -126,6 +142,20 @@ Exemplo — `FinancialEntryDto`:
     "dueDate": "2026-08-05",
     "realizationDate": null,
     "notes": null
+  }
+}
+```
+
+Exemplo — `CategoryBudgetDto` (`GET`/`PUT .../budgets`):
+
+```json
+{
+  "data": {
+    "id": 5,
+    "householdId": 10,
+    "periodId": 1,
+    "categoryId": 3,
+    "limitAmount": "2000.00"
   }
 }
 ```
@@ -165,6 +195,5 @@ Prefixo `/api/v1` já reserva espaço para uma futura v2 caso uma mudança break
 
 ## 11. Decisões Pendentes
 
-- Integração do frontend com esta API — bloco futuro, fora do escopo do Bloco 16.
 - Autenticação real — bloco futuro; até lá, a API só pode ser executada localmente, nunca exposta publicamente (ver seção 2).
 - Endpoints de escrita para `users`/`households` — não existem porta/repositório para essas entidades (DT-10); fora do escopo até uma decisão arquitetural futura.

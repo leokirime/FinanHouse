@@ -4,7 +4,7 @@ import { ApiError, apiErrorFromServerCode } from './api-errors.ts'
 const REQUEST_TIMEOUT_MS = 10_000
 
 export interface ApiRequestInit {
-  method?: 'GET' | 'POST' | 'PUT'
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE'
   body?: unknown
   /** Query string já pronta (ex.: `?periodId=1`), sem o `?` — opcional. */
   query?: Record<string, string | number | undefined>

@@ -1,6 +1,6 @@
 # Contrato Frontend-Backend
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-01
+> Projeto: FinanHouse · Atualizado em: 2026-08-04
 
 > Este contrato é a fonte da verdade da interface entre frontend e backend. Mudar um endpoint sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Para o formato exato de rotas/DTOs/erros, ver `Docs/03_contracts/contrato_api_http.md` (Bloco 16) — este documento cobre especificamente como o **frontend** (`apps/web`, Bloco 17) consome essa API, não repete o wire format.
 
@@ -28,6 +28,9 @@ Consumidos pelo frontend (subconjunto de `contrato_api_http.md`, seção 4):
 | PUT | `.../periods/:referenceMonth` | Cria a competência civil atual quando ainda não existe (idempotente) |
 | GET | `.../entries` | Carga inicial e recarga após toda mutação |
 | POST/PUT/POST transições | `.../entries/**` | `dispatch()` do `FinanceProvider` (criar, editar, marcar pendente, realizar, cancelar, reativar, estornar) |
+| GET | `.../periods/:referenceMonth/budgets` | Carga dos limites por categoria da competência selecionada (`usePeriodBudgets`, hook dedicado a `PlanningPage` — fora de `FinanceProvider`) |
+| PUT | `.../periods/:referenceMonth/budgets/:categoryId` | `createOrUpdate()` de `usePeriodBudgets` — define/edita um limite (idempotente) |
+| DELETE | `.../periods/:referenceMonth/budgets/:categoryId` | `remove()` de `usePeriodBudgets` — remove um limite |
 
 Autenticação: nenhuma (herdado do Bloco 16 — API local, sem produção).
 
@@ -72,4 +75,3 @@ Segue `contrato_api_http.md`, seção 10 (`/api/v1`). Enquanto o frontend for o 
 ## 11. Decisões Pendentes
 
 - Autenticação real — bloco futuro; o frontend hoje resolve `createdByUserId` como o primeiro membro `role: 'owner'` do household, não um usuário autenticado (DT-12).
-- Limites por categoria (orçamento) — sem endpoint; Planejamento usa apenas movimentações reais (`planned`/`pending`) até uma decisão arquitetural própria.

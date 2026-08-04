@@ -72,3 +72,15 @@ export interface RealizeFinancialEntryRequest {
   actualAmount: string
   realizationDate: string
 }
+
+export interface CategoryBudgetDto {
+  id: number
+  householdId: number
+  periodId: number
+  categoryId: number
+  limitAmount: string
+}
+
+export interface PutCategoryBudgetRequest {
+  limitAmount: string
+}

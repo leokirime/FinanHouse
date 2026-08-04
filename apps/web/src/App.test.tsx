@@ -76,7 +76,7 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Planejamento' }).getAttribute('aria-current')).toBe('page')
     expect(screen.getByRole('link', { name: 'Visão geral' }).hasAttribute('aria-current')).toBe(false)
     expect(screen.getByRole('heading', { name: 'Planejamento', level: 1 })).toBeTruthy()
-    expect(screen.getAllByText('Despesas previstas por categoria').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Despesas previstas').length).toBeGreaterThan(0)
   })
 
   it('navega para /historico ao clicar em "Histórico", atualizando aria-current e o título do cabeçalho', () => {

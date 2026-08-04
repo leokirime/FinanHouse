@@ -1,4 +1,5 @@
 export { type DrizzleRepositories, createDrizzleRepositories } from './create-drizzle-repositories.js'
+export { DrizzleCategoryBudgetRepository } from './drizzle-category-budget-repository.js'
 export { DrizzleCategoryRepository } from './drizzle-category-repository.js'
 export { DrizzleFinancialEntryRepository } from './drizzle-financial-entry-repository.js'
 export { DrizzleHouseholdMemberRepository } from './drizzle-household-member-repository.js'

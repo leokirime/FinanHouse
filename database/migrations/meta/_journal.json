@@ -15,6 +15,13 @@
       "when": 1785543203759,
       "tag": "0001_responsible_member_household_integrity",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1785880900995,
+      "tag": "0002_category_budgets",
+      "breakpoints": true
     }
   ]
 }
