@@ -100,6 +100,8 @@ Reaproveita integralmente os tokens/componentes existentes (`fh-card`, `fh-badge
 - Limite por categoria (orçamento) segue sem persistência — risco de expectativa do usuário sobre uma funcionalidade ainda não implementada, mitigado pela mensagem explícita na UI.
 - Integração assume um único household residencial, sem multiusuário concorrente real.
 
+**Correção pós-bloco (Codex, 2026-08-01):** um bug real de `React.StrictMode` (`mountedRef` compartilhado entre execuções do efeito de carga) causava loading infinito no `FinanceProvider` em desenvolvimento. Corrigido fora desta sessão, sem reabrir este bloco — ver `08_feedbacks/feedback_bloco_17_integracao_direta_do_frontend_com_a_api_real.md`, seção 19.
+
 ## 15. Pendências Esperadas
 
 - P3 — Autenticação real e persistência de limites por categoria (orçamento): próximos passos naturais do roadmap (RF-05), não pendências deste bloco.

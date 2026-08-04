@@ -143,3 +143,17 @@ feat(web): integrar frontend com API financeira real
 ```
 
 _Lembrete: este commit não é executado automaticamente — exige confirmação explícita do usuário._
+
+## 19. Correção Pós-Bloco (aplicada pelo Codex, 2026-08-01)
+
+Após o fechamento deste bloco, o frontend passou a ficar preso indefinidamente em "Carregando o Finanhouse". **Esta correção não foi feita pelo Claude** — foi identificada e aplicada pelo Codex, fora desta sessão de trabalho, sem reabrir o Bloco 17.
+
+**Causa raiz:** `mountedRef` era um `ref` único compartilhado entre execuções do efeito de carga do `FinanceProvider`, zerado por um `useEffect` de cleanup que nunca o reafirmava como `true` em um novo mount. Em `React.StrictMode` (ambiente de desenvolvimento), o próprio React executa mount→cleanup→mount de cada efeito — o cleanup simulado da primeira execução marcava `mountedRef.current = false` permanentemente, e a segunda execução (real, com resposta HTTP 200 válida) tinha seu `LOAD_SUCCESS` silenciosamente descartado pela guarda `!mountedRef.current`, deixando a interface presa em `status: 'loading'`.
+
+**Correção:** `mountedRef` passou a ser reafirmado a cada mount; cada execução do efeito de carga ganhou seu próprio estado local `active` e seu próprio `AbortController` (não mais um `ref` único compartilhado entre execuções), com `requestIdRef` como guarda adicional contra uma execução antiga sobrescrever a mais recente. `loadAll` deixou de ser uma função externa memoizada (`useCallback`) e passou a viver dentro do próprio `useEffect`, disparado por um contador `loadAttempt`; `RETRY` agora incrementa esse contador em vez de invocar a função diretamente.
+
+**Arquivos alterados:** `apps/web/src/state/FinanceProvider.tsx`, `apps/web/src/state/FinanceProvider.test.tsx` (4 testes novos: carga em `React.StrictMode` chegando a `ready`; requisição cancelada por uma nova carga sem loading preso; execução antiga não sobrescrevendo a mais recente mesmo respondendo depois; desmontagem real cancelando a carga em andamento).
+
+**Testes:** web 271 → 275 (+4); total do projeto 761 → 765 (+4). API e domain inalterados (337 e 153).
+
+**Commits:** branch `fix/finance-provider-loading-infinito`, commit `7402c7e`, integrada à `main` em 2026-08-01 (merge `a4cb943`). Nenhum fallback demonstrativo foi reintroduzido; nenhuma alteração de banco, migration, seed ou API.
