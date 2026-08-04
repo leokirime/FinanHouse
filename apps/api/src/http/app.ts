@@ -1,7 +1,14 @@
-import type { CategoryRepository, FinancialEntryRepository, HouseholdMemberRepository, MonthlyPeriodRepository } from '../application/ports/index.js'
+import type {
+  CategoryBudgetRepository,
+  CategoryRepository,
+  FinancialEntryRepository,
+  HouseholdMemberRepository,
+  MonthlyPeriodRepository,
+} from '../application/ports/index.js'
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify'
 import { createErrorHandler } from './errors/error-handler.js'
 import { registerCorsPlugin } from './plugins/cors.js'
+import { registerCategoryBudgetRoutes } from './routes/category-budgets.js'
 import { registerCategoryRoutes } from './routes/categories.js'
 import { registerEntryRoutes } from './routes/entries.js'
 import { registerHealthRoute } from './routes/health.js'
@@ -9,12 +16,13 @@ import { registerMemberRoutes } from './routes/members.js'
 import { registerPeriodRoutes } from './routes/periods.js'
 import { registerReadyRoute, type ReadinessCheck, type ReadinessResult } from './routes/ready.js'
 
-/** As quatro portas já existentes em `application/ports/` — nunca uma porta nova, nunca acoplado ao Drizzle. */
+/** As cinco portas já existentes em `application/ports/` — nunca uma porta nova fora deste contrato, nunca acoplado ao Drizzle. */
 export interface HttpAppRepositories {
   entries: FinancialEntryRepository
   periods: MonthlyPeriodRepository
   categories: CategoryRepository
   members: HouseholdMemberRepository
+  budgets: CategoryBudgetRepository
 }
 
 export type HttpRuntimeMode = 'development' | 'test' | 'production'
@@ -70,6 +78,7 @@ export function createHttpApp(options: CreateHttpAppOptions): FastifyInstance {
   registerMemberRoutes(fastify, options.repositories)
   registerPeriodRoutes(fastify, options.repositories)
   registerEntryRoutes(fastify, options.repositories)
+  registerCategoryBudgetRoutes(fastify, options.repositories)
 
   return fastify
 }

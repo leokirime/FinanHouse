@@ -136,6 +136,19 @@ export class FakeDrizzleDb {
     }
   }
 
+  /** `delete(table).where(condition)` — só remove linhas que casam com a condição, como um DELETE real. */
+  delete() {
+    return {
+      where: (condition: SQL): Promise<[{ affectedRows: number }, unknown]> => {
+        if (this.failWith) return Promise.reject(this.failWith)
+        const before = this.rows.length
+        this.rows = this.rows.filter((row) => !rowMatchesCondition(row, condition))
+        const affectedRows = before - this.rows.length
+        return Promise.resolve([{ affectedRows }, []])
+      },
+    }
+  }
+
   execute(_query: unknown): Promise<[Row[], unknown]> {
     if (this.failWith) return Promise.reject(this.failWith)
     return Promise.resolve([this.executeRows, []])

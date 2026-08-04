@@ -1,4 +1,5 @@
 export * from './categories.js'
+export * from './category-budgets.js'
 export * from './financial-entries.js'
 export * from './household-members.js'
 export * from './households.js'

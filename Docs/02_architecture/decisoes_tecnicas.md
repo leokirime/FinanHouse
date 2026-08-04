@@ -1,12 +1,25 @@
 # Decisões Técnicas
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-01
+> Projeto: FinanHouse · Atualizado em: 2026-08-04
 
 > Registre apenas decisões caras de reverter (troca de framework, modelo de dados, estratégia de autenticação, etc.) — não decisões triviais de estilo de código.
 
 ## 1. Decisões Registradas
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
+
+### DT-13 — Persistência real de limites mensais por categoria
+
+- **Data:** 2026-08-04
+- **Contexto:** desde o Bloco 09, o domínio já modelava `CategoryBudget` (limite máximo de despesa por categoria/competência) e todas as suas regras (`packages/domain/src/planning/category-budget-rules.ts`, `category-budget-calculations.ts`), mas apenas em memória. O Bloco 17 removeu esse estado em memória junto do modo demonstrativo, deixando o Planejamento sem limites configuráveis (apenas a soma de movimentações reais `planned`/`pending`). Este bloco persiste `CategoryBudget` de verdade, sem alterar a lógica de contas previstas já existente.
+- **Decisão:**
+  - Nova tabela `category_budgets` (migration `0002_category_budgets.sql`), com FKs compostas para `monthly_periods(id, household_id)` e `categories(id, household_id)` — mesmo padrão de isolamento por household de `financial_entries` (DT-09) — e índice único em `(household_id, period_id, category_id)`: no máximo um limite por competência/categoria.
+  - Somente categorias `expense` e `active` podem receber limite — validado pela aplicação (`assertBudgetCategoryUsable`, já existente no domínio), não pelo schema do banco (o tipo da categoria não é uma coluna desta tabela).
+  - Competência `closed` bloqueia criação, edição e remoção de limites (`assertPeriodAllowsBudgetChanges`, já existente); `open`/`review` permitem — mesma regra do Bloco 09, reaproveitada sem alteração.
+  - Movimentações (`financial_entries`) e limites (`category_budgets`) continuam sendo conceitos independentes: a soma de movimentações nunca substitui o teto configurado, e o teto nunca cria/altera movimentações.
+  - O frontend nunca mantém limite apenas em memória — toda leitura/escrita passa pela API real (`GET`/`PUT`/`DELETE .../periods/:referenceMonth/budgets`); ausência de resposta da API nunca vira um limite fictício.
+  - Autenticação real e exposição pública da API continuam fora de escopo (DT-11/DT-12) — este bloco não muda esse estado.
+- **Consequências:** repositório Drizzle (`DrizzleCategoryBudgetRepository`) e porta (`CategoryBudgetRepository`) seguem o mesmo padrão de `MonthlyPeriodRepository` (`findById`/`findByHouseholdAndPeriod`/`save`/`remove`/`nextId`, `AUTO_INCREMENT` via `information_schema`, mesma dívida técnica de concorrência já documentada em DT-10). Serviços de aplicação (`apps/api/src/application/services/category-budget-services.ts`) reaproveitam as regras de domínio existentes sem duplicá-las. Uma auditoria somente leitura dedicada (`db-audit-category-budgets.ts`) substitui `db-audit-schema.ts`/`db-audit-responsible-member-integrity.ts` para este caso específico, porque aquelas duas assumem banco vazio pós-migration — o que não é mais verdade desde o bootstrap estrutural do Bloco 17 (household/usuários/membros/categorias já existem). A migration `0002_category_budgets.sql` foi gerada via `drizzle-kit generate`, revisada (`drizzle-kit check`) e, com autorização explícita do proprietário (`AUTORIZO MIGRATION CATEGORY_BUDGETS FINANHOUSE_DEV`), **aplicada a `finanhouse_dev` em 2026-08-04** — mesmo protocolo das migrations 0000/0001 (Blocos 12/13, DT-08/DT-09). Auditoria pós-migration (`db-audit-category-budgets.ts`) confirmou a sétima tabela criada vazia, três migrations registradas e as contagens das seis tabelas estruturais preservadas; um novo smoke-test transacional dedicado (`db-smoke-category-budgets.ts`, diferente de `db-smoke-repositories.ts`/`db-smoke-http.ts` por não exigir tabelas vazias) validou repositório e rotas HTTP com rollback intencional e zero dado residual.
 
 ### DT-12 — Corte direto do frontend demonstrativo para a API HTTP local
 

@@ -62,6 +62,17 @@ export const householdAndReferenceMonthParamSchema = {
   },
 } as const
 
+export const householdReferenceMonthAndCategoryIdParamSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['householdId', 'referenceMonth', 'categoryId'],
+  properties: {
+    householdId: { type: 'string', pattern: idParamPattern },
+    referenceMonth: { type: 'string', pattern: referenceMonthPattern },
+    categoryId: { type: 'string', pattern: idParamPattern },
+  },
+} as const
+
 /**
  * Converte um parâmetro de rota já validado pelo pattern `idParamPattern`
  * para `number`, com uma checagem defensiva adicional de

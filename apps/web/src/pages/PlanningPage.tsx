@@ -1,21 +1,38 @@
 import { useMemo, useState } from 'react'
 import { FinancialEntryForm } from '../components/financial-entries/FinancialEntryForm.tsx'
-import { CategoryDistributionList } from '../components/planning/CategoryDistributionList.tsx'
+import { BudgetFormDialog } from '../components/planning/BudgetFormDialog.tsx'
+import { BudgetSummaryCards } from '../components/planning/BudgetSummaryCards.tsx'
+import { CategoryBudgetList } from '../components/planning/CategoryBudgetList.tsx'
 import { PlanningEmptyState } from '../components/planning/PlanningEmptyState.tsx'
 import { PlanningEntries } from '../components/planning/PlanningEntries.tsx'
 import { PlanningRealSummary } from '../components/planning/PlanningRealSummary.tsx'
 import './PlanningPage.css'
 import { useReadyFinance } from '../hooks/use-finance.ts'
-import { buildEntryRows, buildPlanningPeriodOptions, buildPlanningRealSummary, buildPlanningViewModel } from '../view-models/planning-view-model.ts'
+import { usePeriodBudgets } from '../hooks/use-period-budgets.ts'
+import {
+  buildEntryRows,
+  buildPlanningPeriodOptions,
+  buildPlanningRealSummary,
+  buildPlanningViewModel,
+  type CategoryBudgetRowViewModel,
+} from '../view-models/planning-view-model.ts'
+
+type BudgetDialogState = { kind: 'create'; row: CategoryBudgetRowViewModel } | { kind: 'edit'; row: CategoryBudgetRowViewModel } | null
 
 export function PlanningPage() {
   const { state, dispatch } = useReadyFinance()
   const periodOptions = useMemo(() => buildPlanningPeriodOptions(state.periods), [state.periods])
   const [selectedPeriodId, setSelectedPeriodId] = useState<number | null>(state.currentPeriodId)
   const [creatingEntry, setCreatingEntry] = useState(false)
+  const [budgetDialog, setBudgetDialog] = useState<BudgetDialogState>(null)
 
   const effectiveSelectedPeriodId =
     selectedPeriodId !== null && periodOptions.some((option) => option.id === selectedPeriodId) ? selectedPeriodId : (periodOptions[0]?.id ?? null)
+
+  const selectedPeriod = state.periods.find((period) => period.id === effectiveSelectedPeriodId) ?? null
+  const canManageLimits = selectedPeriod !== null && selectedPeriod.status !== 'closed'
+
+  const periodBudgets = usePeriodBudgets(selectedPeriod?.referenceMonth ?? null)
 
   const viewModel = useMemo(
     () =>
@@ -24,11 +41,9 @@ export function PlanningPage() {
         selectedPeriodId: effectiveSelectedPeriodId,
         categories: state.categories,
         entries: state.entries,
-        // Limites por categoria ainda não têm persistência própria (DT-12) — a distribuição
-        // reflete somente a soma de movimentações reais, nunca um `CategoryBudget` fictício.
-        budgets: [],
+        budgets: periodBudgets.status === 'ready' ? periodBudgets.budgets : [],
       }),
-    [state.periods, effectiveSelectedPeriodId, state.categories, state.entries],
+    [state.periods, effectiveSelectedPeriodId, state.categories, state.entries, periodBudgets.status, periodBudgets.budgets],
   )
 
   const realSummary = useMemo(
@@ -52,7 +67,7 @@ export function PlanningPage() {
       <div className="fh-card fh-card--elevated fh-planning-page__intro">
         <div>
           <h2>Planejamento</h2>
-          <p className="fh-text-secondary">Contas previstas da competência — receitas e despesas planejadas ou pendentes.</p>
+          <p className="fh-text-secondary">Contas previstas e limites mensais por categoria da competência.</p>
         </div>
 
         <label className="fh-planning-page__period-select">
@@ -90,6 +105,15 @@ export function PlanningPage() {
         </div>
       )}
 
+      {periodBudgets.status === 'error' && (
+        <div className="fh-planning-page__toast" role="alert">
+          <span>Não foi possível carregar os limites por categoria: {periodBudgets.error?.message}</span>
+          <button type="button" onClick={periodBudgets.retry}>
+            Tentar novamente
+          </button>
+        </div>
+      )}
+
       {viewModel.isEmpty ? (
         <PlanningEmptyState
           title={viewModel.emptyTitle ?? 'Planejamento indisponível'}
@@ -101,7 +125,16 @@ export function PlanningPage() {
 
           {realSummary && <PlanningRealSummary summary={realSummary} />}
 
-          <CategoryDistributionList rows={viewModel.rows} />
+          {viewModel.summary && <BudgetSummaryCards summary={viewModel.summary} />}
+
+          <CategoryBudgetList
+            rows={viewModel.rows}
+            canManageLimits={canManageLimits}
+            pendingAction={periodBudgets.pendingAction}
+            onDefineLimit={(row) => setBudgetDialog({ kind: 'create', row })}
+            onEditLimit={(row) => setBudgetDialog({ kind: 'edit', row })}
+            onRemoveLimit={(row) => periodBudgets.remove(row.categoryId)}
+          />
 
           <PlanningEntries
             title="Receitas previstas"
@@ -124,6 +157,17 @@ export function PlanningPage() {
       )}
 
       {creatingEntry && <FinancialEntryForm mode="create" onClose={() => setCreatingEntry(false)} />}
+
+      {budgetDialog && (
+        <BudgetFormDialog
+          mode={budgetDialog.kind}
+          periodBudgets={periodBudgets}
+          categoryId={budgetDialog.row.categoryId}
+          categoryName={budgetDialog.row.categoryName}
+          initialLimitAmount={budgetDialog.row.limit?.raw}
+          onClose={() => setBudgetDialog(null)}
+        />
+      )}
     </div>
   )
 }

@@ -1,13 +1,22 @@
-import type { Category, FinancialEntry, HouseholdMember, Money, MonthlyPeriod } from '@finanhouse/domain'
+import type { Category, CategoryBudget, FinancialEntry, HouseholdMember, Money, MonthlyPeriod } from '@finanhouse/domain'
 import { apiRequest } from './api-client.ts'
 import type { ApiConfig } from './api-config.ts'
-import { categoryFromDto, financialEntryFromDto, householdMemberFromDto, monthlyPeriodFromDto, moneyToDto } from './financial-api.mappers.ts'
+import {
+  categoryBudgetFromDto,
+  categoryFromDto,
+  financialEntryFromDto,
+  householdMemberFromDto,
+  monthlyPeriodFromDto,
+  moneyToDto,
+} from './financial-api.mappers.ts'
 import type {
+  CategoryBudgetDto,
   CategoryDto,
   CreateFinancialEntryRequest,
   FinancialEntryDto,
   HouseholdMemberDto,
   MonthlyPeriodDto,
+  PutCategoryBudgetRequest,
   UpdateFinancialEntryRequest,
 } from './financial-api.types.ts'
 
@@ -125,3 +134,23 @@ export const revertEntryRealization = (config: ApiConfig, entryId: number, signa
   transitionEntry(config, entryId, 'revert-realization', undefined, signal)
 
 export const reactivateEntry = (config: ApiConfig, entryId: number, signal?: AbortSignal) => transitionEntry(config, entryId, 'reopen', undefined, signal)
+
+export async function listBudgets(config: ApiConfig, referenceMonth: string, signal?: AbortSignal): Promise<CategoryBudget[]> {
+  const dtos = await apiRequest<CategoryBudgetDto[]>(config, scopedPath(config, `/periods/${referenceMonth}/budgets`), { signal })
+  return dtos.map(categoryBudgetFromDto)
+}
+
+/** Idempotente: cria (201) se o limite ainda não existe para a categoria, ou atualiza o existente (200). */
+export async function putBudget(config: ApiConfig, referenceMonth: string, categoryId: number, limitAmount: Money, signal?: AbortSignal): Promise<CategoryBudget> {
+  const body: PutCategoryBudgetRequest = { limitAmount: moneyToDto(limitAmount) }
+  const dto = await apiRequest<CategoryBudgetDto>(config, scopedPath(config, `/periods/${referenceMonth}/budgets/${categoryId}`), {
+    method: 'PUT',
+    body,
+    signal,
+  })
+  return categoryBudgetFromDto(dto)
+}
+
+export async function deleteBudget(config: ApiConfig, referenceMonth: string, categoryId: number, signal?: AbortSignal): Promise<void> {
+  await apiRequest<void>(config, scopedPath(config, `/periods/${referenceMonth}/budgets/${categoryId}`), { method: 'DELETE', signal })
+}

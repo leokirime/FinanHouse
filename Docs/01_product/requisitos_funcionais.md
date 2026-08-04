@@ -1,6 +1,6 @@
 # Requisitos Funcionais
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-01
+> Projeto: FinanHouse · Atualizado em: 2026-08-04
 
 > Todo bloco de implementação deve referenciar um requisito listado aqui. Se uma tarefa não tem requisito correspondente, atualize esta lista antes de implementar — não implemente "por inferência".
 
@@ -15,8 +15,8 @@ Numere os requisitos para que possam ser referenciados por blocos e prompts (ex.
 | RF-03 | Calcular indicadores financeiros por competência (previsto, realizado, pendente, saldo) | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-04 | Comparar duas competências mensais (variações de receita/despesa/saldo, categorias) | Should | Concluído (regras de domínio no Bloco 05; interface em memória no Bloco 08) |
 | RF-05 | Persistir movimentações e competências em banco real (MySQL) | Must | Persistência local real funcionando: TLS validado em 2026-07-30, migration inicial aplicada em 2026-07-31 (Bloco 12, DT-08), integridade composta do membro responsável corrigida em 2026-07-31 (Bloco 13, DT-09), repositórios Drizzle reais em 2026-07-31 (Bloco 14, DT-10), API HTTP financeira v1 em 2026-08-01 (Bloco 16, DT-11), e **integração do frontend com a API real concluída em 2026-08-01** (Bloco 17, DT-12) — Dashboard, Movimentações, Comparativo, Histórico e Planejamento consomem exclusivamente a API, sem fallback demonstrativo. **Ainda não concluído**: autenticação real; a API só pode ser executada localmente, nunca exposta publicamente; produção (`finanhouse_prod`) não preparada |
-| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Dashboard, Movimentações, Comparativo, Histórico e Planejamento com dados reais via API (Bloco 17); refinamento visual pendente segue como P3. Limite por categoria (orçamento) em Planejamento permanece sem persistência própria — Planejamento usa movimentações reais (`planned`/`pending`) enquanto isso |
-| RF-07 | Planejar limites de orçamento por categoria de despesa e acompanhar consumo (realizado, pendente, planejado, projetado) por competência | Should | Implementado em memória no Bloco 09 (`e107716`), mas **regrediu para pendente** no Bloco 17: o corte para a API real removeu o estado em memória e não existe tabela/endpoint de orçamento — Planejamento hoje mostra apenas movimentações reais (`planned`/`pending`), sem limite configurável. Persistência de limites por categoria é o próximo passo natural |
+| RF-06 | Interface visual para consultar/editar movimentações e competências | Must | Dashboard, Movimentações, Comparativo, Histórico e Planejamento com dados reais via API (Bloco 17); refinamento visual pendente segue como P3. Limite por categoria (orçamento) em Planejamento implementado ponta a ponta no Bloco 18 (`usePeriodBudgets`, `BudgetFormDialog`, `CategoryBudgetList`) — ver RF-07 para o status da persistência real |
+| RF-07 | Planejar limites de orçamento por categoria de despesa e acompanhar consumo (realizado, pendente, planejado, projetado) por competência | Should | Implementado em memória no Bloco 09 (`e107716`), regrediu para pendente no Bloco 17 (corte para a API real removeu o estado em memória sem repor tabela/endpoint). **Concluído com persistência real no Bloco 18** (DT-13): tabela `category_budgets`, repositório Drizzle, serviços de aplicação, endpoints `.../periods/:referenceMonth/budgets`, hook dedicado `usePeriodBudgets` e UI real na Planejamento. Migration `0002_category_budgets.sql` aplicada a `finanhouse_dev` em 2026-08-04 com autorização explícita do proprietário, auditada e validada por smoke-test transacional |
 | RF-08 | Consultar histórico de competências e movimentações anteriores, somente leitura, com filtros por ano/status | Should | Concluído em memória (Bloco 10, integrado à `main` em `fd026da`) |
 
 Detalhamento técnico completo das regras (transições de status, cálculos, estratégia monetária): `Docs/02_architecture/regras_dominio_financeiro.md`.
@@ -44,11 +44,12 @@ Para cada requisito, descreva como verificar que ele foi atendido (comportamento
 
 ### RF-07 — Planejamento mensal (limites por categoria)
 - [x] Um usuário consegue acessar `/planejamento` pela sidebar sem recarregar a página, escolhendo a competência a visualizar.
-- [x] Um usuário consegue definir, editar e remover (temporariamente, só na sessão) um limite mensal para uma categoria de despesa ativa.
+- [x] Um usuário consegue definir, editar e remover um limite mensal para uma categoria de despesa ativa, persistido via API real (`.../periods/:referenceMonth/budgets`, Bloco 18/DT-13) — nunca em memória.
 - [x] A interface mostra, por categoria: limite (quando existir), realizado, pendente, planejado, projetado, saldo restante, valor excedido e percentual consumido — nunca inventando um limite zero para categoria sem planejamento.
 - [x] Cada categoria recebe um status textual explícito (saudável/em atenção/excedido/sem planejamento) — nunca comunicado só por cor.
 - [x] `cancelled` nunca compõe nenhum total; `planned`/`pending` compõem a projeção; `realized` usa o valor efetivamente realizado.
-- [x] O planejamento usa a mesma fonte em memória do dashboard, de Movimentações e do Comparativo; recarregar/remontar o provider retorna às fixtures sintéticas.
+- [x] O Planejamento consome movimentações da mesma fonte real do dashboard/Movimentações/Comparativo (`FinanceProvider`); os limites por categoria usam um hook dedicado (`usePeriodBudgets`, fora de `FinanceProvider`, só consumido pela Planejamento) que também fala com a API real, nunca com um estado local.
+- [x] Migration `0002_category_budgets.sql` aplicada em `finanhouse_dev` em 2026-08-04, com autorização explícita do proprietário (`AUTORIZO MIGRATION CATEGORY_BUDGETS FINANHOUSE_DEV`); auditoria pós-migration e smoke-test transacional aprovados.
 
 ### RF-08 — Histórico mensal (somente leitura)
 - [x] Um usuário consegue acessar `/historico` pela sidebar sem recarregar a página.
