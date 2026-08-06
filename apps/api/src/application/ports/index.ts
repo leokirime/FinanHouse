@@ -1,5 +1,7 @@
+export type { AuthSession, AuthSessionRepository, NewAuthSession } from './auth-session-repository.js'
 export type { CategoryBudgetRepository } from './category-budget-repository.js'
 export type { CategoryRepository } from './category-repository.js'
 export type { FinancialEntryRepository } from './financial-entry-repository.js'
 export type { HouseholdMemberRepository } from './household-member-repository.js'
 export type { MonthlyPeriodRepository } from './monthly-period-repository.js'
+export type { AuthUserRecord, UserRepository } from './user-repository.js'

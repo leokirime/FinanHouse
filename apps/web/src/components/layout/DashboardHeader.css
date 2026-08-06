@@ -31,6 +31,24 @@
   font-size: 13px;
 }
 
+.fh-header__logout {
+  background: transparent;
+  color: var(--fh-text-secondary, var(--fh-text));
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-md);
+  padding: var(--fh-space-2) var(--fh-space-4);
+  font-size: 13px;
+}
+
+.fh-header__logout:hover:not(:disabled) {
+  border-color: var(--fh-border-strong);
+}
+
+.fh-header__logout:disabled {
+  color: var(--fh-text-muted);
+  cursor: not-allowed;
+}
+
 .fh-header__cta {
   background: var(--fh-purple);
   color: #0a0710;

@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import type { FastifyInstance } from 'fastify'
-import { buildTestApp, buildTestRepositories } from '../test-support/build-test-app.js'
+import { buildTestApp, buildTestRepositories, type TestRepositories } from '../test-support/build-test-app.js'
+
+/** Household 10 é o household "próprio" usado por quase todo teste deste arquivo — precisa de um membro ativo para autoAuth autenticar (Bloco 19). */
+function buildAuthedRepositories(): TestRepositories {
+  const repositories = buildTestRepositories()
+  repositories.members.seed([{ id: 1, householdId: 10, userId: 100, role: 'owner', status: 'active' }])
+  return repositories
+}
 
 describe('rotas de competências mensais', () => {
   let app: FastifyInstance | undefined
@@ -11,7 +18,7 @@ describe('rotas de competências mensais', () => {
   })
 
   it('GET .../periods lista competências do household', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
     await repositories.periods.save({ id: 2, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
     app = buildTestApp({ repositories })
@@ -23,20 +30,20 @@ describe('rotas de competências mensais', () => {
   })
 
   it('GET .../periods/:referenceMonth retorna 404 quando não existe', async () => {
-    app = buildTestApp()
+    app = buildTestApp({ repositories: buildAuthedRepositories() })
     const response = await app.inject({ method: 'GET', url: '/api/v1/households/10/periods/2026-07-01' })
     expect(response.statusCode).toBe(404)
     expect(response.json().error.code).toBe('NOT_FOUND')
   })
 
   it('GET .../periods/:referenceMonth rejeita formato inválido de competência (400)', async () => {
-    app = buildTestApp()
+    app = buildTestApp({ repositories: buildAuthedRepositories() })
     const response = await app.inject({ method: 'GET', url: '/api/v1/households/10/periods/2026-07-15' })
     expect(response.statusCode).toBe(400)
   })
 
   it('GET .../periods/:referenceMonth de outro household nunca é retornado (isolamento)', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({ id: 1, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
     app = buildTestApp({ repositories })
 
@@ -45,14 +52,14 @@ describe('rotas de competências mensais', () => {
   })
 
   it('PUT .../periods/:referenceMonth cria a competência quando não existe (201)', async () => {
-    app = buildTestApp()
+    app = buildTestApp({ repositories: buildAuthedRepositories() })
     const response = await app.inject({ method: 'PUT', url: '/api/v1/households/10/periods/2026-07-01', payload: {} })
     expect(response.statusCode).toBe(201)
     expect(response.json().data).toMatchObject({ householdId: 10, referenceMonth: '2026-07-01', status: 'open' })
   })
 
   it('PUT .../periods/:referenceMonth é idempotente — chamar de novo retorna 200 sem duplicar', async () => {
-    app = buildTestApp()
+    app = buildTestApp({ repositories: buildAuthedRepositories() })
     await app.inject({ method: 'PUT', url: '/api/v1/households/10/periods/2026-07-01', payload: {} })
     const second = await app.inject({ method: 'PUT', url: '/api/v1/households/10/periods/2026-07-01', payload: {} })
     expect(second.statusCode).toBe(200)
@@ -62,7 +69,7 @@ describe('rotas de competências mensais', () => {
   })
 
   it('PUT .../periods/:referenceMonth rejeita corpo com campo desconhecido (400) e não salva nada', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     app = buildTestApp({ repositories })
     const response = await app.inject({
       method: 'PUT',
@@ -76,7 +83,7 @@ describe('rotas de competências mensais', () => {
   })
 
   it('POST .../start-review transiciona open → review', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
     app = buildTestApp({ repositories })
 
@@ -86,7 +93,7 @@ describe('rotas de competências mensais', () => {
   })
 
   it('POST .../reopen-from-review transiciona review → open', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null })
     app = buildTestApp({ repositories })
 
@@ -96,21 +103,36 @@ describe('rotas de competências mensais', () => {
   })
 
   it('POST .../close transiciona review → closed com corpo válido', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null })
     app = buildTestApp({ repositories })
 
     const response = await app.inject({
       method: 'POST',
       url: '/api/v1/households/10/periods/2026-07-01/close',
-      payload: { closedByUserId: 1, closedAt: '2026-08-01' },
+      payload: { closedAt: '2026-08-01' },
     })
     expect(response.statusCode).toBe(200)
     expect(response.json().data.status).toBe('closed')
+    // closedByUserId vem da sessão autenticada (userId 100, seedado por buildAuthedRepositories), nunca do corpo (Bloco 19, DT-14).
+    expect(response.json().data.closedByUserId).toBe(100)
   })
 
-  it('POST .../close rejeita corpo sem closedByUserId/closedAt (400)', async () => {
-    const repositories = buildTestRepositories()
+  it('POST .../close ignora closedByUserId enviado no corpo (campo desconhecido, 400) — nunca aceita usuário forjado', async () => {
+    const repositories = buildAuthedRepositories()
+    await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: '/api/v1/households/10/periods/2026-07-01/close',
+      payload: { closedByUserId: 999, closedAt: '2026-08-01' },
+    })
+    expect(response.statusCode).toBe(400)
+  })
+
+  it('POST .../close rejeita corpo sem closedAt (400)', async () => {
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null })
     app = buildTestApp({ repositories })
 
@@ -119,7 +141,7 @@ describe('rotas de competências mensais', () => {
   })
 
   it('POST .../reopen transiciona closed → review', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({
       id: 1,
       householdId: 10,
@@ -136,7 +158,7 @@ describe('rotas de competências mensais', () => {
   })
 
   it('transição de estado inválida retorna erro sanitizado de regra de domínio (não 500)', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
     app = buildTestApp({ repositories })
 
@@ -144,14 +166,14 @@ describe('rotas de competências mensais', () => {
     const response = await app.inject({
       method: 'POST',
       url: '/api/v1/households/10/periods/2026-07-01/close',
-      payload: { closedByUserId: 1, closedAt: '2026-08-01' },
+      payload: { closedAt: '2026-08-01' },
     })
     expect(response.statusCode).toBe(409)
     expect(response.json().error.code).toBe('DOMAIN_CONFLICT')
   })
 
   it('ação em competência de outro household retorna 404, nunca altera o recurso', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save({ id: 1, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
     app = buildTestApp({ repositories })
 

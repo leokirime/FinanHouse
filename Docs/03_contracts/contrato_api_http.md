@@ -2,7 +2,7 @@
 
 > Projeto: FinanHouse · Atualizado em: 2026-08-04
 
-> Este contrato descreve a API HTTP implementada a partir do Bloco 16 (DT-11), estendida nos Blocos 17 (movimentações reais no frontend) e 18 (limites mensais por categoria, DT-13). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (Bloco 17 em diante — como o frontend consome esta API, sem repetir o wire format).
+> Este contrato descreve a API HTTP implementada a partir do Bloco 16 (DT-11), estendida nos Blocos 17 (movimentações reais no frontend), 18 (limites mensais por categoria, DT-13) e 19 (autenticação real e sessão, DT-14). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (Bloco 17 em diante — como o frontend consome esta API, sem repetir o wire format) nem com `Docs/03_contracts/contrato_autenticacao.md` (fluxo completo de login/sessão, Bloco 19).
 
 ## 1. Objetivo
 
@@ -10,7 +10,7 @@ Definir sem ambiguidade as rotas, formatos de entrada/saída, códigos HTTP e re
 
 ## 2. Estado Atual
 
-**Execução exclusivamente local.** A API não implementa autenticação real (ver `Docs/03_contracts/contrato_autenticacao.md`) — por isso `createHttpApp` recusa `runtimeMode: 'production'`, o bootstrap (`http/server.ts`) só faz bind em `127.0.0.1` (nunca `0.0.0.0`, nunca configurável) e o CORS aceita apenas `http://127.0.0.1:5173`/`http://localhost:5173` (nunca wildcard). **Esta API nunca deve ser apresentada como pronta para exposição pública** enquanto essas condições não mudarem. Desde o Bloco 17 o frontend real (`apps/web`) consome esta API diretamente, sem modo demonstrativo (DT-12, `Docs/03_contracts/contrato_frontend_backend.md`); o Bloco 18 estendeu essa integração aos limites mensais por categoria (`.../budgets`, DT-13).
+**Execução exclusivamente local.** Desde o Bloco 19 (DT-14) toda rota financeira exige sessão real (cookie `HttpOnly`, ver seção 4 e `contrato_autenticacao.md`), mas isso não é suficiente para produção por si só — `createHttpApp` continua recusando `runtimeMode: 'production'`, o bootstrap (`http/server.ts`) só faz bind em `127.0.0.1` (nunca `0.0.0.0`, nunca configurável) e o CORS aceita apenas `http://127.0.0.1:5173`/`http://localhost:5173` (nunca wildcard, mesmo com `Access-Control-Allow-Credentials: true`). **Esta API nunca deve ser apresentada como pronta para exposição pública** enquanto essas condições não mudarem. Desde o Bloco 17 o frontend real (`apps/web`) consome esta API diretamente, sem modo demonstrativo (DT-12, `Docs/03_contracts/contrato_frontend_backend.md`); o Bloco 18 estendeu essa integração aos limites mensais por categoria (`.../budgets`, DT-13); o Bloco 19 adicionou login/sessão real.
 
 ## 3. Prefixo e Escopo
 
@@ -22,7 +22,7 @@ Todas as rotas financeiras usam o prefixo:
 
 `householdId` é a fonte de escopo de toda operação — deve ser um inteiro positivo, seguro para JavaScript (`Number.isSafeInteger`), sem coerção silenciosa (rejeitado se zero, negativo, decimal ou texto arbitrário). Nenhum corpo de requisição pode conter `householdId` — o schema rejeita como campo desconhecido (`additionalProperties: false`, com `removeAdditional: false` explicitamente configurado no AJV do Fastify — o padrão do framework removeria o campo silenciosamente em vez de rejeitar, ver DT-11).
 
-Um recurso pertencente a outro household nunca é retornado nem alterado: sempre `404` (recurso não encontrado no household) ou `409` (conflito de escopo detectado pelo domínio, ex.: período/categoria/membro referenciado pertence a outro household).
+Um recurso pertencente a outro household nunca é retornado nem alterado: sempre `404` (recurso não encontrado no household) ou `409` (conflito de escopo detectado pelo domínio, ex.: período/categoria/membro referenciado pertence a outro household). Desde o Bloco 19 (DT-14), o `householdId` da URL também precisa corresponder ao `householdId` da sessão autenticada — divergência também é `404`, nunca `401`/`403` (indistinguível de um household inexistente, ver seção 8 do `contrato_autenticacao.md`).
 
 ## 4. Endpoints
 
@@ -32,6 +32,16 @@ Um recurso pertencente a outro household nunca é retornado nem alterado: sempre
 |---|---|---|---|
 | GET | `/health` | Confirma que o processo HTTP está ativo — nunca consulta o banco. | Não |
 | GET | `/ready` | Confirma disponibilidade real (config, pool, conexão, TLS) via dependência injetada — nunca abre conexão em testes. | Não |
+
+### Autenticação (Bloco 19, DT-14)
+
+| Método | Rota | Descrição | Autenticação |
+|---|---|---|---|
+| POST | `/api/v1/auth/login` | Autentica por e-mail/senha; em sucesso, define o cookie de sessão `HttpOnly`. Sem cadastro público — só usuários já existentes. Rate limit: 10 tentativas/5 min por IP. | Não |
+| GET | `/api/v1/auth/session` | Devolve o usuário e o household da sessão atual (401 se ausente/expirada/revogada). Usada pelo frontend para saber se já há sessão válida ao carregar. | Sim |
+| POST | `/api/v1/auth/logout` | Revoga a sessão e limpa o cookie. Idempotente — chamar sem sessão nunca lança. | Não (idempotente mesmo sem cookie) |
+
+Todas as demais rotas abaixo (`/api/v1/households/:householdId/...`) exigem sessão válida — 401 `UNAUTHENTICATED` se ausente/expirada/revogada, 404 se o `householdId` da URL divergir do da sessão. Ver detalhes completos do fluxo em `Docs/03_contracts/contrato_autenticacao.md`.
 
 ### Categorias e membros (somente leitura)
 
@@ -49,7 +59,7 @@ Um recurso pertencente a outro household nunca é retornado nem alterado: sempre
 | PUT | `.../periods/:referenceMonth` | Idempotente: 201 se cria (via `OpenMonthlyPeriodService`), 200 se já existe (nenhuma alteração). Corpo vazio — a identidade da competência vem inteira da URL. |
 | POST | `.../periods/:referenceMonth/start-review` | `open` → `review`. |
 | POST | `.../periods/:referenceMonth/reopen-from-review` | `review` → `open`. |
-| POST | `.../periods/:referenceMonth/close` | `review` → `closed`. Corpo: `{ closedByUserId, closedAt }`. |
+| POST | `.../periods/:referenceMonth/close` | `review` → `closed`. Corpo: `{ closedAt }` — `closedByUserId` não faz parte do corpo desde o Bloco 19 (DT-14), vem da sessão autenticada. |
 | POST | `.../periods/:referenceMonth/reopen` | `closed` → `review`. |
 
 ### Movimentações
@@ -58,7 +68,7 @@ Um recurso pertencente a outro household nunca é retornado nem alterado: sempre
 |---|---|---|
 | GET | `.../entries` | Lista movimentações do household. Aceita `?periodId=` opcional (filtra e ainda reforça o escopo por household). |
 | GET | `.../entries/:entryId` | Busca por ID. 404 se não existir ou pertencer a outro household. |
-| POST | `.../entries` | Cria (`CreateFinancialEntryService`). 201. |
+| POST | `.../entries` | Cria (`CreateFinancialEntryService`). 201. `createdByUserId` não faz parte do corpo desde o Bloco 19 (DT-14), vem da sessão autenticada. |
 | PUT | `.../entries/:entryId` | Atualiza campos permitidos (`UpdateFinancialEntryService`). 200. |
 | POST | `.../entries/:entryId/mark-pending` | `planned` → `pending`. |
 | POST | `.../entries/:entryId/realize` | `planned`/`pending` → `realized`. Corpo: `{ actualAmount, realizationDate }`. |
@@ -91,14 +101,13 @@ Todas as rotas reaproveitam os serviços de aplicação já existentes (`apps/ap
 
 **Corpo:** todo schema usa `additionalProperties: false` — campo desconhecido em qualquer corpo (incluindo `householdId` concorrente) é rejeitado com 400, não descartado silenciosamente.
 
-Exemplo — `POST .../entries`:
+Exemplo — `POST .../entries` (`createdByUserId` nunca faz parte do corpo — vem da sessão, DT-14):
 
 ```json
 {
   "periodId": 1,
   "categoryId": 3,
   "responsibleMemberId": null,
-  "createdByUserId": 10,
   "entryType": "expense",
   "description": "Aluguel",
   "expectedAmount": "1000.00",
@@ -175,11 +184,13 @@ Formato de erro:
 | Código HTTP | Quando ocorre | `error.code` |
 |---|---|---|
 | 400 | Payload/parâmetro/query inválido (schema AJV) | `VALIDATION_ERROR` |
-| 404 | Recurso não encontrado no household (`*NotFoundError` do domínio, ou verificação manual de `householdId`) | `NOT_FOUND` |
+| 401 | Sessão ausente/expirada/revogada, ou credenciais de login inválidas (Bloco 19, DT-14) — mensagem sempre genérica | `UNAUTHENTICATED` |
+| 404 | Recurso não encontrado no household (`*NotFoundError` do domínio, verificação manual de `householdId`, ou `householdId` da URL divergente do da sessão) | `NOT_FOUND` |
 | 409 | Conflito de estado/escopo de domínio (`HouseholdMismatchError`, transição inválida, etc.) | `DOMAIN_CONFLICT` |
 | 409 | Conflito de persistência (duplicidade, FK, escopo de household no banco) | `PERSISTENCE_CONFLICT` |
 | 422 | Regra sintaticamente válida, rejeitada pelo domínio (valor monetário inválido, categoria inativa, etc.) | `DOMAIN_RULE_REJECTED` |
 | 422 | Violação de `CHECK` no banco | `PERSISTENCE_RULE_REJECTED` |
+| 429 | Muitas tentativas de login na mesma janela (`@fastify/rate-limit`) | `RATE_LIMITED` |
 | 503 | Conexão/dependência temporariamente indisponível | `DEPENDENCY_UNAVAILABLE` |
 | 500 | Erro inesperado — sempre sanitizado, nunca stack trace/mensagem bruta | `INTERNAL_ERROR` |
 

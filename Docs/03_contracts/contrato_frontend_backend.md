@@ -13,8 +13,9 @@ Definir, sem ambiguidade, como o frontend real (`apps/web/src/api/**`, `FinanceP
 O backend garante o contrato descrito em `contrato_api_http.md` (formato `{ data }`/`{ error }`, validação estrutural via AJV, isolamento por household). O frontend:
 
 - Nunca duplica validação de regra de negócio — confia no backend como única fonte de verdade (seção 9 de `contrato_api_http.md`).
-- Nunca envia `householdId` no corpo — o escopo vem inteiro de `VITE_FINANHOUSE_HOUSEHOLD_ID` (config local, `apps/web/api/api-config.ts`).
+- Nunca envia `householdId` no corpo — o escopo vem inteiro da sessão autenticada (`GET /api/v1/auth/session`, `AuthProvider`); desde o Bloco 19 (DT-14) não há mais `VITE_FINANHOUSE_HOUSEHOLD_ID` no frontend.
 - Nunca cai para dados fictícios quando a API falha — sempre um estado de erro explícito (`FinanceStatusScreen`, DT-12).
+- Nunca guarda senha ou token de sessão — o cookie `HttpOnly` é gerido inteiramente pelo navegador (`fetch(..., { credentials: 'include' })`), nunca `localStorage`/`sessionStorage` (DT-14).
 
 ## 3. Endpoints
 
@@ -22,17 +23,20 @@ Consumidos pelo frontend (subconjunto de `contrato_api_http.md`, seção 4):
 
 | Método | Rota | Uso no frontend |
 |---|---|---|
-| GET | `.../categories` | Carga inicial (`FinanceProvider`) |
-| GET | `.../members` | Carga inicial; resolve `createdByUserId` (membro `owner`) |
+| POST | `.../auth/login` | `AuthProvider.login()` (`LoginPage`) |
+| GET | `.../auth/session` | Carga inicial de `AuthProvider` — decide entre tela de login e o resto do app |
+| POST | `.../auth/logout` | `AuthProvider.logout()` (botão "Sair" em `DashboardHeader`) |
+| GET | `.../categories` | Carga inicial (`FinanceProvider`, só monta depois de autenticado) |
+| GET | `.../members` | Carga inicial |
 | GET | `.../periods` | Carga inicial |
 | PUT | `.../periods/:referenceMonth` | Cria a competência civil atual quando ainda não existe (idempotente) |
 | GET | `.../entries` | Carga inicial e recarga após toda mutação |
-| POST/PUT/POST transições | `.../entries/**` | `dispatch()` do `FinanceProvider` (criar, editar, marcar pendente, realizar, cancelar, reativar, estornar) |
+| POST/PUT/POST transições | `.../entries/**` | `dispatch()` do `FinanceProvider` (criar, editar, marcar pendente, realizar, cancelar, reativar, estornar) — `createdByUserId` nunca é enviado, vem da sessão (DT-14) |
 | GET | `.../periods/:referenceMonth/budgets` | Carga dos limites por categoria da competência selecionada (`usePeriodBudgets`, hook dedicado a `PlanningPage` — fora de `FinanceProvider`) |
 | PUT | `.../periods/:referenceMonth/budgets/:categoryId` | `createOrUpdate()` de `usePeriodBudgets` — define/edita um limite (idempotente) |
 | DELETE | `.../periods/:referenceMonth/budgets/:categoryId` | `remove()` de `usePeriodBudgets` — remove um limite |
 
-Autenticação: nenhuma (herdado do Bloco 16 — API local, sem produção).
+Autenticação: sessão real por cookie `HttpOnly` desde o Bloco 19 (DT-14) — ver `Docs/03_contracts/contrato_autenticacao.md`. `AppRoot.tsx` nunca monta `FinanceProvider` antes de `AuthProvider` confirmar `status: 'authenticated'`.
 
 ## 4. Inputs
 
@@ -51,7 +55,9 @@ DTOs (`apps/web/src/api/financial-api.types.ts`) são convertidos para os tipos 
 - [x] Nenhum fallback demonstrativo em runtime quando a API falha, está indisponível ou demora (DT-12).
 - [x] Toda mutação aguarda a resposta HTTP antes de confirmar sucesso na UI.
 - [x] Após mutação aprovada, a lista de movimentações é recarregada da API (nunca um espelho local otimista).
-- [x] `householdId` nunca hardcoded no código-fonte nem presumido como `1`.
+- [x] `householdId` nunca hardcoded no código-fonte nem presumido como `1` — vem exclusivamente da sessão autenticada.
+- [x] `FinanceProvider`/`usePeriodBudgets` nunca montam antes de `AuthProvider` chegar a `status: 'authenticated'` (Bloco 19, DT-14).
+- [x] Um 401 vindo de qualquer chamada autenticada (sessão expirada/revogada em uso) chama `notifyUnauthenticated()` — o app volta para a tela de login, nunca mostra um erro genérico de dados.
 
 ## 8. Erros Esperados
 
@@ -62,7 +68,9 @@ O frontend traduz `error.code` (`contrato_api_http.md`, seção 8) em `ApiError.
 | `network` | `fetch` falha (API fora do ar) | `FinanceStatusScreen` — "API indisponível", botão "Tentar novamente" |
 | `timeout` | Sem resposta em 10s | `FinanceStatusScreen`/`actionError` — "demorou para responder" |
 | `cancelled` | Requisição cancelada (unmount, nova carga) | Silencioso — nunca vira erro visível |
-| `config` | `VITE_API_BASE_URL`/`VITE_FINANHOUSE_HOUSEHOLD_ID` ausentes/ inválidas | `FinanceStatusScreen` — "Configuração ausente" |
+| `config` | `VITE_API_BASE_URL` ausente/inválida | `FinanceStatusScreen` — "Configuração ausente" |
+| `unauthenticated` | Sessão ausente/expirada/revogada, ou login com credenciais inválidas | `LoginPage` (mensagem genérica) ou `notifyUnauthenticated()` → volta para o login |
+| `rate_limited` | Muitas tentativas de login na mesma janela | `LoginPage` — "Muitas tentativas" |
 
 ## 9. Validações
 
@@ -74,4 +82,4 @@ Segue `contrato_api_http.md`, seção 10 (`/api/v1`). Enquanto o frontend for o 
 
 ## 11. Decisões Pendentes
 
-- Autenticação real — bloco futuro; o frontend hoje resolve `createdByUserId` como o primeiro membro `role: 'owner'` do household, não um usuário autenticado (DT-12).
+- Recuperação de senha, MFA, permissões granulares por papel — fora de escopo do Bloco 19 (DT-14), ver `Docs/03_contracts/contrato_autenticacao.md`, seção 12.

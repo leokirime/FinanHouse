@@ -19,6 +19,8 @@ export type ApiErrorKind =
   | 'cancelled'
   | 'config'
   | 'unexpected_response'
+  | 'unauthenticated'
+  | 'rate_limited'
 
 const CODE_TO_KIND: Record<string, ApiErrorKind> = {
   VALIDATION_ERROR: 'validation',
@@ -29,6 +31,8 @@ const CODE_TO_KIND: Record<string, ApiErrorKind> = {
   PERSISTENCE_RULE_REJECTED: 'persistence_rule_rejected',
   DEPENDENCY_UNAVAILABLE: 'dependency_unavailable',
   INTERNAL_ERROR: 'internal',
+  UNAUTHENTICATED: 'unauthenticated',
+  RATE_LIMITED: 'rate_limited',
 }
 
 const RETRYABLE_KINDS: ReadonlySet<ApiErrorKind> = new Set(['network', 'timeout', 'dependency_unavailable', 'internal', 'unexpected_response'])

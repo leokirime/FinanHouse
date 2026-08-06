@@ -26,7 +26,6 @@ interface HouseholdAndReferenceMonthParams extends HouseholdParams {
 }
 
 interface CloseMonthlyPeriodBody {
-  closedByUserId: number
   closedAt: string
 }
 
@@ -113,7 +112,7 @@ export function registerPeriodRoutes(fastify: FastifyInstance, repositories: Htt
       const householdId = parseIdParam(request.params.householdId)
       const period = await loadPeriodOrNotFound(repositories, householdId, request.params.referenceMonth)
       const updated = await new CloseMonthlyPeriodService(deps).execute(period.id, {
-        closedByUserId: request.body.closedByUserId,
+        closedByUserId: request.authSession!.userId,
         closedAt: request.body.closedAt,
       })
       reply.status(200).send({ data: toMonthlyPeriodDto(updated) })

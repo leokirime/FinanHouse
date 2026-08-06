@@ -16,6 +16,7 @@ describe('GET /api/v1/households/:householdId/categories', () => {
       { id: 1, householdId: 10, name: 'Mercado', entryType: 'expense', status: 'active' },
       { id: 2, householdId: 20, name: 'Outra casa', entryType: 'expense', status: 'active' },
     ])
+    repositories.members.seed([{ id: 1, householdId: 10, userId: 100, role: 'owner', status: 'active' }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'GET', url: '/api/v1/households/10/categories' })
@@ -42,7 +43,9 @@ describe('GET /api/v1/households/:householdId/categories', () => {
   })
 
   it('aceita householdId positivo válido e retorna lista vazia quando não há categorias', async () => {
-    app = buildTestApp()
+    const repositories = buildTestRepositories()
+    repositories.members.seed([{ id: 1, householdId: 999, userId: 100, role: 'owner', status: 'active' }])
+    app = buildTestApp({ repositories })
     const response = await app.inject({ method: 'GET', url: '/api/v1/households/999/categories' })
     expect(response.statusCode).toBe(200)
     expect(response.json()).toEqual({ data: [] })

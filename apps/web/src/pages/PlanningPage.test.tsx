@@ -3,6 +3,7 @@ import { MemoryRouter } from 'react-router'
 import { fireEvent, render, renderWithProviders, screen, waitFor, within } from '../test-utils.tsx'
 import { FinanceContext, type FinanceContextValue } from '../state/finance-context.ts'
 import type { FinanceReadyState } from '../state/finance-types.ts'
+import { AuthTestProvider } from '../state/test-support/AuthTestProvider.tsx'
 import { createTestFinanceState } from '../state/test-support/finance-test-fixtures.ts'
 import { PlanningPage } from './PlanningPage.tsx'
 
@@ -74,9 +75,11 @@ function renderWithState(state: FinanceReadyState) {
   const value: FinanceContextValue = { state, dispatch: vi.fn() }
   return render(
     <MemoryRouter initialEntries={['/planejamento']}>
-      <FinanceContext.Provider value={value}>
-        <PlanningPage />
-      </FinanceContext.Provider>
+      <AuthTestProvider>
+        <FinanceContext.Provider value={value}>
+          <PlanningPage />
+        </FinanceContext.Provider>
+      </AuthTestProvider>
     </MemoryRouter>,
   )
 }

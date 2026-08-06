@@ -20,10 +20,16 @@
     "db:smoke:repositories": "tsx scripts/db-smoke-repositories.ts",
     "db:smoke:http": "tsx scripts/db-smoke-http.ts",
     "db:smoke:category-budgets": "tsx scripts/db-smoke-category-budgets.ts",
-    "db:bootstrap:household": "tsx scripts/db-bootstrap-household.ts"
+    "db:bootstrap:household": "tsx scripts/db-bootstrap-household.ts",
+    "db:configure:initial-passwords": "tsx scripts/db-configure-initial-passwords.ts",
+    "db:audit:auth-sessions": "tsx scripts/db-audit-auth-sessions.ts",
+    "db:smoke:auth-sessions": "tsx scripts/db-smoke-auth-sessions.ts"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.2",
+    "@fastify/rate-limit": "^11.2.0",
     "@finanhouse/domain": "*",
+    "@node-rs/argon2": "^2.0.2",
     "drizzle-orm": "^0.45.2",
     "fastify": "^5.11.0",
     "mysql2": "^3.23.1"

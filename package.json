@@ -35,6 +35,9 @@
     "db:smoke:http": "npm run db:smoke:http --workspace=api",
     "db:smoke:category-budgets": "npm run db:smoke:category-budgets --workspace=api",
     "db:bootstrap:household": "npm run db:bootstrap:household --workspace=api",
+    "db:configure:initial-passwords": "npm run db:configure:initial-passwords --workspace=api",
+    "db:audit:auth-sessions": "npm run db:audit:auth-sessions --workspace=api --",
+    "db:smoke:auth-sessions": "npm run db:smoke:auth-sessions --workspace=api",
     "typecheck:api-scripts": "npm run typecheck:scripts --workspace=api"
   }
 }

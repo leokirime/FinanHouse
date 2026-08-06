@@ -1,3 +1,4 @@
+import { useAuthenticated } from '../../hooks/use-auth.ts'
 import './DashboardHeader.css'
 
 export interface DashboardHeaderProps {
@@ -6,7 +7,10 @@ export interface DashboardHeaderProps {
   statusLabel: string
 }
 
+/** Presume sessão autenticada (`useAuthenticated()`) — só é montado dentro de `FinanceGatedRoutes`, sempre depois do gate de autenticação (`App.tsx`). */
 export function DashboardHeader({ areaTitle, periodLabel, statusLabel }: DashboardHeaderProps) {
+  const { state, logout } = useAuthenticated()
+
   return (
     <header className="fh-header">
       <div className="fh-header__title">
@@ -17,9 +21,12 @@ export function DashboardHeader({ areaTitle, periodLabel, statusLabel }: Dashboa
         </p>
       </div>
       <div className="fh-header__actions">
-        <span className="fh-header__profile fh-text-secondary" aria-label="Perfil doméstico ativo (apenas visual)">
-          Casa Finanhouse
+        <span className="fh-header__profile fh-text-secondary" aria-label="Usuária autenticada">
+          {state.user.displayName}
         </span>
+        <button type="button" className="fh-header__logout" onClick={logout} disabled={state.pendingLogout} aria-busy={state.pendingLogout}>
+          {state.pendingLogout ? 'Saindo…' : 'Sair'}
+        </button>
         <button type="button" className="fh-header__cta" disabled>
           Nova movimentação
         </button>

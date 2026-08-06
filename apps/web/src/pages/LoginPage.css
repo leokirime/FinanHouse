@@ -1,0 +1,257 @@
+.fh-login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  background: var(--fh-bg);
+  overflow-x: hidden;
+}
+
+/* ---------- Área institucional/visual (esquerda) ---------- */
+
+.fh-login-page__visual {
+  position: relative;
+  flex: 1 1 50%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--fh-space-6);
+  padding: var(--fh-space-10);
+  overflow: hidden;
+  background: radial-gradient(circle at 30% 20%, rgba(155, 93, 229, 0.16) 0%, transparent 55%), var(--fh-bg-elevated);
+  border-right: 1px solid var(--fh-border);
+}
+
+.fh-login-page__glow {
+  position: absolute;
+  inset: -20%;
+  background:
+    radial-gradient(38% 32% at 22% 28%, var(--fh-purple-glow) 0%, transparent 70%),
+    radial-gradient(30% 26% at 78% 74%, rgba(155, 93, 229, 0.18) 0%, transparent 72%);
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.fh-login-page__logo {
+  position: relative;
+  width: min(360px, 80%);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 44px var(--fh-purple-glow));
+}
+
+.fh-login-page__tagline {
+  position: relative;
+  max-width: 360px;
+  text-align: center;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--fh-text-secondary);
+}
+
+/* ---------- Painel do formulário (direita) ---------- */
+
+.fh-login-page__panel {
+  flex: 1 1 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--fh-space-8);
+}
+
+.fh-login-page__card {
+  width: 100%;
+  max-width: 460px;
+  padding: var(--fh-space-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-5);
+  border: 1px solid var(--fh-purple-border);
+  box-shadow: var(--fh-shadow-lg), var(--fh-shadow-purple);
+}
+
+.fh-login-page__card h1 {
+  font-size: 26px;
+  margin: 0;
+}
+
+.fh-login-page__description {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.fh-login-page__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-4);
+}
+
+.fh-login-page__field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-1);
+}
+
+.fh-login-page__field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fh-text-secondary);
+}
+
+.fh-login-page__field input {
+  min-height: 48px;
+  padding: var(--fh-space-2) var(--fh-space-4);
+  border: 1px solid var(--fh-border-strong);
+  border-radius: var(--fh-radius-md);
+  background: var(--fh-surface);
+  color: var(--fh-text);
+  font: inherit;
+  transition: border-color var(--fh-transition-fast), box-shadow var(--fh-transition-fast);
+}
+
+.fh-login-page__field input::placeholder {
+  color: var(--fh-text-muted);
+}
+
+.fh-login-page__field input:focus-visible {
+  outline: none;
+  border-color: var(--fh-purple);
+  box-shadow: 0 0 0 3px var(--fh-purple-soft);
+}
+
+.fh-login-page__field input[aria-invalid='true'] {
+  border-color: var(--fh-expense);
+}
+
+.fh-login-page__password-wrapper {
+  position: relative;
+  display: flex;
+}
+
+.fh-login-page__password-wrapper input {
+  flex: 1;
+  padding-right: calc(var(--fh-space-4) + 28px);
+}
+
+.fh-login-page__toggle-visibility {
+  position: absolute;
+  top: 50%;
+  right: var(--fh-space-2);
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--fh-radius-sm);
+  background: transparent;
+  color: var(--fh-text-muted);
+  cursor: pointer;
+}
+
+.fh-login-page__toggle-visibility:hover {
+  color: var(--fh-text-secondary);
+}
+
+.fh-login-page__toggle-visibility:focus-visible {
+  outline: 2px solid var(--fh-purple-strong);
+  outline-offset: 1px;
+}
+
+.fh-login-page__field-error {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fh-expense);
+}
+
+.fh-login-page__error {
+  background: rgba(242, 113, 138, 0.12);
+  border: 1px solid rgba(242, 113, 138, 0.4);
+  color: var(--fh-text);
+  border-radius: var(--fh-radius-sm);
+  padding: var(--fh-space-3);
+  font-size: 13px;
+  margin: 0;
+}
+
+.fh-login-page__submit {
+  margin-top: var(--fh-space-2);
+  min-height: 48px;
+  border: none;
+  border-radius: var(--fh-radius-md);
+  background: linear-gradient(135deg, var(--fh-purple) 0%, var(--fh-purple-strong) 100%);
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: filter var(--fh-transition-fast), box-shadow var(--fh-transition-fast), transform var(--fh-transition-fast);
+  box-shadow: var(--fh-shadow-purple);
+}
+
+.fh-login-page__submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.fh-login-page__submit:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.fh-login-page__submit:focus-visible {
+  outline: 2px solid var(--fh-purple-strong);
+  outline-offset: 2px;
+}
+
+.fh-login-page__submit:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.15) brightness(0.75);
+  box-shadow: none;
+}
+
+.fh-login-page__note {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+}
+
+/* ---------- Responsividade ---------- */
+
+@media (max-width: 1023px) {
+  .fh-login-page {
+    flex-direction: column;
+  }
+
+  .fh-login-page__visual {
+    display: none;
+  }
+
+  .fh-login-page__panel {
+    flex: 1 1 auto;
+    padding: var(--fh-space-6) var(--fh-space-5);
+  }
+
+  .fh-login-page__card {
+    padding: var(--fh-space-8);
+  }
+}
+
+@media (max-width: 480px) {
+  .fh-login-page__panel {
+    padding: var(--fh-space-5) var(--fh-space-3);
+  }
+
+  .fh-login-page__card {
+    max-width: 100%;
+    padding: var(--fh-space-6) var(--fh-space-5);
+    border-radius: var(--fh-radius-lg);
+  }
+
+  .fh-login-page__card h1 {
+    font-size: 22px;
+  }
+}

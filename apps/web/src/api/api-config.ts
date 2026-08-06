@@ -5,6 +5,11 @@ export interface ApiConfig {
   householdId: number
 }
 
+/** Só a base URL da API — resolvida uma única vez, antes de existir qualquer sessão. */
+export interface ApiBaseConfig {
+  baseUrl: string
+}
+
 function assertHttpUrl(name: string, value: string): void {
   let url: URL
   try {
@@ -18,26 +23,44 @@ function assertHttpUrl(name: string, value: string): void {
 }
 
 /**
- * Resolve e valida a configuração da API antes da primeira chamada. Nunca
- * assume que o primeiro household é `1` — a única fonte é
- * `VITE_FINANHOUSE_HOUSEHOLD_ID`, preenchida localmente após o bootstrap
- * estrutural (`apps/api/scripts/db-bootstrap-household.ts`).
+ * Resolve e valida a base da API — usada antes de qualquer chamada,
+ * inclusive login (`Docs/03_contracts/contrato_api_http.md`). Desde o
+ * Bloco 19 (DT-14), `householdId` nunca vem daqui: é resolvido pela sessão
+ * autenticada (`GET /api/v1/auth/session`), nunca de uma variável de
+ * ambiente ou hardcoded no bundle.
+ *
+ * `VITE_API_BASE_URL` precisa existir (mesmo padrão de configuração
+ * explícita do projeto — nunca um fallback implícito), mas seu valor pode
+ * ser explicitamente vazio: significa "mesma origem do frontend", usado com
+ * o proxy `/api` do Vite (`vite.config.ts`) para o cookie de sessão nunca
+ * cruzar hosts diferentes (`localhost` vs `127.0.0.1`) — o que o navegador
+ * trata como cross-site e bloqueia um cookie `SameSite=Lax` em `fetch`.
  */
-export function resolveApiConfig(env: ImportMetaEnv = import.meta.env): ApiConfig {
-  const baseUrl = env.VITE_API_BASE_URL?.trim()
-  if (!baseUrl) {
+export function resolveApiBaseConfig(env: ImportMetaEnv = import.meta.env): ApiBaseConfig {
+  if (env.VITE_API_BASE_URL === undefined) {
     throw new ApiConfigError('VITE_API_BASE_URL não configurada (variável de ambiente local do workspace web).')
   }
+
+  const baseUrl = env.VITE_API_BASE_URL.trim()
+  if (baseUrl === '') {
+    return { baseUrl: '' }
+  }
+
   assertHttpUrl('VITE_API_BASE_URL', baseUrl)
+  return { baseUrl: baseUrl.replace(/\/+$/, '') }
+}
 
-  const householdIdRaw = env.VITE_FINANHOUSE_HOUSEHOLD_ID?.trim()
-  if (!householdIdRaw) {
-    throw new ApiConfigError('VITE_FINANHOUSE_HOUSEHOLD_ID não configurada (variável de ambiente local do workspace web).')
-  }
-  const householdId = Number(householdIdRaw)
+/**
+ * Combina a base da API já resolvida com o `householdId` da sessão
+ * autenticada — nunca lido de env/hardcoded (DT-14). `householdId` é
+ * validado defensivamente mesmo vindo do próprio backend, mesma postura de
+ * "nunca confiar em uma única camada de validação" já usada no resto do
+ * cliente HTTP.
+ */
+export function resolveApiConfig(householdId: number, env: ImportMetaEnv = import.meta.env): ApiConfig {
+  const { baseUrl } = resolveApiBaseConfig(env)
   if (!Number.isSafeInteger(householdId) || householdId <= 0) {
-    throw new ApiConfigError('VITE_FINANHOUSE_HOUSEHOLD_ID precisa ser um inteiro positivo.')
+    throw new ApiConfigError('householdId inválido — a sessão autenticada não retornou um household válido.')
   }
-
-  return { baseUrl: baseUrl.replace(/\/+$/, ''), householdId }
+  return { baseUrl, householdId }
 }

@@ -12,6 +12,10 @@ export class InMemoryHouseholdMemberRepository implements HouseholdMemberReposit
     return [...this.members.values()].filter((member) => member.householdId === householdId)
   }
 
+  async findByUserId(userId: number): Promise<HouseholdMember[]> {
+    return [...this.members.values()].filter((member) => member.userId === userId)
+  }
+
   /** Popula o repositório para testes/desenvolvimento — não faz parte da interface do domínio. */
   seed(members: HouseholdMember[]): void {
     for (const member of members) this.members.set(member.id, member)

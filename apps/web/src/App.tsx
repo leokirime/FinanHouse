@@ -11,7 +11,9 @@ import { PlanningPage } from './pages/PlanningPage.tsx'
 /**
  * Gateia toda a árvore de rotas até o carregamento inicial da API terminar
  * — `RootLayout`/páginas presumem `status: 'ready'` (nunca leem fixtures
- * como alternativa a uma API indisponível, DT-12).
+ * como alternativa a uma API indisponível, DT-12). Presume `FinanceProvider`
+ * já montado por quem renderiza `<App/>` (`AppRoot.tsx`) — só acontece
+ * depois que a sessão está autenticada (Bloco 19, DT-14).
  */
 function App() {
   const { state, dispatch } = useFinance()

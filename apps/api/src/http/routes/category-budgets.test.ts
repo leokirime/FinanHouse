@@ -1,6 +1,13 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import type { FastifyInstance } from 'fastify'
-import { buildTestApp, buildTestRepositories } from '../test-support/build-test-app.js'
+import { buildTestApp, buildTestRepositories, type TestRepositories } from '../test-support/build-test-app.js'
+
+/** Household 10 é o household "próprio" usado por quase todo teste deste arquivo — precisa de um membro ativo para autoAuth autenticar (Bloco 19). */
+function buildAuthedRepositories(): TestRepositories {
+  const repositories = buildTestRepositories()
+  repositories.members.seed([{ id: 1, householdId: 10, userId: 100, role: 'owner', status: 'active' }])
+  return repositories
+}
 
 const PERIOD = { id: 1, householdId: 10, referenceMonth: '2026-08-01', status: 'open' as const, closedAt: null, closedByUserId: null }
 const CLOSED_PERIOD = { id: 2, householdId: 10, referenceMonth: '2026-06-01', status: 'closed' as const, closedAt: '2026-07-05', closedByUserId: 1 }
@@ -17,7 +24,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('GET .../budgets lista limites da competência, isolado por household', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     await repositories.periods.save({ ...PERIOD, id: 3, householdId: 20 })
     repositories.categories.seed([EXPENSE_CATEGORY])
@@ -32,13 +39,13 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('GET .../budgets retorna 404 quando a competência não existe', async () => {
-    app = buildTestApp()
+    app = buildTestApp({ repositories: buildAuthedRepositories() })
     const response = await app.inject({ method: 'GET', url: '/api/v1/households/10/periods/2026-08-01/budgets' })
     expect(response.statusCode).toBe(404)
   })
 
   it('PUT .../budgets/:categoryId cria um novo limite (201), dinheiro como string decimal', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
@@ -53,7 +60,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('PUT .../budgets/:categoryId é idempotente — segunda chamada atualiza (200), sem duplicar', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
@@ -68,7 +75,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('PUT .../budgets/:categoryId rejeita número JSON (dinheiro precisa ser string) — 400', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
@@ -78,7 +85,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('PUT .../budgets/:categoryId rejeita corpo com campo desconhecido (400) e não salva nada', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
@@ -93,7 +100,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('PUT .../budgets/:categoryId rejeita categoria de receita (422, DOMAIN_RULE_REJECTED)', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     repositories.categories.seed([INCOME_CATEGORY])
     app = buildTestApp({ repositories })
@@ -104,7 +111,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('PUT .../budgets/:categoryId rejeita categoria de outro household (409, DOMAIN_CONFLICT — mesmo padrão de período/categoria referenciados em outro household, DT-09)', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     repositories.categories.seed([OTHER_HOUSEHOLD_CATEGORY])
     app = buildTestApp({ repositories })
@@ -116,7 +123,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('PUT .../budgets/:categoryId rejeita competência fechada (409)', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(CLOSED_PERIOD)
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
@@ -126,7 +133,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('DELETE .../budgets/:categoryId remove o limite (204)', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     repositories.categories.seed([EXPENSE_CATEGORY])
     await repositories.budgets.save({ id: 1, householdId: 10, periodId: PERIOD.id, categoryId: 1, limitAmount: 150000n })
@@ -138,7 +145,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('DELETE .../budgets/:categoryId retorna 404 quando o limite não existe', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
@@ -148,7 +155,7 @@ describe('rotas de limites mensais por categoria', () => {
   })
 
   it('isolamento: limite de outro household nunca aparece na listagem nem pode ser removido pela URL de outro household', async () => {
-    const repositories = buildTestRepositories()
+    const repositories = buildAuthedRepositories()
     await repositories.periods.save(PERIOD)
     await repositories.periods.save({ ...PERIOD, id: 5, householdId: 20 })
     repositories.categories.seed([EXPENSE_CATEGORY, OTHER_HOUSEHOLD_CATEGORY])

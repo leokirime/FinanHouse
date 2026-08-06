@@ -51,7 +51,6 @@ export interface CreateFinancialEntryRequest {
   periodId: number
   categoryId: number
   responsibleMemberId: number | null
-  createdByUserId: number
   entryType: FinancialEntryType
   description: string
   expectedAmount: string
