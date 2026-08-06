@@ -39,7 +39,6 @@ describe('rotas de movimentações', () => {
       payload: {
         periodId: 1,
         categoryId: 1,
-        createdByUserId: 100,
         entryType: 'expense',
         description: 'Aluguel',
         expectedAmount: '1000.00',
@@ -50,6 +49,28 @@ describe('rotas de movimentações', () => {
     expect(dto.expectedAmount).toBe('1000.00')
     expect(dto.status).toBe('planned')
     expect('responsibleMemberHouseholdId' in dto).toBe(false)
+    // createdByUserId vem da sessão autenticada (userId 100, seedado por seedBaseFixtures), nunca do corpo (Bloco 19, DT-14).
+    expect(dto.createdByUserId).toBe(100)
+  })
+
+  it('POST .../entries ignora createdByUserId enviado no corpo (campo desconhecido, 400) — nunca aceita usuário forjado', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({
+      method: 'POST',
+      url: `/api/v1/households/${HOUSEHOLD_ID}/entries`,
+      payload: {
+        periodId: 1,
+        categoryId: 1,
+        createdByUserId: 999,
+        entryType: 'expense',
+        description: 'Aluguel',
+        expectedAmount: '1000.00',
+      },
+    })
+    expect(response.statusCode).toBe(400)
   })
 
   it('POST .../entries rejeita expectedAmount como número JSON, não como string (400)', async () => {
@@ -63,7 +84,6 @@ describe('rotas de movimentações', () => {
       payload: {
         periodId: 1,
         categoryId: 1,
-        createdByUserId: 100,
         entryType: 'expense',
         description: 'Aluguel',
         expectedAmount: 1000,
@@ -83,7 +103,6 @@ describe('rotas de movimentações', () => {
       payload: {
         periodId: 1,
         categoryId: 1,
-        createdByUserId: 100,
         entryType: 'expense',
         description: 'Aluguel',
         expectedAmount: '1000.00',
@@ -104,7 +123,6 @@ describe('rotas de movimentações', () => {
       payload: {
         periodId: 1,
         categoryId: 1,
-        createdByUserId: 100,
         entryType: 'transfer',
         description: 'Aluguel',
         expectedAmount: '1000.00',
@@ -125,7 +143,6 @@ describe('rotas de movimentações', () => {
         householdId: 999,
         periodId: 1,
         categoryId: 1,
-        createdByUserId: 100,
         entryType: 'expense',
         description: 'Aluguel',
         expectedAmount: '1000.00',
@@ -156,7 +173,6 @@ describe('rotas de movimentações', () => {
       payload: {
         periodId: 2,
         categoryId: 1,
-        createdByUserId: 100,
         entryType: 'expense',
         description: 'Tentativa cruzada',
         expectedAmount: '1000.00',
@@ -167,13 +183,16 @@ describe('rotas de movimentações', () => {
   })
 
   it('GET .../entries/:entryId retorna 404 quando não existe', async () => {
-    app = buildTestApp()
+    const repositories = buildTestRepositories()
+    repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
+    app = buildTestApp({ repositories })
     const response = await app.inject({ method: 'GET', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
     expect(response.statusCode).toBe(404)
   })
 
   it('GET .../entries/:entryId de outro household nunca é retornado (isolamento, 404)', async () => {
     const repositories = buildTestRepositories()
+    repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
     await repositories.entries.save({
       id: 1,
       householdId: OTHER_HOUSEHOLD_ID,
@@ -198,6 +217,7 @@ describe('rotas de movimentações', () => {
 
   it('GET .../entries lista movimentações do household, isoladas', async () => {
     const repositories = buildTestRepositories()
+    repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
     await repositories.entries.save({
       id: 1,
       householdId: HOUSEHOLD_ID,
@@ -271,6 +291,7 @@ describe('rotas de movimentações', () => {
 
   it('PUT .../entries/:entryId de outro household resulta em 404, nunca altera o recurso', async () => {
     const repositories = buildTestRepositories()
+    repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
     await repositories.entries.save({
       id: 1,
       householdId: OTHER_HOUSEHOLD_ID,
@@ -492,6 +513,7 @@ describe('rotas de movimentações', () => {
 
   it('erro de conexão do repositório vira 503 sanitizado, nunca 500 opaco com mensagem bruta', async () => {
     const repositories = buildTestRepositories()
+    repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
     repositories.entries.findByHousehold = async () => {
       throw new DatabaseConnectionError('Falha de conexão: host inacessível.')
     }
@@ -504,6 +526,7 @@ describe('rotas de movimentações', () => {
 
   it('erro totalmente inesperado do repositório vira 500 sanitizado, sem stack trace nem mensagem bruta', async () => {
     const repositories = buildTestRepositories()
+    repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
     repositories.entries.findByHousehold = async () => {
       throw new Error('detalhe interno sensível que nunca deveria ir para o cliente')
     }

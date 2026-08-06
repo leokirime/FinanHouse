@@ -12,11 +12,13 @@ import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { drizzle } from 'drizzle-orm/mysql2'
 import { DatabaseConfigError, resolveDatabaseConfig } from '../config/database-config.js'
-import { categorizeConnectionError } from '../db/sanitize-error.js'
+import { connectWithRetry } from '../db/connect-with-retry.js'
 import { createDatabasePool, type DatabasePool } from '../db/pool.js'
 import { createDrizzleRepositories } from '../infrastructure/repositories/drizzle/create-drizzle-repositories.js'
 import { createHttpApp, type HttpRuntimeMode } from './app.js'
+import { classifyListenError } from './listen-error-classifier.js'
 import type { ReadinessCheck } from './routes/ready.js'
+import { formatStartupFailureMessage } from './startup-diagnostics.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ENV_LOCAL_PATH = path.resolve(__dirname, '../../.env.local')
@@ -76,7 +78,36 @@ export async function startHttpServer(): Promise<RunningHttpServer> {
     process.exit(1)
   }
 
+  const debugStartup = process.env.FINANHOUSE_DEBUG_STARTUP === 'true'
   const dbPool = createDatabasePool(config)
+
+  // Valida a conexão inicial (TCP/TLS/autenticação) antes de vincular a porta
+  // HTTP — sem isso, um erro de rede/handshake momentâneo com o Aiven só
+  // seria percebido depois, na primeira requisição real a /ready. Só repete
+  // para erros classificados como transitórios (ver connect-with-retry.ts);
+  // credencial/certificado/config inválidos falham já na primeira tentativa.
+  const connectionResult = await connectWithRetry(async () => {
+    const connection = await dbPool.pool.getConnection()
+    try {
+      // Só valida o handshake — nenhuma consulta é necessária aqui.
+    } finally {
+      connection.release()
+    }
+  })
+
+  if (!connectionResult.ok) {
+    console.error(
+      formatStartupFailureMessage(
+        'conexão inicial com o banco',
+        connectionResult.classification,
+        connectionResult.lastError,
+        debugStartup,
+      ),
+    )
+    await dbPool.close()
+    process.exit(1)
+  }
+
   const db = drizzle(dbPool.pool)
   const repositories = createDrizzleRepositories(db)
 
@@ -92,8 +123,12 @@ export async function startHttpServer(): Promise<RunningHttpServer> {
   try {
     await app.listen({ port, host: LOCAL_HOST })
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    console.error(`Falha ao iniciar o servidor HTTP. Categoria: ${categorizeConnectionError(message)}`)
+    // Deliberadamente NÃO usa o classificador de erros de banco: uma falha de
+    // `listen()` (porta em uso, permissão negada) não tem nenhuma relação com
+    // o banco de dados — rotulá-la como erro de banco (bug anterior) mandava
+    // a investigação na direção errada.
+    const classification = classifyListenError(error)
+    console.error(formatStartupFailureMessage('vinculação da porta HTTP', classification, error, debugStartup))
     await dbPool.close()
     process.exit(1)
   }

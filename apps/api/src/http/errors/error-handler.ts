@@ -19,6 +19,7 @@ import {
   UnexpectedRealizationDataError,
 } from '@finanhouse/domain'
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify'
+import { InvalidCredentialsError, SessionNotFoundError } from '../../application/auth-errors.js'
 import {
   CheckConstraintViolationError,
   DatabaseConnectionError,
@@ -47,6 +48,9 @@ const DOMAIN_NOT_FOUND_ERRORS = [
   HouseholdMemberNotFoundError,
   CategoryBudgetNotFoundError,
 ]
+
+/** Falha de autenticação/sessão — sempre 401 com mensagem genérica (nunca revela qual caso, DT-14). */
+const AUTHENTICATION_ERRORS = [InvalidCredentialsError, SessionNotFoundError]
 
 /** Erros de domínio que representam um conflito de estado/escopo — regra válida, mas não aplicável agora. */
 const DOMAIN_CONFLICT_ERRORS = [
@@ -101,6 +105,17 @@ export function createErrorHandler() {
     // Erro de validação de schema do Fastify/AJV (params, querystring ou body).
     if ('validation' in error && Array.isArray((error as FastifyError).validation)) {
       reply.status(400).send(body('VALIDATION_ERROR', 'Requisição inválida — verifique parâmetros e corpo enviados.'))
+      return
+    }
+
+    if (matchesAny(error, AUTHENTICATION_ERRORS)) {
+      reply.status(401).send(body('UNAUTHENTICATED', error.message))
+      return
+    }
+
+    // `@fastify/rate-limit` (login, Bloco 19) — mensagem própria da lib, sempre segura de expor.
+    if ('statusCode' in error && (error as FastifyError).statusCode === 429) {
+      reply.status(429).send(body('RATE_LIMITED', error.message))
       return
     }
 

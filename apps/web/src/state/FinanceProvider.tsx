@@ -1,4 +1,4 @@
-import { DomainError, type FinancialEntry, type HouseholdMember } from '@finanhouse/domain'
+import { DomainError, type FinancialEntry } from '@finanhouse/domain'
 import { useCallback, useEffect, useReducer, useRef, type ReactNode } from 'react'
 import {
   cancelEntry,
@@ -16,6 +16,7 @@ import {
 } from '../api/financial-api.ts'
 import { ApiError } from '../api/api-errors.ts'
 import { resolveApiConfig } from '../api/api-config.ts'
+import { useAuthenticated } from '../hooks/use-auth.ts'
 import { getCurrentReferenceMonth, getPreviousReferenceMonth } from '../utils/reference-month.ts'
 import { FinanceContext } from './finance-context.ts'
 import type { FinanceAction, FinanceState } from './finance-types.ts'
@@ -59,14 +60,6 @@ function internalReducer(state: FinanceState, event: InternalEvent): FinanceStat
   }
 }
 
-function resolveCreatedByUserId(members: HouseholdMember[]): number {
-  const owner = members.find((member) => member.role === 'owner') ?? members[0]
-  if (!owner) {
-    throw new ApiError('unexpected_response', 'Nenhum membro do household está disponível para registrar a movimentação.')
-  }
-  return owner.userId
-}
-
 function safeActionErrorMessage(error: unknown): string {
   if (error instanceof ApiError) return error.message
   if (error instanceof DomainError) return error.message
@@ -80,6 +73,8 @@ function safeActionErrorMessage(error: unknown): string {
  * `status: 'error'` explícito, nunca um fallback silencioso (DT-12).
  */
 export function FinanceProvider({ children }: FinanceProviderProps) {
+  const { state: authState, notifyUnauthenticated } = useAuthenticated()
+  const householdId = authState.householdId
   const [state, dispatchInternal] = useReducer(internalReducer, { status: 'loading' })
   const [loadAttempt, requestLoad] = useReducer((attempt: number) => attempt + 1, 0)
   const requestIdRef = useRef(0)
@@ -109,7 +104,7 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
 
     async function loadAll() {
       try {
-        const config = resolveApiConfig()
+        const config = resolveApiConfig(householdId)
         const [categories, members, periods] = await Promise.all([
           listCategories(config, controller.signal),
           listMembers(config, controller.signal),
@@ -144,6 +139,10 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
       } catch (error) {
         if (!active || controller.signal.aborted || requestIdRef.current !== requestId) return
         if (error instanceof ApiError && error.kind === 'cancelled') return
+        if (error instanceof ApiError && error.kind === 'unauthenticated') {
+          notifyUnauthenticated()
+          return
+        }
         const apiError = error instanceof ApiError ? error : new ApiError('unexpected_response', 'Falha inesperada ao carregar os dados.')
         dispatchInternal({ kind: 'LOAD_FAILURE', error: apiError })
       }
@@ -155,7 +154,7 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
       active = false
       controller.abort()
     }
-  }, [loadAttempt])
+  }, [loadAttempt, householdId, notifyUnauthenticated])
 
   const dispatch = useCallback(
     (action: FinanceAction) => {
@@ -177,7 +176,7 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
         return
       }
 
-      const config = resolveApiConfig()
+      const config = resolveApiConfig(householdId)
       pendingActionRef.current = true
       dispatchInternal({ kind: 'MUTATION_START' })
 
@@ -185,12 +184,10 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
         try {
           switch (action.type) {
             case 'CREATE_ENTRY': {
-              const createdByUserId = resolveCreatedByUserId(state.members)
               const created = await createEntry(config, {
                 periodId: state.currentPeriodId,
                 categoryId: action.input.categoryId,
                 responsibleMemberId: action.input.responsibleMemberId,
-                createdByUserId,
                 entryType: action.input.entryType,
                 description: action.input.description,
                 expectedAmount: action.input.expectedAmount,
@@ -231,11 +228,15 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
         } catch (error) {
           pendingActionRef.current = false
           if (!mountedRef.current) return
+          if (error instanceof ApiError && error.kind === 'unauthenticated') {
+            notifyUnauthenticated()
+            return
+          }
           dispatchInternal({ kind: 'MUTATION_FAILURE', message: safeActionErrorMessage(error) })
         }
       })()
     },
-    [state],
+    [state, householdId, notifyUnauthenticated],
   )
 
   return <FinanceContext.Provider value={{ state, dispatch }}>{children}</FinanceContext.Provider>

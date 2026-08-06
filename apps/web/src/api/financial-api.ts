@@ -71,7 +71,6 @@ export interface CreateEntryInput {
   periodId: number
   categoryId: number
   responsibleMemberId: number | null
-  createdByUserId: number
   entryType: FinancialEntry['entryType']
   description: string
   expectedAmount: Money
@@ -79,12 +78,12 @@ export interface CreateEntryInput {
   notes: string | null
 }
 
+/** `createdByUserId` nunca é enviado — vem da sessão autenticada no backend (Bloco 19, DT-14); um cliente não consegue mais forjar outro usuário. */
 export async function createEntry(config: ApiConfig, input: CreateEntryInput, signal?: AbortSignal): Promise<FinancialEntry> {
   const body: CreateFinancialEntryRequest = {
     periodId: input.periodId,
     categoryId: input.categoryId,
     responsibleMemberId: input.responsibleMemberId,
-    createdByUserId: input.createdByUserId,
     entryType: input.entryType,
     description: input.description,
     expectedAmount: moneyToDto(input.expectedAmount),

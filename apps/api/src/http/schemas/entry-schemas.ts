@@ -4,15 +4,19 @@ import { datePattern, moneyStringPattern, positiveIdBodySchema } from './common.
 const MAX_DESCRIPTION_LENGTH = 255
 const MAX_NOTES_LENGTH = 500
 
+/**
+ * `createdByUserId` não faz parte do corpo desde o Bloco 19 (DT-14) — vem da
+ * sessão autenticada (`request.authSession.userId`), nunca do cliente
+ * (impede forjar outro usuário como autor da movimentação).
+ */
 export const createFinancialEntryBodySchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['periodId', 'categoryId', 'createdByUserId', 'entryType', 'description', 'expectedAmount'],
+  required: ['periodId', 'categoryId', 'entryType', 'description', 'expectedAmount'],
   properties: {
     periodId: positiveIdBodySchema,
     categoryId: positiveIdBodySchema,
     responsibleMemberId: { anyOf: [positiveIdBodySchema, { type: 'null' }] },
-    createdByUserId: positiveIdBodySchema,
     entryType: { type: 'string', enum: [...FINANCIAL_ENTRY_TYPES] },
     description: { type: 'string', minLength: 1, maxLength: MAX_DESCRIPTION_LENGTH },
     expectedAmount: { type: 'string', pattern: moneyStringPattern },

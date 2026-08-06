@@ -31,4 +31,13 @@ export class DrizzleHouseholdMemberRepository implements HouseholdMemberReposito
       throw translatePersistenceError(error)
     }
   }
+
+  async findByUserId(userId: number): Promise<HouseholdMember[]> {
+    try {
+      const rows = await this.db.select().from(householdMembers).where(eq(householdMembers.userId, userId))
+      return rows.map(toDomainHouseholdMember)
+    } catch (error) {
+      throw translatePersistenceError(error)
+    }
+  }
 }

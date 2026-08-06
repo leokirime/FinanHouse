@@ -13,6 +13,9 @@ const SCRIPTS = [
   'db-audit-responsible-member-integrity.ts',
   'db-bootstrap-household.ts',
   'db-audit-category-budgets.ts',
+  'db-configure-initial-passwords.ts',
+  'db-audit-auth-sessions.ts',
+  'db-smoke-auth-sessions.ts',
 ]
 
 /**

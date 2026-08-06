@@ -1,15 +1,19 @@
 import type {
+  AuthSessionRepository,
   CategoryBudgetRepository,
   CategoryRepository,
   FinancialEntryRepository,
   HouseholdMemberRepository,
   MonthlyPeriodRepository,
+  UserRepository,
 } from '../../../application/ports/index.js'
+import { DrizzleAuthSessionRepository } from './drizzle-auth-session-repository.js'
 import { DrizzleCategoryBudgetRepository } from './drizzle-category-budget-repository.js'
 import { DrizzleCategoryRepository } from './drizzle-category-repository.js'
 import { DrizzleFinancialEntryRepository } from './drizzle-financial-entry-repository.js'
 import { DrizzleHouseholdMemberRepository } from './drizzle-household-member-repository.js'
 import { DrizzleMonthlyPeriodRepository } from './drizzle-monthly-period-repository.js'
+import { DrizzleUserRepository } from './drizzle-user-repository.js'
 import type { DrizzleDb } from './types.js'
 
 export interface DrizzleRepositories {
@@ -18,6 +22,8 @@ export interface DrizzleRepositories {
   categories: CategoryRepository
   members: HouseholdMemberRepository
   budgets: CategoryBudgetRepository
+  users: UserRepository
+  authSessions: AuthSessionRepository
 }
 
 /**
@@ -36,5 +42,7 @@ export function createDrizzleRepositories(db: DrizzleDb): DrizzleRepositories {
     categories: new DrizzleCategoryRepository(db),
     members: new DrizzleHouseholdMemberRepository(db),
     budgets: new DrizzleCategoryBudgetRepository(db),
+    users: new DrizzleUserRepository(db),
+    authSessions: new DrizzleAuthSessionRepository(db),
   }
 }

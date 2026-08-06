@@ -3,6 +3,7 @@ import { useCallback, useEffect, useReducer, useRef } from 'react'
 import { deleteBudget, listBudgets, putBudget } from '../api/financial-api.ts'
 import { ApiError } from '../api/api-errors.ts'
 import { resolveApiConfig } from '../api/api-config.ts'
+import { useAuthenticated } from './use-auth.ts'
 
 export type PeriodBudgetsStatus = 'loading' | 'ready' | 'error'
 
@@ -78,6 +79,8 @@ export interface UsePeriodBudgetsResult {
  * toda leitura/escrita passa pela API real.
  */
 export function usePeriodBudgets(referenceMonth: string | null): UsePeriodBudgetsResult {
+  const { state: authState, notifyUnauthenticated } = useAuthenticated()
+  const householdId = authState.householdId
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE)
   const [loadAttempt, requestLoad] = useReducer((attempt: number) => attempt + 1, 0)
   const requestIdRef = useRef(0)
@@ -94,13 +97,17 @@ export function usePeriodBudgets(referenceMonth: string | null): UsePeriodBudget
 
     async function load() {
       try {
-        const config = resolveApiConfig()
+        const config = resolveApiConfig(householdId)
         const budgets = await listBudgets(config, referenceMonth as string, controller.signal)
         if (!active || requestIdRef.current !== requestId) return
         dispatch({ kind: 'LOAD_SUCCESS', budgets })
       } catch (error) {
         if (!active || requestIdRef.current !== requestId) return
         if (error instanceof ApiError && error.kind === 'cancelled') return
+        if (error instanceof ApiError && error.kind === 'unauthenticated') {
+          notifyUnauthenticated()
+          return
+        }
         const apiError = error instanceof ApiError ? error : new ApiError('unexpected_response', 'Falha inesperada ao carregar os limites.')
         dispatch({ kind: 'LOAD_FAILURE', error: apiError })
       }
@@ -112,12 +119,12 @@ export function usePeriodBudgets(referenceMonth: string | null): UsePeriodBudget
       active = false
       controller.abort()
     }
-  }, [referenceMonth, loadAttempt])
+  }, [referenceMonth, loadAttempt, householdId, notifyUnauthenticated])
 
   const runMutation = useCallback(
     (task: (config: ReturnType<typeof resolveApiConfig>) => Promise<CategoryBudget[]>) => {
       if (referenceMonth === null || state.status !== 'ready' || pendingActionRef.current) return
-      const config = resolveApiConfig()
+      const config = resolveApiConfig(householdId)
       pendingActionRef.current = true
       dispatch({ kind: 'MUTATION_START' })
       void (async () => {
@@ -127,11 +134,15 @@ export function usePeriodBudgets(referenceMonth: string | null): UsePeriodBudget
           dispatch({ kind: 'MUTATION_SUCCESS', budgets })
         } catch (error) {
           pendingActionRef.current = false
+          if (error instanceof ApiError && error.kind === 'unauthenticated') {
+            notifyUnauthenticated()
+            return
+          }
           dispatch({ kind: 'MUTATION_FAILURE', message: safeMessage(error) })
         }
       })()
     },
-    [referenceMonth, state.status],
+    [referenceMonth, state.status, householdId, notifyUnauthenticated],
   )
 
   const createOrUpdate = useCallback(

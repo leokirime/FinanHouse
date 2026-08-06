@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { StrictMode } from 'react'
+import { AuthTestProvider } from '../state/test-support/AuthTestProvider.tsx'
 import { usePeriodBudgets } from './use-period-budgets.ts'
 
 const HOUSEHOLD_ID = 1
@@ -30,7 +31,6 @@ function createFetchMock(routes: RouteMap) {
 
 beforeEach(() => {
   vi.stubEnv('VITE_API_BASE_URL', BASE_URL)
-  vi.stubEnv('VITE_FINANHOUSE_HOUSEHOLD_ID', String(HOUSEHOLD_ID))
 })
 
 afterEach(() => {
@@ -43,7 +43,7 @@ describe('usePeriodBudgets — carregamento', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
 
-    const { result } = renderHook(() => usePeriodBudgets(null))
+    const { result } = renderHook(() => usePeriodBudgets(null), { wrapper: AuthTestProvider })
 
     expect(result.current.status).toBe('loading')
     expect(fetchMock).not.toHaveBeenCalled()
@@ -57,7 +57,7 @@ describe('usePeriodBudgets — carregamento', () => {
       }),
     )
 
-    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH))
+    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), { wrapper: AuthTestProvider })
 
     expect(result.current.status).toBe('loading')
     await waitFor(() => expect(result.current.status).toBe('ready'))
@@ -68,7 +68,7 @@ describe('usePeriodBudgets — carregamento', () => {
   it('API indisponível vira status "error" explícito — nunca dados fictícios', async () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
 
-    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH))
+    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), { wrapper: AuthTestProvider })
     await waitFor(() => expect(result.current.status).toBe('error'))
 
     expect(result.current.error?.kind).toBe('network')
@@ -84,7 +84,10 @@ describe('usePeriodBudgets — carregamento', () => {
       }),
     )
 
-    const { result, rerender } = renderHook(({ month }) => usePeriodBudgets(month), { initialProps: { month: REFERENCE_MONTH } })
+    const { result, rerender } = renderHook(({ month }) => usePeriodBudgets(month), {
+      initialProps: { month: REFERENCE_MONTH },
+      wrapper: AuthTestProvider,
+    })
     await waitFor(() => expect(result.current.status).toBe('ready'))
     expect(result.current.budgets).toHaveLength(1)
 
@@ -108,7 +111,7 @@ describe('usePeriodBudgets — mutações reais', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH))
+    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), { wrapper: AuthTestProvider })
     await waitFor(() => expect(result.current.status).toBe('ready'))
 
     act(() => {
@@ -135,7 +138,7 @@ describe('usePeriodBudgets — mutações reais', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH))
+    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), { wrapper: AuthTestProvider })
     await waitFor(() => expect(result.current.status).toBe('ready'))
     expect(result.current.budgets).toHaveLength(1)
 
@@ -156,7 +159,7 @@ describe('usePeriodBudgets — mutações reais', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH))
+    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), { wrapper: AuthTestProvider })
     await waitFor(() => expect(result.current.status).toBe('ready'))
 
     act(() => {
@@ -183,7 +186,7 @@ describe('usePeriodBudgets — mutações reais', () => {
       }),
     )
 
-    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH))
+    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), { wrapper: AuthTestProvider })
     await waitFor(() => expect(result.current.status).toBe('ready'))
 
     act(() => {
@@ -222,7 +225,11 @@ describe('usePeriodBudgets — StrictMode e cancelamento', () => {
     )
 
     const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), {
-      wrapper: ({ children }) => <StrictMode>{children}</StrictMode>,
+      wrapper: ({ children }) => (
+        <AuthTestProvider>
+          <StrictMode>{children}</StrictMode>
+        </AuthTestProvider>
+      ),
     })
     await waitFor(() => expect(result.current.status).toBe('ready'))
     expect(result.current.budgets).toHaveLength(1)
@@ -251,7 +258,7 @@ describe('usePeriodBudgets — StrictMode e cancelamento', () => {
       }),
     )
 
-    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH))
+    const { result } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), { wrapper: AuthTestProvider })
 
     act(() => {
       result.current.retry()
@@ -279,7 +286,7 @@ describe('usePeriodBudgets — StrictMode e cancelamento', () => {
       }),
     )
 
-    const { unmount } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH))
+    const { unmount } = renderHook(() => usePeriodBudgets(REFERENCE_MONTH), { wrapper: AuthTestProvider })
     unmount()
 
     expect(signals.length).toBeGreaterThan(0)

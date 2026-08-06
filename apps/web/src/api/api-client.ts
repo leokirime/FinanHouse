@@ -1,5 +1,9 @@
-import type { ApiConfig } from './api-config.ts'
 import { ApiError, apiErrorFromServerCode } from './api-errors.ts'
+
+/** `apiRequest` só precisa da base URL — `ApiConfig` (com `householdId`) é um superconjunto válido. */
+export interface ApiRequestConfig {
+  baseUrl: string
+}
 
 const REQUEST_TIMEOUT_MS = 10_000
 
@@ -42,7 +46,7 @@ async function parseErrorBody(response: Response): Promise<ApiError> {
  * `{ error: { code, message } }` (`Docs/03_contracts/contrato_api_http.md`).
  * Nunca registra corpo de requisição/resposta em log — apenas método e rota.
  */
-export async function apiRequest<T>(config: ApiConfig, path: string, init: ApiRequestInit = {}): Promise<T> {
+export async function apiRequest<T>(config: ApiRequestConfig, path: string, init: ApiRequestInit = {}): Promise<T> {
   const timeoutController = new AbortController()
   const timeoutId = setTimeout(() => timeoutController.abort(), REQUEST_TIMEOUT_MS)
   const onExternalAbort = () => timeoutController.abort()
@@ -56,6 +60,9 @@ export async function apiRequest<T>(config: ApiConfig, path: string, init: ApiRe
       headers: init.body !== undefined ? { 'Content-Type': 'application/json', Accept: 'application/json' } : { Accept: 'application/json' },
       body: init.body !== undefined ? JSON.stringify(init.body) : undefined,
       signal: timeoutController.signal,
+      // Sessão real por cookie HttpOnly (Bloco 19, DT-14) — sem isto, o navegador nunca envia nem
+      // aceita o cookie de sessão em requisições para a API (mesmo em same-site).
+      credentials: 'include',
     })
 
     if (response.status === 204) {

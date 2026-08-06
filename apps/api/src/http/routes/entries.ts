@@ -42,7 +42,6 @@ interface CreateFinancialEntryBody {
   periodId: number
   categoryId: number
   responsibleMemberId?: number | null
-  createdByUserId: number
   entryType: 'income' | 'expense'
   description: string
   expectedAmount: string
@@ -125,7 +124,7 @@ export function registerEntryRoutes(fastify: FastifyInstance, repositories: Http
         periodId: request.body.periodId,
         categoryId: request.body.categoryId,
         responsibleMemberId: request.body.responsibleMemberId ?? null,
-        createdByUserId: request.body.createdByUserId,
+        createdByUserId: request.authSession!.userId,
         entryType: request.body.entryType,
         description: request.body.description,
         expectedAmount: parseMoney(request.body.expectedAmount),

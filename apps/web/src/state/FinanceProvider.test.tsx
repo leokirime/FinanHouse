@@ -4,6 +4,7 @@ import { StrictMode, type ReactNode } from 'react'
 import { getCurrentReferenceMonth, getPreviousReferenceMonth } from '../utils/reference-month.ts'
 import { useFinance } from '../hooks/use-finance.ts'
 import { FinanceProvider } from './FinanceProvider.tsx'
+import { AuthTestProvider } from './test-support/AuthTestProvider.tsx'
 
 const HOUSEHOLD_ID = 1
 const BASE_URL = 'http://127.0.0.1:3000'
@@ -34,20 +35,25 @@ function createFetchMock(routes: RouteMap) {
 }
 
 function wrapper({ children }: { children: ReactNode }) {
-  return <FinanceProvider>{children}</FinanceProvider>
+  return (
+    <AuthTestProvider>
+      <FinanceProvider>{children}</FinanceProvider>
+    </AuthTestProvider>
+  )
 }
 
 function strictWrapper({ children }: { children: ReactNode }) {
   return (
-    <StrictMode>
-      <FinanceProvider>{children}</FinanceProvider>
-    </StrictMode>
+    <AuthTestProvider>
+      <StrictMode>
+        <FinanceProvider>{children}</FinanceProvider>
+      </StrictMode>
+    </AuthTestProvider>
   )
 }
 
 beforeEach(() => {
   vi.stubEnv('VITE_API_BASE_URL', BASE_URL)
-  vi.stubEnv('VITE_FINANHOUSE_HOUSEHOLD_ID', String(HOUSEHOLD_ID))
 })
 
 afterEach(() => {

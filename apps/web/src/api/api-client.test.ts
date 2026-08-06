@@ -26,6 +26,16 @@ describe('apiRequest', () => {
     expect(init.method).toBe('GET')
   })
 
+  it('baseUrl vazia (mesma origem, via proxy do Vite) gera uma URL relativa', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: { id: 1 } }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    await apiRequest({ baseUrl: '' }, '/api/v1/auth/session')
+
+    const [url] = fetchMock.mock.calls[0]!
+    expect(url).toBe('/api/v1/auth/session')
+  })
+
   it('serializa a query string, ignorando valores undefined', async () => {
     const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ data: [] }))
     vi.stubGlobal('fetch', fetchMock)

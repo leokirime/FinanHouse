@@ -3,18 +3,20 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import { createDrizzleRepositories } from './create-drizzle-repositories.js'
+import { DrizzleAuthSessionRepository } from './drizzle-auth-session-repository.js'
 import { DrizzleCategoryBudgetRepository } from './drizzle-category-budget-repository.js'
 import { DrizzleCategoryRepository } from './drizzle-category-repository.js'
 import { DrizzleFinancialEntryRepository } from './drizzle-financial-entry-repository.js'
 import { DrizzleHouseholdMemberRepository } from './drizzle-household-member-repository.js'
 import { DrizzleMonthlyPeriodRepository } from './drizzle-monthly-period-repository.js'
+import { DrizzleUserRepository } from './drizzle-user-repository.js'
 import { FakeDrizzleDb } from './test-support/fake-drizzle-db.js'
 import type { DrizzleDb } from './types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 describe('createDrizzleRepositories', () => {
-  it('devolve exatamente as cinco portas existentes no contrato do projeto', () => {
+  it('devolve exatamente as sete portas existentes no contrato do projeto', () => {
     const db = new FakeDrizzleDb([])
     const repositories = createDrizzleRepositories(db as unknown as DrizzleDb)
 
@@ -23,7 +25,9 @@ describe('createDrizzleRepositories', () => {
     expect(repositories.categories).toBeInstanceOf(DrizzleCategoryRepository)
     expect(repositories.members).toBeInstanceOf(DrizzleHouseholdMemberRepository)
     expect(repositories.budgets).toBeInstanceOf(DrizzleCategoryBudgetRepository)
-    expect(Object.keys(repositories).sort()).toEqual(['budgets', 'categories', 'entries', 'members', 'periods'])
+    expect(repositories.users).toBeInstanceOf(DrizzleUserRepository)
+    expect(repositories.authSessions).toBeInstanceOf(DrizzleAuthSessionRepository)
+    expect(Object.keys(repositories).sort()).toEqual(['authSessions', 'budgets', 'categories', 'entries', 'members', 'periods', 'users'])
   })
 
   it('não abre conexão ao ser chamada — apenas compõe repositórios sobre a instância recebida', () => {
@@ -40,6 +44,8 @@ describe('ausência de conexão durante a importação dos repositórios Drizzle
     'drizzle-monthly-period-repository.ts',
     'drizzle-financial-entry-repository.ts',
     'drizzle-category-budget-repository.ts',
+    'drizzle-user-repository.ts',
+    'drizzle-auth-session-repository.ts',
   ]
 
   it.each(files)('%s não chama mysql.createPool/createConnection nem drizzle() no escopo do módulo', (file) => {
@@ -50,7 +56,12 @@ describe('ausência de conexão durante a importação dos repositórios Drizzle
 })
 
 describe('ausência de upsert nos repositórios graváveis', () => {
-  const writableRepositoryFiles = ['drizzle-financial-entry-repository.ts', 'drizzle-monthly-period-repository.ts', 'drizzle-category-budget-repository.ts']
+  const writableRepositoryFiles = [
+    'drizzle-financial-entry-repository.ts',
+    'drizzle-monthly-period-repository.ts',
+    'drizzle-category-budget-repository.ts',
+    'drizzle-auth-session-repository.ts',
+  ]
 
   it.each(writableRepositoryFiles)(
     '%s nunca usa onDuplicateKeyUpdate — escrita sempre escopada por household via INSERT/UPDATE explícitos',

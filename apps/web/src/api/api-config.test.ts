@@ -1,33 +1,46 @@
 import { describe, expect, it } from 'vitest'
-import { ApiConfigError, resolveApiConfig } from './api-config.ts'
+import { ApiConfigError, resolveApiBaseConfig, resolveApiConfig } from './api-config.ts'
 
-const VALID_ENV = { VITE_API_BASE_URL: 'http://127.0.0.1:3000', VITE_FINANHOUSE_HOUSEHOLD_ID: '3' } as ImportMetaEnv
-
-describe('resolveApiConfig', () => {
-  it('resolve base URL (sem barra final) e householdId numérico', () => {
-    const config = resolveApiConfig({ VITE_API_BASE_URL: 'http://127.0.0.1:3000/', VITE_FINANHOUSE_HOUSEHOLD_ID: '3' } as ImportMetaEnv)
-    expect(config).toEqual({ baseUrl: 'http://127.0.0.1:3000', householdId: 3 })
+describe('resolveApiBaseConfig', () => {
+  it('resolve a base URL, sem barra final', () => {
+    expect(resolveApiBaseConfig({ VITE_API_BASE_URL: 'http://127.0.0.1:3000/' } as ImportMetaEnv)).toEqual({ baseUrl: 'http://127.0.0.1:3000' })
   })
 
   it('rejeita quando VITE_API_BASE_URL está ausente', () => {
-    expect(() => resolveApiConfig({ VITE_FINANHOUSE_HOUSEHOLD_ID: '3' } as ImportMetaEnv)).toThrow(ApiConfigError)
+    expect(() => resolveApiBaseConfig({} as ImportMetaEnv)).toThrow(ApiConfigError)
   })
 
   it('rejeita URL malformada', () => {
-    expect(() => resolveApiConfig({ ...VALID_ENV, VITE_API_BASE_URL: 'not-a-url' } as ImportMetaEnv)).toThrow(ApiConfigError)
+    expect(() => resolveApiBaseConfig({ VITE_API_BASE_URL: 'not-a-url' } as ImportMetaEnv)).toThrow(ApiConfigError)
   })
 
   it('rejeita protocolo diferente de http/https', () => {
-    expect(() => resolveApiConfig({ ...VALID_ENV, VITE_API_BASE_URL: 'ftp://127.0.0.1:3000' } as ImportMetaEnv)).toThrow(ApiConfigError)
+    expect(() => resolveApiBaseConfig({ VITE_API_BASE_URL: 'ftp://127.0.0.1:3000' } as ImportMetaEnv)).toThrow(ApiConfigError)
   })
 
-  it('rejeita quando VITE_FINANHOUSE_HOUSEHOLD_ID está ausente', () => {
-    expect(() => resolveApiConfig({ VITE_API_BASE_URL: 'http://127.0.0.1:3000' } as ImportMetaEnv)).toThrow(ApiConfigError)
+  it('VITE_API_BASE_URL vazia (mas presente) resolve para mesma origem — nunca lança', () => {
+    expect(resolveApiBaseConfig({ VITE_API_BASE_URL: '' } as ImportMetaEnv)).toEqual({ baseUrl: '' })
   })
 
-  it('rejeita household ID não numérico, zero, negativo ou decimal', () => {
-    for (const value of ['abc', '0', '-1', '1.5']) {
-      expect(() => resolveApiConfig({ ...VALID_ENV, VITE_FINANHOUSE_HOUSEHOLD_ID: value } as ImportMetaEnv)).toThrow(ApiConfigError)
+  it('VITE_API_BASE_URL só com espaços resolve para mesma origem, igual a vazia', () => {
+    expect(resolveApiBaseConfig({ VITE_API_BASE_URL: '   ' } as ImportMetaEnv)).toEqual({ baseUrl: '' })
+  })
+})
+
+describe('resolveApiConfig', () => {
+  const env = { VITE_API_BASE_URL: 'http://127.0.0.1:3000' } as ImportMetaEnv
+
+  it('combina a base URL com o householdId fornecido (nunca de env, Bloco 19/DT-14)', () => {
+    expect(resolveApiConfig(3, env)).toEqual({ baseUrl: 'http://127.0.0.1:3000', householdId: 3 })
+  })
+
+  it('rejeita householdId zero, negativo, decimal ou não inteiro', () => {
+    for (const value of [0, -1, 1.5, Number.NaN]) {
+      expect(() => resolveApiConfig(value, env)).toThrow(ApiConfigError)
     }
+  })
+
+  it('propaga erro de base URL inválida mesmo com householdId válido', () => {
+    expect(() => resolveApiConfig(3, { VITE_API_BASE_URL: 'not-a-url' } as ImportMetaEnv)).toThrow(ApiConfigError)
   })
 })

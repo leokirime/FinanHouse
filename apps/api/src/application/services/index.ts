@@ -1,3 +1,4 @@
+export * from './auth-services.js'
 export * from './category-budget-services.js'
 export * from './financial-entry-services.js'
 export * from './monthly-period-services.js'

@@ -1,4 +1,4 @@
-import type { categories, categoryBudgets, financialEntries, householdMembers, households, monthlyPeriods, users } from './schema/index.js'
+import type { authSessions, categories, categoryBudgets, financialEntries, householdMembers, households, monthlyPeriods, users } from './schema/index.js'
 
 export type User = typeof users.$inferSelect
 export type NewUser = typeof users.$inferInsert
@@ -20,3 +20,6 @@ export type NewFinancialEntry = typeof financialEntries.$inferInsert
 
 export type CategoryBudget = typeof categoryBudgets.$inferSelect
 export type NewCategoryBudget = typeof categoryBudgets.$inferInsert
+
+export type AuthSessionRow = typeof authSessions.$inferSelect
+export type NewAuthSessionRow = typeof authSessions.$inferInsert

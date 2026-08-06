@@ -13,14 +13,21 @@ npm run dev:web            # comando oficial (raiz do monorepo) — ver "Scripts
 
 ## Configuração local (API real)
 
-Desde o Bloco 17, o frontend exige a API real em execução (`npm run dev:api`, raiz). Configure `apps/web/.env.local` (nunca commitado):
+Desde o Bloco 17, o frontend exige a API real em execução (`npm run dev:api`, raiz). Copie `apps/web/.env.example` para `apps/web/.env.local` (nunca commitado — funciona em qualquer clone novo sem exigir conhecimento tácito):
 
-```env
-VITE_API_BASE_URL=http://127.0.0.1:3000
-VITE_FINANHOUSE_HOUSEHOLD_ID=<ID do household criado pelo bootstrap estrutural>
+```bash
+cp apps/web/.env.example apps/web/.env.local
 ```
 
-`VITE_FINANHOUSE_HOUSEHOLD_ID` não é uma credencial, mas nunca deve ser hardcoded no código-fonte nem presumido como `1` — vem do `householdId` impresso por `npm run db:bootstrap:household` (`apps/api/scripts/db-bootstrap-household.ts`). Sem essas variáveis, a aplicação mostra um erro explícito de configuração (`FinanceStatusScreen`) — nunca cai para dados fictícios.
+```env
+VITE_API_BASE_URL=
+```
+
+Desde o Bloco 19 (DT-14/DT-15), o valor recomendado é **vazio** — significa "mesma origem do frontend". `vite.config.ts` encaminha `/api/*` para a API local (`http://127.0.0.1:3000`) através de um proxy de desenvolvimento (`server.proxy`), então o navegador nunca fala diretamente com a porta da API; do ponto de vista do navegador, toda chamada é same-origin. Isso é obrigatório para o cookie de sessão `HttpOnly`/`SameSite=Lax` funcionar: `localhost` e `127.0.0.1` são hosts diferentes para o navegador, e um cookie `SameSite=Lax` nunca é enviado numa requisição `fetch`/XHR cross-site — apontar `VITE_API_BASE_URL` direto para `http://127.0.0.1:3000` (ou qualquer origem diferente da do frontend) faz o login "funcionar" mas a sessão nunca validar depois. Só use uma URL absoluta em `VITE_API_BASE_URL` se você tiver um motivo técnico específico para não usar o proxy — nesse caso, garanta que o frontend e a API estejam na mesma origem por outro meio.
+
+`vite.config.ts` também fixa `server.host = '127.0.0.1'` (nunca `localhost`, nunca todas as interfaces) — a URL final é sempre `http://127.0.0.1:5173/`.
+
+Desde o Bloco 19 (DT-14), **não existe mais `VITE_FINANHOUSE_HOUSEHOLD_ID`** — o `householdId` vem da sessão autenticada (`GET /api/v1/auth/session`), nunca de uma variável de ambiente ou hardcoded no bundle. Sem `VITE_API_BASE_URL` definida (mesmo vazia), a aplicação mostra um erro explícito de configuração (`FinanceStatusScreen`) — nunca cai para dados fictícios. Para acessar o app é preciso uma sessão real: login com e-mail/senha de um dos dois usuários já existentes (senhas configuradas via `db-configure-initial-passwords.ts`, autorização própria).
 
 ## Scripts
 
@@ -36,19 +43,22 @@ VITE_FINANHOUSE_HOUSEHOLD_ID=<ID do household criado pelo bootstrap estrutural>
 ```
 src/
 ├── styles/               # design tokens, estilos globais e utilitários (Docs/07_design_system/)
-├── api/                   # cliente HTTP real (config, erros, fetch, DTOs, mapeadores) — Bloco 17
-├── state/                 # FinanceProvider real (API); test-support/ = infraestrutura exclusiva de teste
-├── hooks/                 # useFinance/useReadyFinance, useDashboardViewModel, useMutationDialog
+├── api/                   # cliente HTTP real (config, erros, fetch, DTOs, mapeadores, auth-api) — Blocos 17/19
+├── state/                 # AuthProvider + FinanceProvider reais (API); test-support/ = infraestrutura exclusiva de teste
+├── hooks/                 # useAuth/useAuthenticated, useFinance/useReadyFinance, useDashboardViewModel, useMutationDialog
 ├── view-models/           # funções puras que combinam dados + @finanhouse/domain
 ├── utils/                 # formatação (dinheiro/data em pt-BR), competência civil atual
 ├── components/            # layout/, dashboard/, brand/, financial-entries/, comparison/, planning/, history/
-├── pages/                 # DashboardPage, FinancialEntriesPage, ComparisonPage, PlanningPage, HistoryPage
-└── App.tsx                # gateia loading/erro do FinanceProvider; rotas (react-router)
+├── pages/                 # LoginPage, DashboardPage, FinancialEntriesPage, ComparisonPage, PlanningPage, HistoryPage
+├── App.tsx                # gateia loading/erro do FinanceProvider; rotas (react-router)
+└── AppRoot.tsx             # gateia autenticação (AuthProvider) — só monta FinanceProvider/App depois de logado (Bloco 19)
 ```
 
-Status (Bloco 17 — `bloco_17_integracao_direta_do_frontend_com_a_api_real`): frontend integrado diretamente à **API HTTP real** (Bloco 16) — nenhum fallback demonstrativo em runtime (DT-12). O antigo modo demonstrativo (`FinanceDemoProvider`, fixtures) foi removido do runtime; a mesma lógica de transição foi portada para `state/test-support/` como infraestrutura exclusiva de teste. Configuração local via `apps/web/.env.local` (`VITE_API_BASE_URL`, `VITE_FINANHOUSE_HOUSEHOLD_ID`, nunca commitado). Desde o Bloco 18 (DT-13), a Planejamento também consome `.../periods/:referenceMonth/budgets` via um hook dedicado (`hooks/use-period-budgets.ts`, fora de `FinanceProvider` — só a Planejamento usa limites) para definir/editar/remover limites mensais por categoria; a migration `0002_category_budgets.sql` foi aplicada a `finanhouse_dev` em 2026-08-04, com autorização explícita do proprietário.
+Status (Bloco 17 — `bloco_17_integracao_direta_do_frontend_com_a_api_real`): frontend integrado diretamente à **API HTTP real** (Bloco 16) — nenhum fallback demonstrativo em runtime (DT-12). O antigo modo demonstrativo (`FinanceDemoProvider`, fixtures) foi removido do runtime; a mesma lógica de transição foi portada para `state/test-support/` como infraestrutura exclusiva de teste. Configuração local via `apps/web/.env.local` (só `VITE_API_BASE_URL` desde o Bloco 19, nunca commitado). Desde o Bloco 18 (DT-13), a Planejamento também consome `.../periods/:referenceMonth/budgets` via um hook dedicado (`hooks/use-period-budgets.ts`, fora de `FinanceProvider` — só a Planejamento usa limites) para definir/editar/remover limites mensais por categoria; a migration `0002_category_budgets.sql` foi aplicada a `finanhouse_dev` em 2026-08-04, com autorização explícita do proprietário. Desde o Bloco 19 (DT-14), `AppRoot.tsx` exige sessão real (cookie `HttpOnly`) antes de montar `FinanceProvider`/`App` — sem sessão, mostra `LoginPage`; `householdId` vem inteiro da sessão, nunca de env; a migration `0003_auth_sessions.sql` foi aplicada a `finanhouse_dev` e as senhas iniciais dos dois usuários existentes foram configuradas, ambas com autorização explícita e separada do proprietário. O cookie de sessão é first-party: `vite.config.ts` encaminha `/api/*` para a API local via proxy de desenvolvimento — o navegador nunca fala diretamente com a porta da API, evitando o bloqueio de cookies `SameSite=Lax` entre `localhost`/`127.0.0.1` como origens diferentes.
 
 ## Rotas funcionais
+
+Todas as rotas abaixo exigem sessão autenticada (Bloco 19, DT-14) — sem sessão, `AppRoot.tsx` mostra a tela de login (`/login` não é uma rota separada; a própria árvore de rotas é substituída por `LoginPage` até autenticar).
 
 - `/` — visão geral da competência civil atual, dados reais da API.
 - `/movimentacoes` — criação, edição e transições de movimentações reais via API.
