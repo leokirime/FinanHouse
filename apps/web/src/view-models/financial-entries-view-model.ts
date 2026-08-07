@@ -46,8 +46,8 @@ export interface FinancialEntryRowViewModel {
   canMarkPending: boolean
   /** planned|pending → realized */
   canRealize: boolean
-  /** planned|pending → cancelled */
-  canCancel: boolean
+  /** planned|pending|realized (não cancelled) — exclusão real e permanente (Bloco 20; ajustada para também alcançar `realized` após revisão do usuário — competência aberta é responsabilidade do backend) */
+  canDelete: boolean
   /** cancelled → planned */
   canReactivate: boolean
   /** realized → pending (estorno) */
@@ -84,7 +84,7 @@ export function buildFinancialEntryRow(entry: FinancialEntry, categories: Catego
     canEdit: editable,
     canMarkPending: entry.status === 'planned',
     canRealize: entry.status === 'planned' || entry.status === 'pending',
-    canCancel: entry.status === 'planned' || entry.status === 'pending',
+    canDelete: entry.status !== 'cancelled',
     canReactivate: entry.status === 'cancelled',
     canRevertRealization: entry.status === 'realized',
     editBlockedReason: editBlockedReason(entry),

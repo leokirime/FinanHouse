@@ -103,6 +103,15 @@ export class DrizzleFinancialEntryRepository implements FinancialEntryRepository
     }
   }
 
+  /** Remove permanentemente (nunca soft delete) — `WHERE id = ? AND household_id = ?`, nunca remove um registro de outro household mesmo que `id` colida. */
+  async remove(id: number, householdId: number): Promise<void> {
+    try {
+      await this.db.delete(financialEntries).where(and(eq(financialEntries.id, id), eq(financialEntries.householdId, householdId)))
+    } catch (error) {
+      throw translatePersistenceError(error)
+    }
+  }
+
   /**
    * Próximo valor de `AUTO_INCREMENT` da tabela — reserva o ID antes do
    * `save`, seguindo o mesmo contrato do repositório em memória (a porta

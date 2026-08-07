@@ -3,6 +3,7 @@ import { useCallback, useEffect, useReducer, useRef, type ReactNode } from 'reac
 import {
   cancelEntry,
   createEntry,
+  deleteEntry,
   ensurePeriod,
   listCategories,
   listEntries,
@@ -210,6 +211,9 @@ export function FinanceProvider({ children }: FinanceProviderProps) {
               break
             case 'CANCEL':
               await cancelEntry(config, action.id)
+              break
+            case 'DELETE_ENTRY':
+              await deleteEntry(config, action.id)
               break
             case 'REACTIVATE':
               await reactivateEntry(config, action.id)

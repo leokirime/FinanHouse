@@ -31,6 +31,12 @@ export class InMemoryFinancialEntryRepository implements FinancialEntryRepositor
     return this.idCounter++
   }
 
+  /** Remove permanentemente — nunca remove um registro de outro household mesmo que `id` colida. */
+  async remove(id: number, householdId: number): Promise<void> {
+    const entry = this.entries.get(id)
+    if (entry && entry.householdId === householdId) this.entries.delete(id)
+  }
+
   /** Limpa todos os dados — usar entre testes para garantir isolamento. */
   reset(): void {
     this.entries.clear()

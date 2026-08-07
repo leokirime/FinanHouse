@@ -8,7 +8,7 @@ const currentEntries = fixtureFinancialEntries.filter((entry) => entry.periodId 
 describe('FinancialEntryList — responsividade estrutural', () => {
   it('cada célula da tabela carrega data-label, o mecanismo que a CSS usa para empilhar em telas estreitas sem rolagem horizontal', () => {
     renderWithProviders(
-      <FinancialEntryList entries={currentEntries} categories={fixtureCategories} onEdit={() => {}} onRealize={() => {}} onCancel={() => {}} />,
+      <FinancialEntryList entries={currentEntries} categories={fixtureCategories} onEdit={() => {}} onRealize={() => {}} onDelete={() => {}} />,
     )
 
     const cellsWithLabel = document.querySelectorAll('.fh-entry-list__table tbody td[data-label]')
@@ -23,7 +23,7 @@ describe('FinancialEntryList — responsividade estrutural', () => {
 
   it('renderiza uma linha por movimentação recebida', () => {
     renderWithProviders(
-      <FinancialEntryList entries={currentEntries} categories={fixtureCategories} onEdit={() => {}} onRealize={() => {}} onCancel={() => {}} />,
+      <FinancialEntryList entries={currentEntries} categories={fixtureCategories} onEdit={() => {}} onRealize={() => {}} onDelete={() => {}} />,
     )
     const rows = screen.getAllByRole('row')
     // +1 pela linha de cabeçalho.

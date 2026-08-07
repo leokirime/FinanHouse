@@ -49,29 +49,6 @@
   cursor: not-allowed;
 }
 
-.fh-header__cta {
-  background: var(--fh-purple);
-  color: #0a0710;
-  border: none;
-  border-radius: var(--fh-radius-md);
-  padding: var(--fh-space-2) var(--fh-space-5);
-  font-size: 13px;
-  font-weight: 600;
-  box-shadow: var(--fh-shadow-purple);
-  transition: transform var(--fh-transition-fast), box-shadow var(--fh-transition-fast);
-}
-
-.fh-header__cta:hover:not(:disabled) {
-  transform: translateY(-1px);
-}
-
-.fh-header__cta:disabled {
-  background: var(--fh-surface-elevated);
-  color: var(--fh-text-muted);
-  box-shadow: none;
-  cursor: not-allowed;
-}
-
 @media (max-width: 768px) {
   .fh-header {
     padding: var(--fh-space-4);

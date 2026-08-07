@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import type { FinanceReadyState } from '../state/finance-types.ts'
+import { createTestFinanceState, FIXTURE_HOUSEHOLD_ID } from '../state/test-support/finance-test-fixtures.ts'
 import { fireEvent, renderWithProviders, screen, within } from '../test-utils.tsx'
 import { FinancialEntriesPage } from './FinancialEntriesPage.tsx'
 
@@ -54,5 +56,149 @@ describe('FinancialEntriesPage', () => {
 
     expect(screen.getByText(/Informe um valor válido/)).toBeTruthy()
     expect(screen.queryByText('Valor ruim')).toBeNull()
+  })
+})
+
+function rowFor(description: string): HTMLElement {
+  const cell = screen.getByText(description)
+  const row = cell.closest('tr')
+  if (!row) throw new Error(`Linha da tabela não encontrada para "${description}".`)
+  return row
+}
+
+describe('FinancialEntriesPage — exclusão real de lançamentos (Bloco 20)', () => {
+  it('não oferece mais a ação "Cancelar" — "Excluir" aparece para planned/pending/realized', () => {
+    renderWithProviders(<FinancialEntriesPage />)
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).toBeNull()
+    expect(within(rowFor('Viagem de fim de semana (planejada)')).getByRole('button', { name: 'Excluir' })).toBeTruthy()
+  })
+
+  it('oferece "Excluir" também para uma movimentação realizada, em competência aberta (ajuste pós-revisão do Bloco 20)', () => {
+    renderWithProviders(<FinancialEntriesPage />)
+    expect(within(rowFor('Salário — julho')).getByRole('button', { name: 'Excluir' })).toBeTruthy()
+  })
+
+  it('confirmar a exclusão de uma movimentação realizada remove da lista (ajuste pós-revisão do Bloco 20)', () => {
+    renderWithProviders(<FinancialEntriesPage />)
+    fireEvent.click(within(rowFor('Salário — julho')).getByRole('button', { name: 'Excluir' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir lançamento' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByText('Salário — julho')).toBeNull()
+    expect(screen.getByText(/Movimentação excluída/)).toBeTruthy()
+  })
+
+  it('não oferece "Excluir" para uma movimentação cancelada — reativação continua sendo o único caminho de volta', () => {
+    renderWithProviders(<FinancialEntriesPage />)
+    expect(within(rowFor('Consulta odontológica (cancelada)')).queryByRole('button', { name: 'Excluir' })).toBeNull()
+    expect(within(rowFor('Consulta odontológica (cancelada)')).getByRole('button', { name: 'Reativar' })).toBeTruthy()
+  })
+
+  it('clicar em Excluir abre a confirmação, sem excluir imediatamente', () => {
+    renderWithProviders(<FinancialEntriesPage />)
+    fireEvent.click(within(rowFor('Viagem de fim de semana (planejada)')).getByRole('button', { name: 'Excluir' }))
+
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('heading', { name: 'Excluir lançamento?' })).toBeTruthy()
+    expect(within(dialog).getByText(/removido permanentemente do FinanHouse/)).toBeTruthy()
+    expect(screen.getByText('Viagem de fim de semana (planejada)')).toBeTruthy()
+  })
+
+  it('"Voltar" fecha a confirmação sem excluir a movimentação', () => {
+    renderWithProviders(<FinancialEntriesPage />)
+    fireEvent.click(within(rowFor('Viagem de fim de semana (planejada)')).getByRole('button', { name: 'Excluir' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Voltar' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByText('Viagem de fim de semana (planejada)')).toBeTruthy()
+  })
+
+  it('a tecla Escape fecha a confirmação sem excluir a movimentação', () => {
+    renderWithProviders(<FinancialEntriesPage />)
+    fireEvent.click(within(rowFor('Viagem de fim de semana (planejada)')).getByRole('button', { name: 'Excluir' }))
+    fireEvent.keyDown(document, { key: 'Escape' })
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.getByText('Viagem de fim de semana (planejada)')).toBeTruthy()
+  })
+
+  it('confirmar a exclusão remove a movimentação da lista e fecha a confirmação', () => {
+    renderWithProviders(<FinancialEntriesPage />)
+    fireEvent.click(within(rowFor('Viagem de fim de semana (planejada)')).getByRole('button', { name: 'Excluir' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir lançamento' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+    expect(screen.queryByText('Viagem de fim de semana (planejada)')).toBeNull()
+    expect(screen.getByText(/Movimentação excluída/)).toBeTruthy()
+  })
+
+  it('exclusão em competência fechada é rejeitada, mantém a movimentação e mostra o erro no diálogo', () => {
+    const base = createTestFinanceState()
+    const state: FinanceReadyState = {
+      ...base,
+      currentPeriodId: 1,
+      entries: [
+        ...base.entries,
+        {
+          id: 9999,
+          householdId: FIXTURE_HOUSEHOLD_ID,
+          periodId: 1,
+          categoryId: base.categories.find((category) => category.entryType === 'expense')!.id,
+          responsibleMemberId: null,
+          createdByUserId: 1,
+          entryType: 'expense',
+          status: 'planned',
+          description: 'Não deveria ser excluída',
+          expectedAmount: 10000n,
+          actualAmount: null,
+          dueDate: null,
+          realizationDate: null,
+          notes: null,
+        },
+      ],
+    }
+    renderWithProviders(<FinancialEntriesPage />, { financeState: state })
+
+    fireEvent.click(within(rowFor('Não deveria ser excluída')).getByRole('button', { name: 'Excluir' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir lançamento' }))
+
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Não deveria ser excluída')).toBeTruthy()
+  })
+
+  it('exclusão de uma movimentação realizada em competência fechada continua bloqueada (item 4 da correção pós-revisão)', () => {
+    const base = createTestFinanceState()
+    const state: FinanceReadyState = {
+      ...base,
+      currentPeriodId: 1,
+      entries: [
+        ...base.entries,
+        {
+          id: 9998,
+          householdId: FIXTURE_HOUSEHOLD_ID,
+          periodId: 1,
+          categoryId: base.categories.find((category) => category.entryType === 'expense')!.id,
+          responsibleMemberId: null,
+          createdByUserId: 1,
+          entryType: 'expense',
+          status: 'realized',
+          description: 'Realizada em competência fechada',
+          expectedAmount: 10000n,
+          actualAmount: 10000n,
+          dueDate: null,
+          realizationDate: '2026-01-05',
+          notes: null,
+        },
+      ],
+    }
+    renderWithProviders(<FinancialEntriesPage />, { financeState: state })
+
+    fireEvent.click(within(rowFor('Realizada em competência fechada')).getByRole('button', { name: 'Excluir' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Excluir lançamento' }))
+
+    expect(screen.getByRole('dialog')).toBeTruthy()
+    expect(screen.getByRole('alert')).toBeTruthy()
+    expect(screen.getByText('Realizada em competência fechada')).toBeTruthy()
   })
 })

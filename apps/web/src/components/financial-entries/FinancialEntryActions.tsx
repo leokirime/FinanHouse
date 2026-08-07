@@ -6,10 +6,10 @@ export interface FinancialEntryActionsProps {
   row: FinancialEntryRowViewModel
   onEdit: () => void
   onRealize: () => void
-  onCancel: () => void
+  onDelete: () => void
 }
 
-export function FinancialEntryActions({ row, onEdit, onRealize, onCancel }: FinancialEntryActionsProps) {
+export function FinancialEntryActions({ row, onEdit, onRealize, onDelete }: FinancialEntryActionsProps) {
   const { dispatch } = useReadyFinance()
 
   return (
@@ -29,9 +29,9 @@ export function FinancialEntryActions({ row, onEdit, onRealize, onCancel }: Fina
           Realizar
         </button>
       )}
-      {row.canCancel && (
-        <button type="button" onClick={onCancel}>
-          Cancelar
+      {row.canDelete && (
+        <button type="button" className="fh-entry-actions__delete" onClick={onDelete}>
+          Excluir
         </button>
       )}
       {row.canReactivate && (

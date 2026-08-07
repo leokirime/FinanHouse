@@ -3,6 +3,7 @@ import {
   CancelFinancialEntryService,
   CorrectFinancialEntryToPlannedService,
   CreateFinancialEntryService,
+  DeleteFinancialEntryService,
   MarkFinancialEntryAsPendingService,
   RealizeFinancialEntryService,
   ReopenFinancialEntryService,
@@ -156,6 +157,18 @@ export function registerEntryRoutes(fastify: FastifyInstance, repositories: Http
 
       const updated = await new UpdateFinancialEntryService(deps).execute(entryId, changes)
       reply.status(200).send({ data: toFinancialEntryDto(updated) })
+    },
+  )
+
+  fastify.delete(
+    `${HOUSEHOLD_BASE_PATH}/entries/:entryId`,
+    { schema: { params: householdAndEntryIdParamSchema } },
+    async (request: FastifyRequest<{ Params: HouseholdAndEntryIdParams }>, reply) => {
+      const householdId = parseIdParam(request.params.householdId)
+      const entryId = parseIdParam(request.params.entryId)
+      await loadEntryOrNotFound(repositories, householdId, entryId)
+      await new DeleteFinancialEntryService(deps).execute(entryId, householdId)
+      reply.status(204).send()
     },
   )
 

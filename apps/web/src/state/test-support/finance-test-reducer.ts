@@ -1,4 +1,5 @@
 import {
+  assertFinancialEntryDeletable,
   cancelFinancialEntry,
   createFinancialEntry,
   DomainError,
@@ -112,6 +113,17 @@ export function financeTestReducer(state: FinanceState, action: FinanceAction): 
       case 'CANCEL': {
         const existing = findEntryOrThrow(state, action.id)
         return replaceEntry(state, cancelFinancialEntry(existing, findPeriodOrThrow(state, existing.periodId)))
+      }
+
+      case 'DELETE_ENTRY': {
+        const existing = findEntryOrThrow(state, action.id)
+        assertFinancialEntryDeletable(existing, findPeriodOrThrow(state, existing.periodId))
+        return {
+          ...state,
+          entries: state.entries.filter((entry) => entry.id !== action.id),
+          actionError: null,
+          lastActionMessage: 'Movimentação excluída.',
+        }
       }
 
       case 'REACTIVATE': {

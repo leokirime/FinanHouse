@@ -73,4 +73,32 @@ describe('sincronização entre o estado financeiro e o comparativo', () => {
 
     expect(afterProjected).not.toBe(beforeProjected)
   })
+
+  it('remove a despesa excluída dos totais projetados do comparativo (Bloco 20)', () => {
+    const before = createTestFinanceState()
+    const plannedExpense = before.entries.find(
+      (entry) => entry.periodId === before.currentPeriodId && entry.entryType === 'expense' && entry.status === 'planned',
+    )!
+    const beforeProjected = comparisonFrom(before).indicators.find((indicator) => indicator.key === 'projectedBalance')?.base.label
+
+    const after = asReady(financeTestReducer(before, { type: 'DELETE_ENTRY', id: plannedExpense.id }))
+    const afterProjected = comparisonFrom(after).indicators.find((indicator) => indicator.key === 'projectedBalance')?.base.label
+
+    expect(after.entries.find((entry) => entry.id === plannedExpense.id)).toBeUndefined()
+    expect(afterProjected).not.toBe(beforeProjected)
+  })
+
+  it('recalcula a despesa realizada do comparativo após excluir uma movimentação "realized" (correção pós-revisão do Bloco 20)', () => {
+    const before = createTestFinanceState()
+    const realizedExpense = before.entries.find(
+      (entry) => entry.periodId === before.currentPeriodId && entry.entryType === 'expense' && entry.status === 'realized',
+    )!
+    const beforeExpense = comparisonFrom(before).indicators.find((indicator) => indicator.key === 'realizedExpense')?.base.label
+
+    const after = asReady(financeTestReducer(before, { type: 'DELETE_ENTRY', id: realizedExpense.id }))
+    const afterExpense = comparisonFrom(after).indicators.find((indicator) => indicator.key === 'realizedExpense')?.base.label
+
+    expect(after.entries.find((entry) => entry.id === realizedExpense.id)).toBeUndefined()
+    expect(afterExpense).not.toBe(beforeExpense)
+  })
 })

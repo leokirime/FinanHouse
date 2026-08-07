@@ -25,16 +25,8 @@ describe('DashboardHeader', () => {
     expect(screen.getByRole('button', { name: 'Sair' })).toBeTruthy()
   })
 
-  it('o CTA "Nova movimentação" está realmente desabilitado (atributo disabled nativo)', () => {
+  it('não exibe mais o botão "Nova movimentação" no header (Bloco 20 — redundante com a navegação da Sidebar)', () => {
     renderHeader()
-    const cta = screen.getByRole('button', { name: 'Nova movimentação' }) as HTMLButtonElement
-    expect(cta.disabled).toBe(true)
-  })
-
-  it('não simula sucesso ao clicar no CTA desabilitado', () => {
-    renderHeader()
-    const cta = screen.getByRole('button', { name: 'Nova movimentação' })
-    cta.dispatchEvent(new MouseEvent('click', { bubbles: true }))
-    expect(screen.queryByText(/salv/i)).toBeNull()
+    expect(screen.queryByRole('button', { name: 'Nova movimentação' })).toBeNull()
   })
 })

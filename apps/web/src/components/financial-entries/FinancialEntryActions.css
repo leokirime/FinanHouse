@@ -18,3 +18,13 @@
   background: var(--fh-surface);
   color: var(--fh-text);
 }
+
+.fh-entry-actions__delete {
+  border-color: var(--fh-expense);
+  color: var(--fh-expense);
+}
+
+.fh-entry-actions__delete:hover {
+  background: var(--fh-expense);
+  color: #1a0508;
+}

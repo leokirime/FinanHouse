@@ -5,12 +5,13 @@ import { useReadyFinance } from '../../hooks/use-finance.ts'
 import { EntryDialog } from './EntryDialog.tsx'
 import './FinancialEntryForm.css'
 
-export interface CancelEntryDialogProps {
+export interface DeleteEntryDialogProps {
   entry: FinancialEntry
   onClose: () => void
 }
 
-export function CancelEntryDialog({ entry, onClose }: CancelEntryDialogProps) {
+/** Confirmação de exclusão real e permanente (Bloco 20, substitui `CancelEntryDialog` como ação destrutiva). */
+export function DeleteEntryDialog({ entry, onClose }: DeleteEntryDialogProps) {
   const { state, dispatch } = useReadyFinance()
   const titleId = useId()
 
@@ -19,15 +20,15 @@ export function CancelEntryDialog({ entry, onClose }: CancelEntryDialogProps) {
   function handleConfirm() {
     if (state.pendingAction) return
     markSubmitted()
-    dispatch({ type: 'CANCEL', id: entry.id })
+    dispatch({ type: 'DELETE_ENTRY', id: entry.id })
   }
 
   return (
-    <EntryDialog titleId={titleId} title="Cancelar movimentação" onClose={onClose}>
+    <EntryDialog titleId={titleId} title="Excluir lançamento?" onClose={onClose}>
       <div className="fh-entry-form">
         <p>
-          Tem certeza que deseja cancelar <strong>"{entry.description}"</strong>? É possível reativá-la depois, se
-          necessário.
+          Este lançamento será removido permanentemente do FinanHouse. <strong>"{entry.description}"</strong> não
+          poderá ser recuperado depois.
         </p>
 
         {state.actionError && (
@@ -47,7 +48,7 @@ export function CancelEntryDialog({ entry, onClose }: CancelEntryDialogProps) {
             disabled={state.pendingAction}
             aria-busy={state.pendingAction}
           >
-            {state.pendingAction ? 'Cancelando…' : 'Confirmar cancelamento'}
+            {state.pendingAction ? 'Excluindo…' : 'Excluir lançamento'}
           </button>
         </div>
       </div>
