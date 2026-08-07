@@ -237,4 +237,21 @@ describe('DrizzleFinancialEntryRepository', () => {
     // O household original nunca é sobrescrito.
     expect(db.insertedValues).toHaveLength(0)
   })
+
+  it('remove exclui permanentemente uma movimentação do household correto', async () => {
+    const { repository } = repositoryWith([buildRow({ id: 1, householdId: 10 })])
+    await repository.remove(1, 10)
+    expect(await repository.findById(1)).toBeNull()
+  })
+
+  it('remove nunca exclui um registro de outro household, mesmo com o mesmo id', async () => {
+    const { repository } = repositoryWith([buildRow({ id: 1, householdId: 20 })])
+    await repository.remove(1, 10)
+    expect(await repository.findById(1)).not.toBeNull()
+  })
+
+  it('remove propaga PersistenceError sanitizado para falha do banco', async () => {
+    const { repository } = repositoryWith([buildRow({ id: 1, householdId: 10 })], new Error('connect ETIMEDOUT'))
+    await expect(repository.remove(1, 10)).rejects.toBeInstanceOf(PersistenceError)
+  })
 })

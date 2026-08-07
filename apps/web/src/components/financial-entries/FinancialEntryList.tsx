@@ -9,10 +9,10 @@ export interface FinancialEntryListProps {
   categories: Category[]
   onEdit: (entry: FinancialEntry) => void
   onRealize: (entry: FinancialEntry) => void
-  onCancel: (entry: FinancialEntry) => void
+  onDelete: (entry: FinancialEntry) => void
 }
 
-export function FinancialEntryList({ entries, categories, onEdit, onRealize, onCancel }: FinancialEntryListProps) {
+export function FinancialEntryList({ entries, categories, onEdit, onRealize, onDelete }: FinancialEntryListProps) {
   return (
     <div className="fh-card fh-entry-list">
       <table className="fh-entry-list__table">
@@ -51,7 +51,7 @@ export function FinancialEntryList({ entries, categories, onEdit, onRealize, onC
                     row={row}
                     onEdit={() => onEdit(entry)}
                     onRealize={() => onRealize(entry)}
-                    onCancel={() => onCancel(entry)}
+                    onDelete={() => onDelete(entry)}
                   />
                 </td>
               </tr>

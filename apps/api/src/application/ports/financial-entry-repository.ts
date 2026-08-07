@@ -11,4 +11,6 @@ export interface FinancialEntryRepository {
   findByHousehold(householdId: number): Promise<FinancialEntry[]>
   save(entry: FinancialEntry): Promise<FinancialEntry>
   nextId(): Promise<number>
+  /** Remove permanentemente — nunca soft delete. `householdId` sempre no filtro: nunca remove um registro de outro household, mesmo que `id` colida. */
+  remove(id: number, householdId: number): Promise<void>
 }

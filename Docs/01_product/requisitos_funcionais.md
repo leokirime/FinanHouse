@@ -10,7 +10,7 @@ Numere os requisitos para que possam ser referenciados por blocos e prompts (ex.
 
 | ID | Requisito | Prioridade | Status |
 |---|---|---|---|
-| RF-01 | Registrar movimentações financeiras (receitas/despesas) com ciclo de vida previsto → pendente → realizado, ou cancelado | Must | Concluído (regras de domínio, Bloco 05) |
+| RF-01 | Registrar movimentações financeiras (receitas/despesas) com ciclo de vida previsto → pendente → realizado, ou cancelado; permitir exclusão real e permanente de uma movimentação `planned`/`pending` | Must | Regras de domínio (Bloco 05); exclusão real substituindo o cancelamento como ação oferecida na interface, com confirmação obrigatória (Bloco 20) |
 | RF-02 | Organizar movimentações por competência mensal, com abertura/revisão/fechamento | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-03 | Calcular indicadores financeiros por competência (previsto, realizado, pendente, saldo) | Must | Concluído (regras de domínio, Bloco 05) |
 | RF-04 | Comparar duas competências mensais (variações de receita/despesa/saldo, categorias) | Should | Concluído (regras de domínio no Bloco 05; interface em memória no Bloco 08) |
@@ -30,6 +30,8 @@ Para cada requisito, descreva como verificar que ele foi atendido (comportamento
 - [x] Uma movimentação pode ser criada, marcada como pendente, realizada ou cancelada, seguindo as transições documentadas.
 - [x] Uma movimentação `realized` sempre tem valor e data de realização; nenhuma outra tem.
 - [x] Um usuário consegue realizar essas ações pela interface visual — página "Movimentações" (Bloco 07), sobre estado em memória (`Docs/02_architecture/estado_temporario_frontend.md`); persistência real ainda depende de RF-05.
+- [x] **Desde o Bloco 20**: a ação "Cancelar lançamento" deixou de ser oferecida na interface para iniciar um novo cancelamento — no lugar, uma movimentação de uma competência aberta pode ser **excluída permanentemente** ("Excluir lançamento"), mediante confirmação explícita em diálogo (nunca `window.confirm`, nunca exclusão direta no clique). Diferente do cancelamento, a exclusão alcança `planned`, `pending` **e também `realized`** — um lançamento marcado como realizado por engano continua podendo ser corrigido pela exclusão, sem exigir estorno prévio; só `cancelled` fica fora do conjunto elegível (reativação é o único caminho de volta). A exclusão remove o registro do banco (`DELETE`, nunca soft delete) e atualiza Dashboard/Comparativo/Planejamento/Histórico sem recarregar a página.
+- [x] O status histórico `cancelled`, a transição `cancelFinancialEntry` e a ação "Reativar" (`cancelled → planned`) continuam funcionais para movimentações já canceladas antes do Bloco 20 — apenas o caminho de UI que **inicia** um novo cancelamento foi removido; nenhuma migration/remoção de enum foi feita.
 
 ### RF-02 — Competência mensal
 - [x] Uma competência pode ser aberta, colocada em revisão, fechada e reaberta, seguindo as transições documentadas.

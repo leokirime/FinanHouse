@@ -28,6 +28,7 @@ export type FinanceAction =
   | { type: 'MARK_PENDING'; id: number }
   | { type: 'REALIZE'; id: number; actualAmount: Money; realizationDate: string }
   | { type: 'CANCEL'; id: number }
+  | { type: 'DELETE_ENTRY'; id: number }
   | { type: 'REACTIVATE'; id: number }
   | { type: 'REVERT_REALIZATION'; id: number }
   | { type: 'CLEAR_ERROR' }

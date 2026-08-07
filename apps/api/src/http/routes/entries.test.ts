@@ -481,6 +481,305 @@ describe('rotas de movimentações', () => {
     expect(response.json().data.status).toBe('planned')
   })
 
+  it('DELETE .../entries/:entryId remove permanentemente uma movimentação "planned" (204)', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    await repositories.entries.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 100,
+      entryType: 'expense',
+      status: 'planned',
+      description: 'Aluguel',
+      expectedAmount: parseMoney('1000.00'),
+      actualAmount: null,
+      dueDate: null,
+      realizationDate: null,
+      notes: null,
+    })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(204)
+    expect(await repositories.entries.findById(1)).toBeNull()
+  })
+
+  it('DELETE .../entries/:entryId remove permanentemente uma movimentação "pending" (204)', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    await repositories.entries.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 100,
+      entryType: 'expense',
+      status: 'pending',
+      description: 'Aluguel',
+      expectedAmount: parseMoney('1000.00'),
+      actualAmount: null,
+      dueDate: null,
+      realizationDate: null,
+      notes: null,
+    })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(204)
+    expect(await repositories.entries.findById(1)).toBeNull()
+  })
+
+  it('DELETE .../entries/:entryId inexistente retorna 404', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/999` })
+    expect(response.statusCode).toBe(404)
+  })
+
+  it('DELETE .../entries/:entryId de outro household retorna 404 (isolamento) e não remove o registro', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    repositories.members.seed([
+      { id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' },
+      { id: 2, householdId: OTHER_HOUSEHOLD_ID, userId: 200, role: 'owner', status: 'active' },
+    ])
+    await repositories.entries.save({
+      id: 1,
+      householdId: OTHER_HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 200,
+      entryType: 'expense',
+      status: 'planned',
+      description: 'De outro household',
+      expectedAmount: parseMoney('50.00'),
+      actualAmount: null,
+      dueDate: null,
+      realizationDate: null,
+      notes: null,
+    })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(404)
+    expect(await repositories.entries.findById(1)).not.toBeNull()
+  })
+
+  it('DELETE .../entries/:entryId de outro household continua impossível mesmo para uma movimentação "realized" (404, não remove)', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    repositories.members.seed([
+      { id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' },
+      { id: 2, householdId: OTHER_HOUSEHOLD_ID, userId: 200, role: 'owner', status: 'active' },
+    ])
+    await repositories.entries.save({
+      id: 1,
+      householdId: OTHER_HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 200,
+      entryType: 'expense',
+      status: 'realized',
+      description: 'Realizada de outro household',
+      expectedAmount: parseMoney('50.00'),
+      actualAmount: parseMoney('50.00'),
+      dueDate: null,
+      realizationDate: '2026-07-10',
+      notes: null,
+    })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(404)
+    expect(await repositories.entries.findById(1)).not.toBeNull()
+  })
+
+  it('DELETE .../entries/:entryId sem sessão retorna 401 e não remove o registro', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    await repositories.entries.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 100,
+      entryType: 'expense',
+      status: 'planned',
+      description: 'Aluguel',
+      expectedAmount: parseMoney('1000.00'),
+      actualAmount: null,
+      dueDate: null,
+      realizationDate: null,
+      notes: null,
+    })
+    app = buildTestApp({ repositories, autoAuth: false })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(401)
+    expect(await repositories.entries.findById(1)).not.toBeNull()
+  })
+
+  it('DELETE .../entries/:entryId em competência fechada retorna 409 sanitizado (DOMAIN_CONFLICT) e não remove', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    await repositories.entries.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 100,
+      entryType: 'expense',
+      status: 'planned',
+      description: 'Aluguel',
+      expectedAmount: parseMoney('1000.00'),
+      actualAmount: null,
+      dueDate: null,
+      realizationDate: null,
+      notes: null,
+    })
+    await repositories.periods.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      referenceMonth: '2026-07-01',
+      status: 'closed',
+      closedAt: '2026-07-20',
+      closedByUserId: 100,
+    })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(409)
+    expect(response.json().error.code).toBe('DOMAIN_CONFLICT')
+    expect(await repositories.entries.findById(1)).not.toBeNull()
+  })
+
+  it('DELETE .../entries/:entryId remove permanentemente uma movimentação "realized" em competência aberta (204) — ajuste pós-revisão do Bloco 20', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    await repositories.entries.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 100,
+      entryType: 'expense',
+      status: 'realized',
+      description: 'Aluguel',
+      expectedAmount: parseMoney('1000.00'),
+      actualAmount: parseMoney('1000.00'),
+      dueDate: null,
+      realizationDate: '2026-07-10',
+      notes: null,
+    })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(204)
+    expect(await repositories.entries.findById(1)).toBeNull()
+  })
+
+  it('DELETE .../entries/:entryId com status "realized" em competência fechada retorna 409 sanitizado (DOMAIN_CONFLICT) e não remove', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    await repositories.entries.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 100,
+      entryType: 'expense',
+      status: 'realized',
+      description: 'Aluguel',
+      expectedAmount: parseMoney('1000.00'),
+      actualAmount: parseMoney('1000.00'),
+      dueDate: null,
+      realizationDate: '2026-07-10',
+      notes: null,
+    })
+    await repositories.periods.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      referenceMonth: '2026-07-01',
+      status: 'closed',
+      closedAt: '2026-07-20',
+      closedByUserId: 100,
+    })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(409)
+    expect(response.json().error.code).toBe('DOMAIN_CONFLICT')
+    expect(await repositories.entries.findById(1)).not.toBeNull()
+  })
+
+  it('DELETE .../entries/:entryId com status "cancelled" retorna 409 sanitizado (DOMAIN_CONFLICT) e não remove', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    await repositories.entries.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 100,
+      entryType: 'expense',
+      status: 'cancelled',
+      description: 'Aluguel',
+      expectedAmount: parseMoney('1000.00'),
+      actualAmount: null,
+      dueDate: null,
+      realizationDate: null,
+      notes: null,
+    })
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(409)
+    expect(response.json().error.code).toBe('DOMAIN_CONFLICT')
+    expect(await repositories.entries.findById(1)).not.toBeNull()
+  })
+
+  it('erro de conexão do repositório em remove() vira 503 sanitizado, nunca 500 opaco', async () => {
+    const repositories = buildTestRepositories()
+    await seedBaseFixtures(repositories)
+    await repositories.entries.save({
+      id: 1,
+      householdId: HOUSEHOLD_ID,
+      periodId: 1,
+      categoryId: 1,
+      responsibleMemberId: null,
+      createdByUserId: 100,
+      entryType: 'expense',
+      status: 'planned',
+      description: 'Aluguel',
+      expectedAmount: parseMoney('1000.00'),
+      actualAmount: null,
+      dueDate: null,
+      realizationDate: null,
+      notes: null,
+    })
+    repositories.entries.remove = async () => {
+      throw new DatabaseConnectionError('Falha de conexão: host inacessível.')
+    }
+    app = buildTestApp({ repositories })
+
+    const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
+    expect(response.statusCode).toBe(503)
+    expect(response.json().error.code).toBe('DEPENDENCY_UNAVAILABLE')
+  })
+
   it('transição inválida (realize sem estar planned/pending) retorna erro de regra de domínio sanitizado (não 500)', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)

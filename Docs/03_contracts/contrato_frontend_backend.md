@@ -1,6 +1,6 @@
 # Contrato Frontend-Backend
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-04
+> Projeto: FinanHouse · Atualizado em: 2026-08-06
 
 > Este contrato é a fonte da verdade da interface entre frontend e backend. Mudar um endpoint sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Para o formato exato de rotas/DTOs/erros, ver `Docs/03_contracts/contrato_api_http.md` (Bloco 16) — este documento cobre especificamente como o **frontend** (`apps/web`, Bloco 17) consome essa API, não repete o wire format.
 
@@ -31,7 +31,8 @@ Consumidos pelo frontend (subconjunto de `contrato_api_http.md`, seção 4):
 | GET | `.../periods` | Carga inicial |
 | PUT | `.../periods/:referenceMonth` | Cria a competência civil atual quando ainda não existe (idempotente) |
 | GET | `.../entries` | Carga inicial e recarga após toda mutação |
-| POST/PUT/POST transições | `.../entries/**` | `dispatch()` do `FinanceProvider` (criar, editar, marcar pendente, realizar, cancelar, reativar, estornar) — `createdByUserId` nunca é enviado, vem da sessão (DT-14) |
+| POST/PUT/POST transições | `.../entries/**` | `dispatch()` do `FinanceProvider` (criar, editar, marcar pendente, realizar, reativar, estornar) — `createdByUserId` nunca é enviado, vem da sessão (DT-14) |
+| DELETE | `.../entries/:entryId` | **Bloco 20** — `deleteEntry()`/ação `DELETE_ENTRY` do `FinanceProvider`, disparada por `DeleteEntryDialog` após confirmação explícita. Substitui `POST .../cancel` como ação destrutiva iniciada pela interface — o endpoint `/cancel` continua existindo no backend (histórico/reativação), mas nenhum componente do frontend o chama mais. |
 | GET | `.../periods/:referenceMonth/budgets` | Carga dos limites por categoria da competência selecionada (`usePeriodBudgets`, hook dedicado a `PlanningPage` — fora de `FinanceProvider`) |
 | PUT | `.../periods/:referenceMonth/budgets/:categoryId` | `createOrUpdate()` de `usePeriodBudgets` — define/edita um limite (idempotente) |
 | DELETE | `.../periods/:referenceMonth/budgets/:categoryId` | `remove()` de `usePeriodBudgets` — remove um limite |

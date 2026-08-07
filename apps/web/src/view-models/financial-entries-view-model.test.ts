@@ -93,21 +93,24 @@ describe('buildFinancialEntryRow', () => {
     expect(plannedRow.canEdit).toBe(true)
     expect(plannedRow.canMarkPending).toBe(true)
     expect(plannedRow.canRealize).toBe(true)
-    expect(plannedRow.canCancel).toBe(true)
+    expect(plannedRow.canDelete).toBe(true)
 
     const pendingRow = buildFinancialEntryRow(pending, fixtureCategories)
     expect(pendingRow.canEdit).toBe(true)
     expect(pendingRow.canMarkPending).toBe(false)
     expect(pendingRow.canRealize).toBe(true)
-    expect(pendingRow.canCancel).toBe(true)
+    expect(pendingRow.canDelete).toBe(true)
 
     const realizedRow = buildFinancialEntryRow(realized, fixtureCategories)
     expect(realizedRow.canEdit).toBe(false)
     expect(realizedRow.editBlockedReason).toBeTruthy()
     expect(realizedRow.canRevertRealization).toBe(true)
+    // Bloco 20 (ajuste pós-revisão): "realized" pode ser excluída — só a competência aberta é exigida, verificada pelo backend.
+    expect(realizedRow.canDelete).toBe(true)
 
     const cancelledRow = buildFinancialEntryRow(cancelled, fixtureCategories)
     expect(cancelledRow.canEdit).toBe(false)
     expect(cancelledRow.canReactivate).toBe(true)
+    expect(cancelledRow.canDelete).toBe(false)
   })
 })

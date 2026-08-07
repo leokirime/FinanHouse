@@ -1,4 +1,5 @@
 import {
+  assertFinancialEntryDeletable,
   CategoryNotFoundError,
   type CreateFinancialEntryInput,
   type FinancialEntry,
@@ -113,6 +114,24 @@ export class CancelFinancialEntryService {
     const period = await this.deps.periods.findById(entry.periodId)
     if (!period) throw new PeriodNotFoundError(`Competência ${entry.periodId} não encontrada.`)
     return this.deps.entries.save(cancelFinancialEntry(entry, period))
+  }
+}
+
+/**
+ * Exclusão real e permanente (Bloco 20, substitui o cancelamento como ação
+ * destrutiva disponível ao usuário) — nunca soft delete. Mesmas precondições
+ * de `CancelFinancialEntryService` (`assertFinancialEntryDeletable`, mesmo
+ * conjunto de status de origem, mesma regra de competência).
+ */
+export class DeleteFinancialEntryService {
+  constructor(private readonly deps: FinancialEntryServiceDependencies) {}
+
+  async execute(id: number, householdId: number): Promise<void> {
+    const entry = await loadEntry(this.deps, id)
+    const period = await this.deps.periods.findById(entry.periodId)
+    if (!period) throw new PeriodNotFoundError(`Competência ${entry.periodId} não encontrada.`)
+    assertFinancialEntryDeletable(entry, period)
+    await this.deps.entries.remove(id, householdId)
   }
 }
 

@@ -134,6 +134,11 @@ export const revertEntryRealization = (config: ApiConfig, entryId: number, signa
 
 export const reactivateEntry = (config: ApiConfig, entryId: number, signal?: AbortSignal) => transitionEntry(config, entryId, 'reopen', undefined, signal)
 
+/** Exclusão real e permanente (Bloco 20, substitui o cancelamento como ação destrutiva disponível ao usuário) — nunca soft delete. */
+export async function deleteEntry(config: ApiConfig, entryId: number, signal?: AbortSignal): Promise<void> {
+  await apiRequest<void>(config, scopedPath(config, `/entries/${entryId}`), { method: 'DELETE', signal })
+}
+
 export async function listBudgets(config: ApiConfig, referenceMonth: string, signal?: AbortSignal): Promise<CategoryBudget[]> {
   const dtos = await apiRequest<CategoryBudgetDto[]>(config, scopedPath(config, `/periods/${referenceMonth}/budgets`), { signal })
   return dtos.map(categoryBudgetFromDto)

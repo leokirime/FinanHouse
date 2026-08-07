@@ -1,8 +1,8 @@
 # Contrato da API HTTP
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-04
+> Projeto: FinanHouse · Atualizado em: 2026-08-06
 
-> Este contrato descreve a API HTTP implementada a partir do Bloco 16 (DT-11), estendida nos Blocos 17 (movimentações reais no frontend), 18 (limites mensais por categoria, DT-13) e 19 (autenticação real e sessão, DT-14). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (Bloco 17 em diante — como o frontend consome esta API, sem repetir o wire format) nem com `Docs/03_contracts/contrato_autenticacao.md` (fluxo completo de login/sessão, Bloco 19).
+> Este contrato descreve a API HTTP implementada a partir do Bloco 16 (DT-11), estendida nos Blocos 17 (movimentações reais no frontend), 18 (limites mensais por categoria, DT-13), 19 (autenticação real e sessão, DT-14) e 20 (exclusão real de movimentações). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (Bloco 17 em diante — como o frontend consome esta API, sem repetir o wire format) nem com `Docs/03_contracts/contrato_autenticacao.md` (fluxo completo de login/sessão, Bloco 19).
 
 ## 1. Objetivo
 
@@ -70,12 +70,13 @@ Todas as demais rotas abaixo (`/api/v1/households/:householdId/...`) exigem sess
 | GET | `.../entries/:entryId` | Busca por ID. 404 se não existir ou pertencer a outro household. |
 | POST | `.../entries` | Cria (`CreateFinancialEntryService`). 201. `createdByUserId` não faz parte do corpo desde o Bloco 19 (DT-14), vem da sessão autenticada. |
 | PUT | `.../entries/:entryId` | Atualiza campos permitidos (`UpdateFinancialEntryService`). 200. |
+| DELETE | `.../entries/:entryId` | **Bloco 20** — exclusão real e permanente (nunca soft delete): `DeleteFinancialEntryService` remove a linha do banco (`WHERE id = ? AND household_id = ?`). 204. Elegibilidade (`assertFinancialEntryDeletable`): competência precisa estar `open`; status pode ser `planned`, `pending` **ou `realized`** — só `cancelled` é bloqueado (reativação continua sendo o único caminho de volta para um registro já cancelado). 404 se não existir ou pertencer a outro household (mesma checagem de `loadEntryOrNotFound`). 409 `DOMAIN_CONFLICT` para competência `closed`/`review` ou status `cancelled`. Esta é a ação destrutiva oferecida pela interface desde o Bloco 20 — substitui `POST .../cancel` como fluxo iniciado pelo usuário (o endpoint `/cancel` abaixo continua existindo e funcional, só não é mais acionado por nenhum botão da UI). |
 | POST | `.../entries/:entryId/mark-pending` | `planned` → `pending`. |
 | POST | `.../entries/:entryId/realize` | `planned`/`pending` → `realized`. Corpo: `{ actualAmount, realizationDate }`. |
-| POST | `.../entries/:entryId/cancel` | `planned`/`pending` → `cancelled`. |
+| POST | `.../entries/:entryId/cancel` | `planned`/`pending` → `cancelled`. Mantido por compatibilidade histórica (registros já cancelados, reativação) — não é mais iniciado pela interface desde o Bloco 20 (ver `DELETE .../entries/:entryId` acima). |
 | POST | `.../entries/:entryId/revert-realization` | `realized` → `pending` (estorno). |
 | POST | `.../entries/:entryId/correct-to-planned` | `pending` → `planned` (correção). |
-| POST | `.../entries/:entryId/reopen` | `cancelled` → `planned` (reativação). |
+| POST | `.../entries/:entryId/reopen` | `cancelled` → `planned` (reativação). Continua sendo o único caminho de volta para uma movimentação `cancelled` — permanece intacto. |
 
 ### Limites mensais por categoria (Bloco 18, DT-13)
 

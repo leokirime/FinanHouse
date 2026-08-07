@@ -75,6 +75,34 @@ describe('sincronização entre o estado financeiro e o histórico', () => {
     expect(afterCounts.cancelled).toBe(beforeCounts.cancelled + 1)
   })
 
+  it('remove a movimentação excluída do histórico — não vira "cancelled", desaparece (Bloco 20)', () => {
+    const before = createTestFinanceState()
+    const plannedExpense = before.entries.find(
+      (entry) => entry.periodId === before.currentPeriodId && entry.entryType === 'expense' && entry.status === 'planned',
+    )!
+    const beforeCount = historyFrom(before).entries.length
+
+    const after = asReady(financeTestReducer(before, { type: 'DELETE_ENTRY', id: plannedExpense.id }))
+    const afterHistory = historyFrom(after)
+
+    expect(afterHistory.entries.length).toBe(beforeCount - 1)
+    expect(afterHistory.entries.some((entry) => entry.id === plannedExpense.id)).toBe(false)
+  })
+
+  it('recalcula a receita realizada do histórico após excluir uma movimentação "realized" (correção pós-revisão do Bloco 20)', () => {
+    const before = createTestFinanceState()
+    const realizedIncome = before.entries.find(
+      (entry) => entry.periodId === before.currentPeriodId && entry.entryType === 'income' && entry.status === 'realized',
+    )!
+    const beforeIncome = historyFrom(before).summary!.realizedIncome.raw
+
+    const after = asReady(financeTestReducer(before, { type: 'DELETE_ENTRY', id: realizedIncome.id }))
+    const afterHistory = historyFrom(after)
+
+    expect(afterHistory.entries.some((entry) => entry.id === realizedIncome.id)).toBe(false)
+    expect(afterHistory.summary!.realizedIncome.raw).toBe(beforeIncome - realizedIncome.actualAmount!)
+  })
+
   it('mesma fonte de estado: dashboard, Movimentações, Comparativo, Planejamento e Histórico derivam do mesmo FinanceReadyState', () => {
     const state = createTestFinanceState()
     expect(historyFrom(state).entries.length).toBeGreaterThan(0)

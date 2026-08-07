@@ -258,6 +258,31 @@ export function cancelFinancialEntry(entry: FinancialEntry, period: MonthlyPerio
   return updated
 }
 
+/**
+ * Valida se uma movimentação pode ser excluída (removida permanentemente,
+ * não uma transição de status) — nunca transforma nem retorna a entidade,
+ * apenas autoriza ou rejeita; quem chama é responsável por de fato remover
+ * do repositório. Competência precisa estar aberta (mesma regra de
+ * `cancelFinancialEntry`/`assertPeriodAllowsEntryChanges`, sem ajuste de
+ * revisão). Diferente do cancelamento, `realized` TAMBÉM pode ser excluída
+ * diretamente: um lançamento incorretamente marcado como realizado ainda
+ * pode ter sido um erro de cadastro, e a competência aberta é justamente o
+ * período em que corrigir esse tipo de engano é esperado — não faz sentido
+ * obrigar um estorno prévio só para depois excluir. `cancelled` permanece
+ * fora do conjunto elegível: um registro já cancelado tem "Reativar" como o
+ * único caminho de volta (mesmo raciocínio de sempre passar por uma
+ * operação nomeada explícita, nunca uma exclusão direta de um estado que já
+ * é, em si, o resultado de uma ação destrutiva anterior).
+ */
+export function assertFinancialEntryDeletable(entry: FinancialEntry, period: MonthlyPeriod): void {
+  assertPeriodAllowsEntryChanges(period)
+  if (entry.status === 'cancelled') {
+    throw new InvalidStatusTransitionError(
+      `Uma movimentação "${entry.status}" não pode ser excluída diretamente. Status atual: "${entry.status}".`,
+    )
+  }
+}
+
 /** realized → pending (estorno explícito). Limpa actual_amount/realization_date. */
 export function revertFinancialEntryRealization(entry: FinancialEntry, period: MonthlyPeriod): FinancialEntry {
   assertPeriodAllowsEntryChanges(period, { allowReviewAdjustment: true })

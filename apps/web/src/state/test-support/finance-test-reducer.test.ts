@@ -174,6 +174,50 @@ describe('financeTestReducer', () => {
     expect(updated?.actualAmount).toBeNull()
   })
 
+  it('exclui permanentemente uma movimentação planned (Bloco 20)', () => {
+    const state = createTestFinanceState()
+    const planned = currentPlanned(state)
+    const next = reduce(state, { type: 'DELETE_ENTRY', id: planned.id })
+    expect(next.actionError).toBeNull()
+    expect(next.entries).toHaveLength(state.entries.length - 1)
+    expect(next.entries.find((entry) => entry.id === planned.id)).toBeUndefined()
+  })
+
+  it('exclui permanentemente uma movimentação pending (Bloco 20)', () => {
+    const state = createTestFinanceState()
+    const pending = currentPending(state)
+    const next = reduce(state, { type: 'DELETE_ENTRY', id: pending.id })
+    expect(next.actionError).toBeNull()
+    expect(next.entries.find((entry) => entry.id === pending.id)).toBeUndefined()
+  })
+
+  it('exclui permanentemente uma movimentação realized em competência aberta (ajuste pós-revisão do Bloco 20)', () => {
+    const state = createTestFinanceState()
+    const realized = currentRealized(state)
+    const next = reduce(state, { type: 'DELETE_ENTRY', id: realized.id })
+    expect(next.actionError).toBeNull()
+    expect(next.entries).toHaveLength(state.entries.length - 1)
+    expect(next.entries.find((entry) => entry.id === realized.id)).toBeUndefined()
+  })
+
+  it('impede exclusão de uma movimentação realized em competência fechada — nada é removido', () => {
+    const base = createTestFinanceState()
+    const realized = currentRealized(base)
+    const state: FinanceReadyState = { ...base, periods: base.periods.map((period) => (period.id === realized.periodId ? { ...period, status: 'closed' as const } : period)) }
+    const next = reduce(state, { type: 'DELETE_ENTRY', id: realized.id })
+    expect(next.actionError).toBeTruthy()
+    expect(next.entries).toHaveLength(state.entries.length)
+    expect(next.entries.find((entry) => entry.id === realized.id)).toBeDefined()
+  })
+
+  it('impede exclusão de uma movimentação cancelled — nada é removido', () => {
+    const state = createTestFinanceState()
+    const cancelled = currentCancelled(state)
+    const next = reduce(state, { type: 'DELETE_ENTRY', id: cancelled.id })
+    expect(next.actionError).toBeTruthy()
+    expect(next.entries.find((entry) => entry.id === cancelled.id)).toBeDefined()
+  })
+
   it('reativa uma movimentação cancelled', () => {
     const state = createTestFinanceState()
     const cancelled = currentCancelled(state)

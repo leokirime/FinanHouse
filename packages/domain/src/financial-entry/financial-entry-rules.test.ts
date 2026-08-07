@@ -18,6 +18,7 @@ import { parseMoney } from '../money/money.js'
 import type { MonthlyPeriod } from '../monthly-period/monthly-period.js'
 import type { FinancialEntry } from './financial-entry.js'
 import {
+  assertFinancialEntryDeletable,
   assertFinancialEntryRealizationInvariants,
   assertValidDate,
   cancelFinancialEntry,
@@ -306,6 +307,67 @@ describe('transições proibidas', () => {
     const period = makeOpenPeriod()
     const entry = createValidEntry({}, period)
     expect(() => reactivateFinancialEntry(entry, period)).toThrow(InvalidStatusTransitionError)
+  })
+})
+
+/**
+ * `assertFinancialEntryDeletable` (Bloco 20, ajustada no mesmo bloco após
+ * revisão): a competência precisa estar aberta, mesma regra de
+ * `cancelFinancialEntry`/`assertPeriodAllowsEntryChanges`. Diferente do
+ * cancelamento, `realized` TAMBÉM é elegível — só `cancelled` permanece
+ * bloqueada (reativação é o único caminho de volta para um registro já
+ * cancelado).
+ */
+describe('assertFinancialEntryDeletable', () => {
+  it('permite excluir uma movimentação "planned"', () => {
+    const period = makeOpenPeriod()
+    const entry = createValidEntry({}, period)
+    expect(() => assertFinancialEntryDeletable(entry, period)).not.toThrow()
+  })
+
+  it('permite excluir uma movimentação "pending"', () => {
+    const period = makeOpenPeriod()
+    const pending = markFinancialEntryAsPending(createValidEntry({}, period), period)
+    expect(() => assertFinancialEntryDeletable(pending, period)).not.toThrow()
+  })
+
+  it('permite excluir uma movimentação "realized" em competência aberta (Bloco 20 — ajuste pós-revisão)', () => {
+    const period = makeOpenPeriod()
+    const realized = realizeFinancialEntry(createValidEntry({}, period), period, {
+      actualAmount: parseMoney('250.00'),
+      realizationDate: '2026-07-15',
+    })
+    expect(() => assertFinancialEntryDeletable(realized, period)).not.toThrow()
+  })
+
+  it('rejeita excluir uma movimentação "cancelled" — reativação continua sendo o único caminho de volta', () => {
+    const period = makeOpenPeriod()
+    const cancelled = cancelFinancialEntry(createValidEntry({}, period), period)
+    expect(() => assertFinancialEntryDeletable(cancelled, period)).toThrow(InvalidStatusTransitionError)
+  })
+
+  it('bloqueia exclusão em competência fechada, mesmo para "realized"', () => {
+    const closedPeriod = makeOpenPeriod({ status: 'closed' })
+    const realized: FinancialEntry = { ...createValidEntry(), status: 'realized', actualAmount: parseMoney('250.00'), realizationDate: '2026-07-15' }
+    expect(() => assertFinancialEntryDeletable(realized, closedPeriod)).toThrow(ClosedPeriodError)
+  })
+
+  it('bloqueia exclusão em competência fechada', () => {
+    const closedPeriod = makeOpenPeriod({ status: 'closed' })
+    const entry = createValidEntry()
+    expect(() => assertFinancialEntryDeletable(entry, closedPeriod)).toThrow(ClosedPeriodError)
+  })
+
+  it('bloqueia exclusão em competência em revisão (mesma regra de cancelFinancialEntry, sem ajuste explícito)', () => {
+    const reviewPeriod = makeOpenPeriod({ status: 'review' })
+    const entry = createValidEntry({}, makeOpenPeriod())
+    expect(() => assertFinancialEntryDeletable(entry, reviewPeriod)).toThrow(PeriodInReviewError)
+  })
+
+  it('permite exclusão em competência aberta', () => {
+    const period = makeOpenPeriod()
+    const entry = createValidEntry({}, period)
+    expect(() => assertFinancialEntryDeletable(entry, period)).not.toThrow()
   })
 })
 

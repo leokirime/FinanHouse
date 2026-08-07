@@ -76,6 +76,34 @@ describe('sincronização entre o estado financeiro e o planejamento (movimenta�
     expect(afterLeisure).toBeUndefined()
   })
 
+  it('remove a categoria da distribuição quando a única despesa é excluída e não há limite (Bloco 20)', () => {
+    const before = createTestFinanceState()
+    const plannedExpense = before.entries.find(
+      (entry) => entry.periodId === before.currentPeriodId && entry.entryType === 'expense' && entry.status === 'planned',
+    )!
+    expect(plannedExpense.categoryId).toBe(CATEGORY_LEISURE)
+
+    const after = asReady(financeTestReducer(before, { type: 'DELETE_ENTRY', id: plannedExpense.id }))
+    const afterLeisure = planningFrom(after).rows.find((row) => row.categoryId === CATEGORY_LEISURE)
+
+    expect(after.entries.find((entry) => entry.id === plannedExpense.id)).toBeUndefined()
+    expect(afterLeisure).toBeUndefined()
+  })
+
+  it('reduz o realizado da distribuição após excluir uma movimentação "realized" (correção pós-revisão do Bloco 20)', () => {
+    const before = createTestFinanceState()
+    const realizedFood = before.entries.find(
+      (entry) => entry.periodId === before.currentPeriodId && entry.entryType === 'expense' && entry.status === 'realized' && entry.categoryId === CATEGORY_FOOD,
+    )!
+    const beforeFood = planningFrom(before).rows.find((row) => row.categoryId === CATEGORY_FOOD)!
+
+    const after = asReady(financeTestReducer(before, { type: 'DELETE_ENTRY', id: realizedFood.id }))
+    const afterFood = planningFrom(after).rows.find((row) => row.categoryId === CATEGORY_FOOD)!
+
+    expect(after.entries.find((entry) => entry.id === realizedFood.id)).toBeUndefined()
+    expect(afterFood.realized.raw).toBe(beforeFood.realized.raw - realizedFood.actualAmount!)
+  })
+
   it('receita planejada aparece separadamente das despesas, via buildEntryRows("income")', () => {
     const state = createTestFinanceState()
     const incomePlanned = buildEntryRows(state.entries, state.categories, state.currentPeriodId, 'planned', 'income')

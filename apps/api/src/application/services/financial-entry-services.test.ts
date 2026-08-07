@@ -13,6 +13,7 @@ import { InMemoryMonthlyPeriodRepository } from '../../infrastructure/repositori
 import {
   CancelFinancialEntryService,
   CreateFinancialEntryService,
+  DeleteFinancialEntryService,
   MarkFinancialEntryAsPendingService,
   RealizeFinancialEntryService,
   ReopenFinancialEntryService,
@@ -135,5 +136,146 @@ describe('serviços de movimentação (repositórios em memória)', () => {
     })
 
     await expect(new CancelFinancialEntryService(deps).execute(created.id)).rejects.toThrow(InvalidStatusTransitionError)
+  })
+
+  describe('DeleteFinancialEntryService (Bloco 20 — substitui o cancelamento como ação destrutiva)', () => {
+    it('exclui permanentemente uma movimentação "planned"', async () => {
+      const period = await new OpenMonthlyPeriodService(deps).execute({ householdId: HOUSEHOLD_ID, referenceMonth: '2026-07-01' })
+      const created = await new CreateFinancialEntryService(deps).execute({
+        householdId: HOUSEHOLD_ID,
+        periodId: period.id,
+        categoryId: category.id,
+        responsibleMemberId: null,
+        createdByUserId: 1,
+        entryType: 'expense',
+        description: 'Compras',
+        expectedAmount: parseMoney('50.00'),
+        dueDate: null,
+        notes: null,
+      })
+
+      await new DeleteFinancialEntryService(deps).execute(created.id, HOUSEHOLD_ID)
+      expect(await entries.findById(created.id)).toBeNull()
+    })
+
+    it('exclui permanentemente uma movimentação "pending"', async () => {
+      const period = await new OpenMonthlyPeriodService(deps).execute({ householdId: HOUSEHOLD_ID, referenceMonth: '2026-07-01' })
+      const created = await new CreateFinancialEntryService(deps).execute({
+        householdId: HOUSEHOLD_ID,
+        periodId: period.id,
+        categoryId: category.id,
+        responsibleMemberId: null,
+        createdByUserId: 1,
+        entryType: 'expense',
+        description: 'Compras',
+        expectedAmount: parseMoney('50.00'),
+        dueDate: null,
+        notes: null,
+      })
+      await new MarkFinancialEntryAsPendingService(deps).execute(created.id)
+
+      await new DeleteFinancialEntryService(deps).execute(created.id, HOUSEHOLD_ID)
+      expect(await entries.findById(created.id)).toBeNull()
+    })
+
+    it('exclui permanentemente uma movimentação "realized" em competência aberta (ajuste pós-revisão do Bloco 20)', async () => {
+      const period = await new OpenMonthlyPeriodService(deps).execute({ householdId: HOUSEHOLD_ID, referenceMonth: '2026-07-01' })
+      const created = await new CreateFinancialEntryService(deps).execute({
+        householdId: HOUSEHOLD_ID,
+        periodId: period.id,
+        categoryId: category.id,
+        responsibleMemberId: null,
+        createdByUserId: 1,
+        entryType: 'expense',
+        description: 'Compras',
+        expectedAmount: parseMoney('50.00'),
+        dueDate: null,
+        notes: null,
+      })
+      await new RealizeFinancialEntryService(deps).execute(created.id, { actualAmount: parseMoney('50.00'), realizationDate: '2026-07-10' })
+
+      await new DeleteFinancialEntryService(deps).execute(created.id, HOUSEHOLD_ID)
+      expect(await entries.findById(created.id)).toBeNull()
+    })
+
+    it('rejeita excluir uma movimentação "cancelled" — nunca remove do repositório (reativação é o único caminho de volta)', async () => {
+      const period = await new OpenMonthlyPeriodService(deps).execute({ householdId: HOUSEHOLD_ID, referenceMonth: '2026-07-01' })
+      const created = await new CreateFinancialEntryService(deps).execute({
+        householdId: HOUSEHOLD_ID,
+        periodId: period.id,
+        categoryId: category.id,
+        responsibleMemberId: null,
+        createdByUserId: 1,
+        entryType: 'expense',
+        description: 'Compras',
+        expectedAmount: parseMoney('50.00'),
+        dueDate: null,
+        notes: null,
+      })
+      await new CancelFinancialEntryService(deps).execute(created.id)
+
+      await expect(new DeleteFinancialEntryService(deps).execute(created.id, HOUSEHOLD_ID)).rejects.toThrow(InvalidStatusTransitionError)
+      expect(await entries.findById(created.id)).not.toBeNull()
+    })
+
+    it('rejeita excluir em competência fechada — nunca remove do repositório', async () => {
+      const period = await new OpenMonthlyPeriodService(deps).execute({ householdId: HOUSEHOLD_ID, referenceMonth: '2026-07-01' })
+      const created = await new CreateFinancialEntryService(deps).execute({
+        householdId: HOUSEHOLD_ID,
+        periodId: period.id,
+        categoryId: category.id,
+        responsibleMemberId: null,
+        createdByUserId: 1,
+        entryType: 'expense',
+        description: 'Compras',
+        expectedAmount: parseMoney('50.00'),
+        dueDate: null,
+        notes: null,
+      })
+      await periods.save({ ...period, status: 'closed' as const })
+
+      await expect(new DeleteFinancialEntryService(deps).execute(created.id, HOUSEHOLD_ID)).rejects.toThrow(ClosedPeriodError)
+      expect(await entries.findById(created.id)).not.toBeNull()
+    })
+
+    it('rejeita excluir uma movimentação "realized" em competência fechada — nunca remove do repositório', async () => {
+      const period = await new OpenMonthlyPeriodService(deps).execute({ householdId: HOUSEHOLD_ID, referenceMonth: '2026-07-01' })
+      const created = await new CreateFinancialEntryService(deps).execute({
+        householdId: HOUSEHOLD_ID,
+        periodId: period.id,
+        categoryId: category.id,
+        responsibleMemberId: null,
+        createdByUserId: 1,
+        entryType: 'expense',
+        description: 'Compras',
+        expectedAmount: parseMoney('50.00'),
+        dueDate: null,
+        notes: null,
+      })
+      await new RealizeFinancialEntryService(deps).execute(created.id, { actualAmount: parseMoney('50.00'), realizationDate: '2026-07-10' })
+      await periods.save({ ...period, status: 'closed' as const })
+
+      await expect(new DeleteFinancialEntryService(deps).execute(created.id, HOUSEHOLD_ID)).rejects.toThrow(ClosedPeriodError)
+      expect(await entries.findById(created.id)).not.toBeNull()
+    })
+
+    it('nunca exclui um registro de outro household, mesmo com o mesmo id', async () => {
+      const period = await new OpenMonthlyPeriodService(deps).execute({ householdId: HOUSEHOLD_ID, referenceMonth: '2026-07-01' })
+      const created = await new CreateFinancialEntryService(deps).execute({
+        householdId: HOUSEHOLD_ID,
+        periodId: period.id,
+        categoryId: category.id,
+        responsibleMemberId: null,
+        createdByUserId: 1,
+        entryType: 'expense',
+        description: 'Compras',
+        expectedAmount: parseMoney('50.00'),
+        dueDate: null,
+        notes: null,
+      })
+
+      await new DeleteFinancialEntryService(deps).execute(created.id, 999)
+      expect(await entries.findById(created.id)).not.toBeNull()
+    })
   })
 })

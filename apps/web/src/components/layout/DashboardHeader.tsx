@@ -27,9 +27,6 @@ export function DashboardHeader({ areaTitle, periodLabel, statusLabel }: Dashboa
         <button type="button" className="fh-header__logout" onClick={logout} disabled={state.pendingLogout} aria-busy={state.pendingLogout}>
           {state.pendingLogout ? 'Saindo…' : 'Sair'}
         </button>
-        <button type="button" className="fh-header__cta" disabled>
-          Nova movimentação
-        </button>
       </div>
     </header>
   )

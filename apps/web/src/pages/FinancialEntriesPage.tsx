@@ -1,6 +1,6 @@
 import type { FinancialEntry } from '@finanhouse/domain'
 import { useMemo, useState } from 'react'
-import { CancelEntryDialog } from '../components/financial-entries/CancelEntryDialog.tsx'
+import { DeleteEntryDialog } from '../components/financial-entries/DeleteEntryDialog.tsx'
 import { FinancialEntryEmptyState } from '../components/financial-entries/FinancialEntryEmptyState.tsx'
 import { FinancialEntryFilters } from '../components/financial-entries/FinancialEntryFilters.tsx'
 import { FinancialEntryForm } from '../components/financial-entries/FinancialEntryForm.tsx'
@@ -10,7 +10,7 @@ import { useReadyFinance } from '../hooks/use-finance.ts'
 import { DEFAULT_FINANCIAL_ENTRIES_FILTERS, filterFinancialEntries, type FinancialEntriesFilters } from '../view-models/financial-entries-view-model.ts'
 import './FinancialEntriesPage.css'
 
-type DialogState = { kind: 'create' } | { kind: 'edit'; entry: FinancialEntry } | { kind: 'realize'; entry: FinancialEntry } | { kind: 'cancel'; entry: FinancialEntry } | null
+type DialogState = { kind: 'create' } | { kind: 'edit'; entry: FinancialEntry } | { kind: 'realize'; entry: FinancialEntry } | { kind: 'delete'; entry: FinancialEntry } | null
 
 export function FinancialEntriesPage() {
   const { state, dispatch } = useReadyFinance()
@@ -62,14 +62,14 @@ export function FinancialEntriesPage() {
           categories={state.categories}
           onEdit={(entry) => setDialog({ kind: 'edit', entry })}
           onRealize={(entry) => setDialog({ kind: 'realize', entry })}
-          onCancel={(entry) => setDialog({ kind: 'cancel', entry })}
+          onDelete={(entry) => setDialog({ kind: 'delete', entry })}
         />
       )}
 
       {dialog?.kind === 'create' && <FinancialEntryForm mode="create" onClose={() => setDialog(null)} />}
       {dialog?.kind === 'edit' && <FinancialEntryForm mode="edit" entry={dialog.entry} onClose={() => setDialog(null)} />}
       {dialog?.kind === 'realize' && <RealizeEntryDialog entry={dialog.entry} onClose={() => setDialog(null)} />}
-      {dialog?.kind === 'cancel' && <CancelEntryDialog entry={dialog.entry} onClose={() => setDialog(null)} />}
+      {dialog?.kind === 'delete' && <DeleteEntryDialog entry={dialog.entry} onClose={() => setDialog(null)} />}
     </div>
   )
 }

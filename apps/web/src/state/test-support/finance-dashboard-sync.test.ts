@@ -75,4 +75,33 @@ describe('sincronização entre o estado financeiro e o dashboard', () => {
       expect(afterBreakdown).not.toEqual(beforeBreakdown)
     }
   })
+
+  it('remove uma movimentação excluída dos totais do dashboard (Bloco 20)', () => {
+    const before = createTestFinanceState()
+    const planned = before.entries.find((entry) => entry.periodId === before.currentPeriodId && entry.status === 'planned')!
+    const beforeBreakdown = dashboardFrom(before).categoryBreakdown
+
+    const after = asReady(financeTestReducer(before, { type: 'DELETE_ENTRY', id: planned.id }))
+    const afterBreakdown = dashboardFrom(after).categoryBreakdown
+
+    expect(after.entries.find((entry) => entry.id === planned.id)).toBeUndefined()
+    if (planned.entryType === 'expense') {
+      expect(afterBreakdown).not.toEqual(beforeBreakdown)
+    }
+  })
+
+  it('recalcula a despesa realizada do dashboard após excluir uma movimentação "realized" (correção pós-revisão do Bloco 20)', () => {
+    const before = createTestFinanceState()
+    const realizedExpense = before.entries.find(
+      (entry) => entry.periodId === before.currentPeriodId && entry.status === 'realized' && entry.entryType === 'expense',
+    )!
+    const beforeIndicator = dashboardFrom(before).indicators.find((indicator) => indicator.key === 'realizedExpense')
+
+    const after = asReady(financeTestReducer(before, { type: 'DELETE_ENTRY', id: realizedExpense.id }))
+    const afterIndicator = dashboardFrom(after).indicators.find((indicator) => indicator.key === 'realizedExpense')
+
+    expect(after.actionError).toBeNull()
+    expect(after.entries.find((entry) => entry.id === realizedExpense.id)).toBeUndefined()
+    expect(afterIndicator?.value).not.toBe(beforeIndicator?.value)
+  })
 })
