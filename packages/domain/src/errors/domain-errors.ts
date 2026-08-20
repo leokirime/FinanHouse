@@ -41,3 +41,5 @@ export class InvalidDateError extends DomainError {}
 export class CategoryBudgetNotFoundError extends DomainError {}
 
 export class DuplicateCategoryBudgetError extends DomainError {}
+
+export class InvalidInstallmentPlanError extends DomainError {}

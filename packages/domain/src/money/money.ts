@@ -66,4 +66,24 @@ export function assertPositiveMoney(cents: Money, fieldName: string): void {
   }
 }
 
+/**
+ * Divide `total` em `parts` valores cuja soma é exatamente `total` — nunca
+ * perde nem sobra centavo. As primeiras `parts - 1` parcelas recebem o
+ * valor-base (`total / parts`, divisão inteira); a última parcela absorve
+ * deterministicamente todo o restante (`total - base * (parts - 1)`) —
+ * nunca distribuído entre múltiplas parcelas. Ex.: `splitMoney(100000n, 3)`
+ * (R$ 1.000,00 em 3x) → `[33333n, 33333n, 33334n]`.
+ */
+export function splitMoney(total: Money, parts: number): Money[] {
+  assertPositiveMoney(total, 'total')
+  if (!Number.isInteger(parts) || parts < 1) {
+    throw new InvalidMoneyAmountError(`parts deve ser um número inteiro positivo. Recebido: ${parts}.`)
+  }
+  const partsBig = BigInt(parts)
+  const base = total / partsBig
+  const values = Array.from<Money>({ length: parts }).fill(base)
+  values[parts - 1] = total - base * (partsBig - 1n)
+  return values
+}
+
 export const ZERO_MONEY: Money = 0n
