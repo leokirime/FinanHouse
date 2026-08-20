@@ -111,7 +111,7 @@ describe('serviços de movimentação (repositórios em memória)', () => {
     })
 
     const closedPeriod = { ...period, status: 'closed' as const }
-    await periods.save(closedPeriod)
+    periods.seed([closedPeriod])
 
     await expect(new CancelFinancialEntryService(deps).execute(created.id)).rejects.toThrow(ClosedPeriodError)
   })
@@ -232,7 +232,7 @@ describe('serviços de movimentação (repositórios em memória)', () => {
         dueDate: null,
         notes: null,
       })
-      await periods.save({ ...period, status: 'closed' as const })
+      periods.seed([{ ...period, status: 'closed' as const }])
 
       await expect(new DeleteFinancialEntryService(deps).execute(created.id, HOUSEHOLD_ID)).rejects.toThrow(ClosedPeriodError)
       expect(await entries.findById(created.id)).not.toBeNull()
@@ -253,7 +253,7 @@ describe('serviços de movimentação (repositórios em memória)', () => {
         notes: null,
       })
       await new RealizeFinancialEntryService(deps).execute(created.id, { actualAmount: parseMoney('50.00'), realizationDate: '2026-07-10' })
-      await periods.save({ ...period, status: 'closed' as const })
+      periods.seed([{ ...period, status: 'closed' as const }])
 
       await expect(new DeleteFinancialEntryService(deps).execute(created.id, HOUSEHOLD_ID)).rejects.toThrow(ClosedPeriodError)
       expect(await entries.findById(created.id)).not.toBeNull()

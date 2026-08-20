@@ -1,17 +1,27 @@
 import type { CategoryBudget } from '@finanhouse/domain'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import type { ResultSetHeader } from 'mysql2/promise'
 import type { CategoryBudgetRepository } from '../../../application/ports/category-budget-repository.js'
 import { categoryBudgets } from '../../../db/schema/index.js'
-import { toDomainCategoryBudget, toPersistenceCategoryBudget } from './mappers/category-budget-mapper.js'
+import { toDomainCategoryBudget, toPersistenceCategoryBudget, toPersistenceNewCategoryBudget } from './mappers/category-budget-mapper.js'
 import { HouseholdScopeViolationError, translatePersistenceError } from './persistence-errors.js'
 import type { DrizzleDb } from './types.js'
 
 /**
  * Adaptador Drizzle real da porta `CategoryBudgetRepository`. Recebe a
  * instância de banco (ou transaction compatível) por injeção de
- * dependência; nunca abre conexão própria. Mesmo padrão de
- * `DrizzleMonthlyPeriodRepository` (nunca upsert por unique key — ver o
- * comentário em `save()`).
+ * dependência; nunca abre conexão própria.
+ *
+ * CORRIGIDO (rodada de correção/hardening pré-Bloco 04, DT-15): a versão
+ * anterior usava `nextId()` (lendo `information_schema.TABLES.AUTO_INCREMENT`)
+ * + um único `save()` que fazia `INSERT` ou `UPDATE` dependendo da
+ * existência prévia do `id`. `create()` agora faz um `INSERT` sem `id`,
+ * deixando o `AUTO_INCREMENT` nativo do MySQL gerá-lo (`ResultSetHeader.insertId`);
+ * `update()` só toca um limite já existente, nunca cria implicitamente. Um
+ * `INSERT` via `create()` que colida com
+ * `category_budgets_household_period_category_unique` continua falhando
+ * como conflito de unicidade (`ER_DUP_ENTRY`, traduzido pelo
+ * `translatePersistenceError`), exatamente como antes.
  */
 export class DrizzleCategoryBudgetRepository implements CategoryBudgetRepository {
   constructor(private readonly db: DrizzleDb) {}
@@ -56,15 +66,19 @@ export class DrizzleCategoryBudgetRepository implements CategoryBudgetRepository
     }
   }
 
-  /**
-   * Cria (INSERT simples, nunca upsert) ou atualiza um limite existente —
-   * mesmo raciocínio de `DrizzleMonthlyPeriodRepository#save`: um upsert por
-   * `category_budgets_household_period_category_unique` colidiria de forma
-   * alheia ao `id`, mascarando um conflito legítimo de limite duplicado como
-   * atualização silenciosa. Existência e household são verificados antes;
-   * o UPDATE sempre usa `WHERE id = ? AND household_id = ?`.
-   */
-  async save(budget: CategoryBudget): Promise<CategoryBudget> {
+  /** Sempre insere uma linha nova — nunca fornece `id`; o valor real vem de `ResultSetHeader.insertId`, lido de volta pelo próprio banco de forma atômica. */
+  async create(budget: Omit<CategoryBudget, 'id'>): Promise<CategoryBudget> {
+    try {
+      const values = toPersistenceNewCategoryBudget(budget)
+      const [result] = (await this.db.insert(categoryBudgets).values(values)) as unknown as [ResultSetHeader, unknown]
+      return { id: result.insertId, ...budget }
+    } catch (error) {
+      throw translatePersistenceError(error)
+    }
+  }
+
+  /** Nunca cria: só atualiza um limite já existente do mesmo household — `WHERE id = ? AND household_id = ?`. */
+  async update(budget: CategoryBudget): Promise<CategoryBudget> {
     try {
       const values = toPersistenceCategoryBudget(budget)
 
@@ -74,14 +88,9 @@ export class DrizzleCategoryBudgetRepository implements CategoryBudgetRepository
         .where(eq(categoryBudgets.id, budget.id))
         .limit(1)
 
-      if (existing.length === 0) {
-        await this.db.insert(categoryBudgets).values(values)
-        return budget
-      }
-
-      if (existing[0]?.householdId !== budget.householdId) {
+      if (existing.length === 0 || existing[0]?.householdId !== budget.householdId) {
         throw new HouseholdScopeViolationError(
-          `Limite de orçamento ${budget.id} pertence a outro household — escrita bloqueada.`,
+          `Limite de orçamento ${budget.id} não existe ou pertence a outro household — atualização bloqueada (update() nunca cria implicitamente).`,
         )
       }
 
@@ -99,23 +108,6 @@ export class DrizzleCategoryBudgetRepository implements CategoryBudgetRepository
   async remove(id: number): Promise<void> {
     try {
       await this.db.delete(categoryBudgets).where(eq(categoryBudgets.id, id))
-    } catch (error) {
-      throw translatePersistenceError(error)
-    }
-  }
-
-  /**
-   * Próximo valor de `AUTO_INCREMENT` — mesma dívida técnica documentada em
-   * `drizzle-monthly-period-repository.ts#nextId`/`drizzle-financial-entry-repository.ts#nextId`
-   * (DT-10): não reserva o valor atomicamente, aceitável apenas sem
-   * escritores concorrentes.
-   */
-  async nextId(): Promise<number> {
-    try {
-      const [rows] = (await this.db.execute(
-        sql`SELECT AUTO_INCREMENT AS nextId FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'category_budgets'`,
-      )) as unknown as [Array<{ nextId: number }>, unknown]
-      return Number(rows[0]?.nextId ?? 1)
     } catch (error) {
       throw translatePersistenceError(error)
     }

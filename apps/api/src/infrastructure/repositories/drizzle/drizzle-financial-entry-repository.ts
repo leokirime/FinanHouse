@@ -1,8 +1,9 @@
 import type { FinancialEntry } from '@finanhouse/domain'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import type { ResultSetHeader } from 'mysql2/promise'
 import type { FinancialEntryRepository } from '../../../application/ports/financial-entry-repository.js'
 import { financialEntries } from '../../../db/schema/index.js'
-import { toDomainFinancialEntry, toPersistenceFinancialEntry } from './mappers/financial-entry-mapper.js'
+import { toDomainFinancialEntry, toPersistenceFinancialEntry, toPersistenceNewFinancialEntry } from './mappers/financial-entry-mapper.js'
 import { HouseholdScopeViolationError, translatePersistenceError } from './persistence-errors.js'
 import type { DrizzleDb } from './types.js'
 
@@ -12,7 +13,17 @@ import type { DrizzleDb } from './types.js'
  * dependência; nunca abre conexão própria. A FK composta e a CHECK do
  * membro responsável (DT-09) continuam sendo a última barreira de
  * integridade — este repositório apenas preenche a coluna auxiliar
- * corretamente (`toPersistenceFinancialEntry`), nunca a expõe de volta.
+ * corretamente (`toPersistenceFinancialEntry`/`toPersistenceNewFinancialEntry`),
+ * nunca a expõe de volta.
+ *
+ * CORRIGIDO (rodada de correção/hardening pré-Bloco 04, DT-15): a versão
+ * anterior usava `nextId()` (lendo `information_schema.TABLES.AUTO_INCREMENT`)
+ * + um único `save()` que fazia `INSERT` ou `UPDATE` dependendo da
+ * existência prévia do `id` — exatamente o padrão já corrigido em
+ * `DrizzleAuthSessionRepository`. `create()` agora faz um `INSERT` sem `id`,
+ * deixando o `AUTO_INCREMENT` nativo do MySQL gerá-lo (`ResultSetHeader.insertId`);
+ * `update()` só toca uma movimentação já existente, nunca cria implicitamente.
+ * `nextId()` foi removido inteiramente da porta e desta implementação.
  */
 export class DrizzleFinancialEntryRepository implements FinancialEntryRepository {
   constructor(private readonly db: DrizzleDb) {}
@@ -44,20 +55,19 @@ export class DrizzleFinancialEntryRepository implements FinancialEntryRepository
     }
   }
 
-  /**
-   * Cria (INSERT simples, nunca upsert) ou atualiza uma movimentação
-   * existente. Um upsert via `ON DUPLICATE KEY UPDATE` foi deliberadamente
-   * evitado: no MySQL, qualquer índice único (não só a chave primária) pode
-   * disparar o ramo de update, e a atualização resultante não fica limitada
-   * por `household_id` — poderia sobrescrever silenciosamente um registro de
-   * outro household em caso de colisão de `id`, ou mascarar um conflito de
-   * unicidade legítimo como uma atualização. Em vez disso: existência e
-   * household são verificados explicitamente antes de decidir entre INSERT e
-   * UPDATE, e o UPDATE sempre usa `WHERE id = ? AND household_id = ?` — o
-   * household de um registro existente nunca pode ser alterado por esta
-   * operação.
-   */
-  async save(entry: FinancialEntry): Promise<FinancialEntry> {
+  /** Sempre insere uma linha nova — nunca fornece `id`; o valor real vem de `ResultSetHeader.insertId`, lido de volta pelo próprio banco de forma atômica. */
+  async create(entry: Omit<FinancialEntry, 'id'>): Promise<FinancialEntry> {
+    try {
+      const values = toPersistenceNewFinancialEntry(entry)
+      const [result] = (await this.db.insert(financialEntries).values(values)) as unknown as [ResultSetHeader, unknown]
+      return { id: result.insertId, ...entry }
+    } catch (error) {
+      throw translatePersistenceError(error)
+    }
+  }
+
+  /** Nunca cria: só atualiza uma movimentação já existente do mesmo household — `WHERE id = ? AND household_id = ?`. */
+  async update(entry: FinancialEntry): Promise<FinancialEntry> {
     try {
       const values = toPersistenceFinancialEntry(entry)
 
@@ -67,14 +77,9 @@ export class DrizzleFinancialEntryRepository implements FinancialEntryRepository
         .where(eq(financialEntries.id, entry.id))
         .limit(1)
 
-      if (existing.length === 0) {
-        await this.db.insert(financialEntries).values(values)
-        return entry
-      }
-
-      if (existing[0]?.householdId !== entry.householdId) {
+      if (existing.length === 0 || existing[0]?.householdId !== entry.householdId) {
         throw new HouseholdScopeViolationError(
-          `Movimentação ${entry.id} pertence a outro household — escrita bloqueada (o household de um registro existente nunca pode ser alterado).`,
+          `Movimentação ${entry.id} não existe ou pertence a outro household — atualização bloqueada (update() nunca cria implicitamente).`,
         )
       }
 
@@ -107,38 +112,6 @@ export class DrizzleFinancialEntryRepository implements FinancialEntryRepository
   async remove(id: number, householdId: number): Promise<void> {
     try {
       await this.db.delete(financialEntries).where(and(eq(financialEntries.id, id), eq(financialEntries.householdId, householdId)))
-    } catch (error) {
-      throw translatePersistenceError(error)
-    }
-  }
-
-  /**
-   * Próximo valor de `AUTO_INCREMENT` da tabela — reserva o ID antes do
-   * `save`, seguindo o mesmo contrato do repositório em memória (a porta
-   * separa `nextId()` de `save()` porque o domínio constrói a entidade com o
-   * `id` já definido). RISCO DE CONCORRÊNCIA DOCUMENTADO: esta leitura via
-   * `information_schema` não reserva o valor atomicamente — sob múltiplos
-   * escritores concorrentes, duas chamadas podem observar o mesmo próximo
-   * valor antes de qualquer INSERT ocorrer, causando colisão de `id`
-   * (detectada como `ER_DUP_ENTRY` no INSERT seguinte, nunca como corrupção
-   * silenciosa, mas ainda assim uma falha visível ao usuário). Aceitável no
-   * escopo atual (aplicação de um único usuário/household, sem escritores
-   * concorrentes) — NÃO deve ser tratada como estratégia definitiva de
-   * geração de ID em um cenário de produção com concorrência real; nesse
-   * caso, a alternativa correta é confiar no AUTO_INCREMENT nativo do INSERT
-   * (via `ResultSetHeader.insertId`) e reestruturar a porta para não exigir
-   * um `id` pré-conhecido antes da escrita.
-   */
-  async nextId(): Promise<number> {
-    try {
-      // `db.execute` é tipado estaticamente como `[ResultSetHeader, FieldPacket[]]` (voltado a
-      // DML) mesmo para SELECT — em tempo de execução, o mysql2 retorna `[RowDataPacket[],
-      // FieldPacket[]]`. O cast reflete a mesma forma já usada pelos scripts de auditoria
-      // (`connection.query(...)` em `apps/api/scripts/db-audit-schema.ts`).
-      const [rows] = (await this.db.execute(
-        sql`SELECT AUTO_INCREMENT AS nextId FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'financial_entries'`,
-      )) as unknown as [Array<{ nextId: number }>, unknown]
-      return Number(rows[0]?.nextId ?? 1)
     } catch (error) {
       throw translatePersistenceError(error)
     }

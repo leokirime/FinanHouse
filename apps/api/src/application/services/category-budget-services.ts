@@ -47,7 +47,7 @@ export interface PutCategoryBudgetInput {
 }
 
 export interface PutCategoryBudgetResult {
-  budget: Awaited<ReturnType<CategoryBudgetRepository['save']>>
+  budget: Awaited<ReturnType<CategoryBudgetRepository['create']>>
   created: boolean
 }
 
@@ -63,17 +63,19 @@ export class PutCategoryBudgetService {
 
     if (existing) {
       const updated = updateCategoryBudget(existing, { limitAmount: input.limitAmount }, period)
-      const saved = await this.deps.budgets.save(updated)
+      const saved = await this.deps.budgets.update(updated)
       return { budget: saved, created: false }
     }
 
-    const id = await this.deps.budgets.nextId()
-    const created = createCategoryBudget(
-      { id, householdId: input.householdId, periodId: input.periodId, categoryId: input.categoryId, limitAmount: input.limitAmount },
+    // `id: 0` é um placeholder descartado — `createCategoryBudget` exige `id` no input (nunca usado
+    // em validação, só copiado para a entidade retornada); o `id` real vem de `budgets.create()`,
+    // gerado pelo AUTO_INCREMENT nativo do banco (DT-15), nunca calculado aqui.
+    const { id: _placeholder, ...draft } = createCategoryBudget(
+      { id: 0, householdId: input.householdId, periodId: input.periodId, categoryId: input.categoryId, limitAmount: input.limitAmount },
       { period, category },
       [],
     )
-    const saved = await this.deps.budgets.save(created)
+    const saved = await this.deps.budgets.create(draft)
     return { budget: saved, created: true }
   }
 }

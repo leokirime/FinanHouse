@@ -1,8 +1,9 @@
 import type { MonthlyPeriod } from '@finanhouse/domain'
-import { and, eq, sql } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
+import type { ResultSetHeader } from 'mysql2/promise'
 import type { MonthlyPeriodRepository } from '../../../application/ports/monthly-period-repository.js'
 import { monthlyPeriods } from '../../../db/schema/index.js'
-import { toDomainMonthlyPeriod, toPersistenceMonthlyPeriod } from './mappers/monthly-period-mapper.js'
+import { toDomainMonthlyPeriod, toPersistenceMonthlyPeriod, toPersistenceNewMonthlyPeriod } from './mappers/monthly-period-mapper.js'
 import { HouseholdScopeViolationError, translatePersistenceError } from './persistence-errors.js'
 import type { DrizzleDb } from './types.js'
 
@@ -10,6 +11,17 @@ import type { DrizzleDb } from './types.js'
  * Adaptador Drizzle real da porta `MonthlyPeriodRepository`. Recebe a
  * instância de banco (ou transaction compatível) por injeção de
  * dependência; nunca abre conexão própria.
+ *
+ * CORRIGIDO (rodada de correção/hardening pré-Bloco 04, DT-15): a versão
+ * anterior usava `nextId()` (lendo `information_schema.TABLES.AUTO_INCREMENT`)
+ * + um único `save()` que fazia `INSERT` ou `UPDATE` dependendo da
+ * existência prévia do `id`. `create()` agora faz um `INSERT` sem `id`,
+ * deixando o `AUTO_INCREMENT` nativo do MySQL gerá-lo (`ResultSetHeader.insertId`);
+ * `update()` só toca uma competência já existente, nunca cria implicitamente.
+ * Um `INSERT` via `create()` que colida com
+ * `monthly_periods_household_reference_month_unique` continua falhando como
+ * conflito de unicidade (`ER_DUP_ENTRY`, traduzido pelo `translatePersistenceError`),
+ * exatamente como antes — nenhuma mudança nessa proteção.
  */
 export class DrizzleMonthlyPeriodRepository implements MonthlyPeriodRepository {
   constructor(private readonly db: DrizzleDb) {}
@@ -45,24 +57,19 @@ export class DrizzleMonthlyPeriodRepository implements MonthlyPeriodRepository {
     }
   }
 
-  /**
-   * Cria (INSERT simples, nunca upsert) ou atualiza uma competência
-   * existente. Ver o comentário equivalente em
-   * `drizzle-financial-entry-repository.ts#save` sobre por que
-   * `ON DUPLICATE KEY UPDATE` foi deliberadamente evitado: aqui o risco é
-   * ainda mais concreto, porque `monthly_periods` tem um índice único
-   * adicional (`household_id + reference_month`) além da chave primária — um
-   * upsert por essa unique key colidiria de forma completamente alheia ao
-   * `id`, mascarando um conflito legítimo de competência duplicada como uma
-   * atualização. Em vez disso: existência e household são verificados
-   * explicitamente antes de decidir entre INSERT e UPDATE, e o UPDATE sempre
-   * usa `WHERE id = ? AND household_id = ?` — o household de uma competência
-   * existente nunca pode ser alterado por esta operação, e um INSERT que
-   * colida com `monthly_periods_household_reference_month_unique` continua
-   * falhando como conflito de unicidade (`ER_DUP_ENTRY`), nunca como
-   * atualização silenciosa.
-   */
-  async save(period: MonthlyPeriod): Promise<MonthlyPeriod> {
+  /** Sempre insere uma linha nova — nunca fornece `id`; o valor real vem de `ResultSetHeader.insertId`, lido de volta pelo próprio banco de forma atômica. */
+  async create(period: Omit<MonthlyPeriod, 'id'>): Promise<MonthlyPeriod> {
+    try {
+      const values = toPersistenceNewMonthlyPeriod(period)
+      const [result] = (await this.db.insert(monthlyPeriods).values(values)) as unknown as [ResultSetHeader, unknown]
+      return { id: result.insertId, ...period }
+    } catch (error) {
+      throw translatePersistenceError(error)
+    }
+  }
+
+  /** Nunca cria: só atualiza uma competência já existente do mesmo household — `WHERE id = ? AND household_id = ?`. */
+  async update(period: MonthlyPeriod): Promise<MonthlyPeriod> {
     try {
       const values = toPersistenceMonthlyPeriod(period)
 
@@ -72,14 +79,9 @@ export class DrizzleMonthlyPeriodRepository implements MonthlyPeriodRepository {
         .where(eq(monthlyPeriods.id, period.id))
         .limit(1)
 
-      if (existing.length === 0) {
-        await this.db.insert(monthlyPeriods).values(values)
-        return period
-      }
-
-      if (existing[0]?.householdId !== period.householdId) {
+      if (existing.length === 0 || existing[0]?.householdId !== period.householdId) {
         throw new HouseholdScopeViolationError(
-          `Competência ${period.id} pertence a outro household — escrita bloqueada (o household de um registro existente nunca pode ser alterado).`,
+          `Competência ${period.id} não existe ou pertence a outro household — atualização bloqueada (update() nunca cria implicitamente).`,
         )
       }
 
@@ -94,28 +96,6 @@ export class DrizzleMonthlyPeriodRepository implements MonthlyPeriodRepository {
         .where(and(eq(monthlyPeriods.id, period.id), eq(monthlyPeriods.householdId, period.householdId)))
 
       return period
-    } catch (error) {
-      throw translatePersistenceError(error)
-    }
-  }
-
-  /**
-   * Próximo valor de `AUTO_INCREMENT` da tabela — reserva o ID antes do
-   * `save`, seguindo o mesmo contrato do repositório em memória (`nextId()`
-   * separado de `save()`). RISCO DE CONCORRÊNCIA DOCUMENTADO: ver o
-   * comentário equivalente em `drizzle-financial-entry-repository.ts#nextId`
-   * — esta leitura via `information_schema` não reserva o valor
-   * atomicamente; aceitável apenas no escopo atual (um único
-   * usuário/household, sem escritores concorrentes), nunca como estratégia
-   * definitiva para um cenário de produção com concorrência real.
-   */
-  async nextId(): Promise<number> {
-    try {
-      // Ver comentário equivalente em `drizzle-financial-entry-repository.ts` sobre o cast de `db.execute`.
-      const [rows] = (await this.db.execute(
-        sql`SELECT AUTO_INCREMENT AS nextId FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'monthly_periods'`,
-      )) as unknown as [Array<{ nextId: number }>, unknown]
-      return Number(rows[0]?.nextId ?? 1)
     } catch (error) {
       throw translatePersistenceError(error)
     }

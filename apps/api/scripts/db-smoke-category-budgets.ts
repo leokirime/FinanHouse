@@ -192,18 +192,18 @@ async function main(): Promise<void> {
           .values({ householdId: householdAId, referenceMonth: '2026-07-01', status: 'open' })) as unknown as [ResultSetHeader, unknown]
         const periodId = period.insertId
 
-        // 2) Repositório real: criação via `nextId` + `save` (INSERT), leitura após escrita.
-        const budgetId = await repositories.budgets.nextId()
-        const created = await repositories.budgets.save({ id: budgetId, householdId: householdAId, periodId, categoryId: categoryAId, limitAmount: 200000n })
-        console.log(`Repositório — criação (nextId + save): ${created.limitAmount === 200000n ? 'aprovada' : 'reprovada'}`)
+        // 2) Repositório real: criação via `create()` (INSERT sem id, insertId nativo — DT-15), leitura após escrita.
+        const created = await repositories.budgets.create({ householdId: householdAId, periodId, categoryId: categoryAId, limitAmount: 200000n })
+        const budgetId = created.id
+        console.log(`Repositório — criação (create(), insertId nativo): ${created.limitAmount === 200000n ? 'aprovada' : 'reprovada'}`)
 
         const reloaded = await repositories.budgets.findByHouseholdPeriodAndCategory(householdAId, periodId, categoryAId)
         console.log(`Repositório — leitura após escrita: ${reloaded?.id === budgetId ? 'aprovada' : 'reprovada'}`)
         if (reloaded?.id !== budgetId) throw new Error('Smoke-test reprovado: leitura após escrita do repositório falhou.')
 
-        // 3) Repositório real: atualização (nunca upsert) via `save` sobre `id` existente.
-        const updated = await repositories.budgets.save({ ...reloaded, limitAmount: 350000n })
-        console.log(`Repositório — atualização (nunca upsert): ${updated.limitAmount === 350000n ? 'aprovada' : 'reprovada'}`)
+        // 3) Repositório real: atualização (nunca cria implicitamente) via `update()` sobre `id` existente.
+        const updated = await repositories.budgets.update({ ...reloaded, limitAmount: 350000n })
+        console.log(`Repositório — atualização (update() nunca cria): ${updated.limitAmount === 350000n ? 'aprovada' : 'reprovada'}`)
 
         // 4) Rotas HTTP reais sobre a mesma transação.
         const listEmpty = await app.inject({ method: 'GET', url: `/api/v1/households/${householdBId}/periods/2026-07-01/budgets` })
@@ -241,17 +241,16 @@ async function main(): Promise<void> {
         console.log(`GET .../budgets (vazio após remoção): ${emptyAfterDelete ? 'aprovado' : 'reprovado'}`)
         if (!emptyAfterDelete) throw new Error('Smoke-test reprovado: limite continuou listado após DELETE.')
 
-        // 7) Repositório real: `save` sobre `id` de outro household é rejeitado (HouseholdScopeViolationError).
-        const secondBudgetId = await repositories.budgets.nextId()
-        await repositories.budgets.save({ id: secondBudgetId, householdId: householdAId, periodId, categoryId: categoryAId, limitAmount: 500000n })
-        let crossHouseholdSaveRejected = false
+        // 7) Repositório real: `update()` sobre `id` de outro household é rejeitado (HouseholdScopeViolationError), nunca cria implicitamente.
+        const secondBudget = await repositories.budgets.create({ householdId: householdAId, periodId, categoryId: categoryAId, limitAmount: 500000n })
+        let crossHouseholdUpdateRejected = false
         try {
-          await repositories.budgets.save({ id: secondBudgetId, householdId: householdBId, periodId, categoryId: categoryAId, limitAmount: 999999n })
+          await repositories.budgets.update({ id: secondBudget.id, householdId: householdBId, periodId, categoryId: categoryAId, limitAmount: 999999n })
         } catch (error) {
-          crossHouseholdSaveRejected = error instanceof HouseholdScopeViolationError
+          crossHouseholdUpdateRejected = error instanceof HouseholdScopeViolationError
         }
-        console.log(`Repositório — save com household divergente do existente rejeitado: ${crossHouseholdSaveRejected ? 'aprovado' : 'reprovado'}`)
-        if (!crossHouseholdSaveRejected) throw new Error('Smoke-test reprovado: save() não rejeitou household divergente do registro existente.')
+        console.log(`Repositório — update() com household divergente do existente rejeitado: ${crossHouseholdUpdateRejected ? 'aprovado' : 'reprovado'}`)
+        if (!crossHouseholdUpdateRejected) throw new Error('Smoke-test reprovado: update() não rejeitou household divergente do registro existente.')
 
         await app.close()
 

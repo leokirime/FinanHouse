@@ -10,14 +10,14 @@ const OTHER_HOUSEHOLD_ID = 20
 async function seedBaseFixtures(repositories: ReturnType<typeof buildTestRepositories>) {
   repositories.categories.seed([{ id: 1, householdId: HOUSEHOLD_ID, name: 'Mercado', entryType: 'expense', status: 'active' }])
   repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
-  await repositories.periods.save({
+  repositories.periods.seed([{
     id: 1,
     householdId: HOUSEHOLD_ID,
     referenceMonth: '2026-07-01',
     status: 'open',
     closedAt: null,
     closedByUserId: null,
-  })
+  }])
 }
 
 describe('rotas de movimentações', () => {
@@ -157,14 +157,14 @@ describe('rotas de movimentações', () => {
   it('POST .../entries com período de outro household resulta em conflito de escopo sanitizado, não 500', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.periods.save({
+    repositories.periods.seed([{
       id: 2,
       householdId: OTHER_HOUSEHOLD_ID,
       referenceMonth: '2026-07-01',
       status: 'open',
       closedAt: null,
       closedByUserId: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({
@@ -193,7 +193,7 @@ describe('rotas de movimentações', () => {
   it('GET .../entries/:entryId de outro household nunca é retornado (isolamento, 404)', async () => {
     const repositories = buildTestRepositories()
     repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: OTHER_HOUSEHOLD_ID,
       periodId: 1,
@@ -208,7 +208,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'GET', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -218,7 +218,7 @@ describe('rotas de movimentações', () => {
   it('GET .../entries lista movimentações do household, isoladas', async () => {
     const repositories = buildTestRepositories()
     repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -233,8 +233,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
-    await repositories.entries.save({
+    }])
+    repositories.entries.seed([{
       id: 2,
       householdId: OTHER_HOUSEHOLD_ID,
       periodId: 1,
@@ -249,7 +249,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'GET', url: `/api/v1/households/${HOUSEHOLD_ID}/entries` })
@@ -261,7 +261,7 @@ describe('rotas de movimentações', () => {
   it('PUT .../entries/:entryId atualiza uma movimentação existente', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -276,7 +276,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({
@@ -292,7 +292,7 @@ describe('rotas de movimentações', () => {
   it('PUT .../entries/:entryId de outro household resulta em 404, nunca altera o recurso', async () => {
     const repositories = buildTestRepositories()
     repositories.members.seed([{ id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' }])
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: OTHER_HOUSEHOLD_ID,
       periodId: 1,
@@ -307,7 +307,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({
@@ -323,7 +323,7 @@ describe('rotas de movimentações', () => {
   it('POST .../realize transiciona planned → realized com dados válidos', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -338,7 +338,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({
@@ -354,7 +354,7 @@ describe('rotas de movimentações', () => {
   it('POST .../cancel transiciona planned → cancelled', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -369,7 +369,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1/cancel` })
@@ -380,7 +380,7 @@ describe('rotas de movimentações', () => {
   it('POST .../mark-pending transiciona planned → pending', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -395,7 +395,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1/mark-pending` })
@@ -406,7 +406,7 @@ describe('rotas de movimentações', () => {
   it('POST .../revert-realization transiciona realized → pending', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -421,7 +421,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: '2026-07-10',
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1/revert-realization` })
@@ -432,7 +432,7 @@ describe('rotas de movimentações', () => {
   it('POST .../correct-to-planned transiciona pending → planned', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -447,7 +447,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1/correct-to-planned` })
@@ -458,7 +458,7 @@ describe('rotas de movimentações', () => {
   it('POST .../reopen transiciona cancelled → planned', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -473,7 +473,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1/reopen` })
@@ -484,7 +484,7 @@ describe('rotas de movimentações', () => {
   it('DELETE .../entries/:entryId remove permanentemente uma movimentação "planned" (204)', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -499,7 +499,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -510,7 +510,7 @@ describe('rotas de movimentações', () => {
   it('DELETE .../entries/:entryId remove permanentemente uma movimentação "pending" (204)', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -525,7 +525,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -549,7 +549,7 @@ describe('rotas de movimentações', () => {
       { id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' },
       { id: 2, householdId: OTHER_HOUSEHOLD_ID, userId: 200, role: 'owner', status: 'active' },
     ])
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: OTHER_HOUSEHOLD_ID,
       periodId: 1,
@@ -564,7 +564,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -579,7 +579,7 @@ describe('rotas de movimentações', () => {
       { id: 1, householdId: HOUSEHOLD_ID, userId: 100, role: 'owner', status: 'active' },
       { id: 2, householdId: OTHER_HOUSEHOLD_ID, userId: 200, role: 'owner', status: 'active' },
     ])
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: OTHER_HOUSEHOLD_ID,
       periodId: 1,
@@ -594,7 +594,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: '2026-07-10',
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -605,7 +605,7 @@ describe('rotas de movimentações', () => {
   it('DELETE .../entries/:entryId sem sessão retorna 401 e não remove o registro', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -620,7 +620,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories, autoAuth: false })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -631,7 +631,7 @@ describe('rotas de movimentações', () => {
   it('DELETE .../entries/:entryId em competência fechada retorna 409 sanitizado (DOMAIN_CONFLICT) e não remove', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -646,15 +646,15 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
-    await repositories.periods.save({
+    }])
+    repositories.periods.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       referenceMonth: '2026-07-01',
       status: 'closed',
       closedAt: '2026-07-20',
       closedByUserId: 100,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -666,7 +666,7 @@ describe('rotas de movimentações', () => {
   it('DELETE .../entries/:entryId remove permanentemente uma movimentação "realized" em competência aberta (204) — ajuste pós-revisão do Bloco 20', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -681,7 +681,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: '2026-07-10',
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -692,7 +692,7 @@ describe('rotas de movimentações', () => {
   it('DELETE .../entries/:entryId com status "realized" em competência fechada retorna 409 sanitizado (DOMAIN_CONFLICT) e não remove', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -707,15 +707,15 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: '2026-07-10',
       notes: null,
-    })
-    await repositories.periods.save({
+    }])
+    repositories.periods.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       referenceMonth: '2026-07-01',
       status: 'closed',
       closedAt: '2026-07-20',
       closedByUserId: 100,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -727,7 +727,7 @@ describe('rotas de movimentações', () => {
   it('DELETE .../entries/:entryId com status "cancelled" retorna 409 sanitizado (DOMAIN_CONFLICT) e não remove', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -742,7 +742,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: `/api/v1/households/${HOUSEHOLD_ID}/entries/1` })
@@ -754,7 +754,7 @@ describe('rotas de movimentações', () => {
   it('erro de conexão do repositório em remove() vira 503 sanitizado, nunca 500 opaco', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -769,7 +769,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     repositories.entries.remove = async () => {
       throw new DatabaseConnectionError('Falha de conexão: host inacessível.')
     }
@@ -783,7 +783,7 @@ describe('rotas de movimentações', () => {
   it('transição inválida (realize sem estar planned/pending) retorna erro de regra de domínio sanitizado (não 500)', async () => {
     const repositories = buildTestRepositories()
     await seedBaseFixtures(repositories)
-    await repositories.entries.save({
+    repositories.entries.seed([{
       id: 1,
       householdId: HOUSEHOLD_ID,
       periodId: 1,
@@ -798,7 +798,7 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({

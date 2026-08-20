@@ -140,7 +140,8 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- **`DrizzleFinancialEntryRepository.nextId()`/`save()` (padrão pré-DT-15) é um risco real para a criação sequencial de N parcelas planejada no Bloco 04** — pode sobrescrever parcelas silenciosamente, sem erro visível. Avaliação completa e mudança mínima recomendada (um `create()` dedicado, espelhando `AuthSessionRepository`, sem tocar `nextId()`/`save()` existentes) documentadas em `Docs/02_architecture/decisoes_tecnicas.md`, DT-17. Recomenda-se tratar como correção curta e isolada **antes** de desenhar a orquestração transacional do Bloco 04 — decisão do proprietário.
+_Original (registrada neste bloco): `DrizzleFinancialEntryRepository.nextId()`/`save()` (padrão pré-DT-15) era um risco real para a criação sequencial de N parcelas planejada no Bloco 04 — podia sobrescrever parcelas silenciosamente, sem erro visível. Avaliação completa e mudança mínima recomendada (um `create()` dedicado, espelhando `AuthSessionRepository`, sem tocar `nextId()`/`save()` existentes) documentadas em `Docs/02_architecture/decisoes_tecnicas.md`, DT-17._
+_**Resolvida em 2026-08-20** — ver seção 19 (Adendo) abaixo: `DrizzleFinancialEntryRepository`, e também `DrizzleMonthlyPeriodRepository`/`DrizzleCategoryBudgetRepository` (mesma dívida, fechada por completo), agora usam `create()`/`update()` com `insertId` nativo — DT-18. Nenhuma pendência P2 técnica ativa remanescente desta origem._
 
 ### P3 — Melhoria Recomendada
 
@@ -148,12 +149,13 @@ _Nenhuma nova neste bloco._
 
 ### P4 — Opcional
 
-- `database/migrations/README.md` não documenta `0002_category_budgets.sql`/`0003_auth_sessions.sql` no mesmo nível de detalhe das demais entradas — lacuna pré-existente a este bloco, apenas sinalizada (nota adicionada ao arquivo), não corrigida.
+_Original (registrada neste bloco): `database/migrations/README.md` não documentava `0002_category_budgets.sql`/`0003_auth_sessions.sql` no mesmo nível de detalhe das demais entradas — lacuna pré-existente a este bloco, apenas sinalizada, não corrigida na aprovação original._
+_**Resolvida em 2026-08-20** — ver seção 19 (Adendo): `database/migrations/README.md` e `Docs/03_contracts/contrato_banco_dados.md` atualizados com as entradas de `0002`/`0003` (incluindo a correção de uma imprecisão adicional encontrada: `contrato_banco_dados.md` ainda marcava `0003_auth_sessions.sql`/`auth_sessions` como "pendente de aplicação", quando na verdade já havia sido aplicada em 2026-08-06 segundo `apps/api/README.md`). Nenhuma pendência P4 técnica/documental ativa remanescente desta origem._
 
 ## 14. Riscos Restantes
 
-- O risco P2 acima (DT-17) é o único risco material deixado em aberto por este bloco — sem impacto no estado atual (nenhum código novo depende dele ainda), mas com impacto direto no desenho do Bloco 04 se não for endereçado antes da orquestração transacional.
-- Migration `0004_deep_machine_man.sql` permanece gerada e não aplicada — nenhum ambiente (`finanhouse_dev` ou produção) reflete o novo schema até uma aplicação explícita e autorizada.
+- ~~O risco P2 (DT-17) era o único risco material deixado em aberto por este bloco~~ — **resolvido em 2026-08-20** (ver seção 19, Adendo).
+- Migration `0004_deep_machine_man.sql` permanece gerada e não aplicada — nenhum ambiente (`finanhouse_dev` ou produção) reflete o novo schema até uma aplicação explícita e autorizada. Continua sendo o único item realmente em aberto.
 
 ## 15. Evidências
 
@@ -178,5 +180,24 @@ Bloco 04 — orquestração transacional de compra parcelada (RS-01: persistênc
 ```
 feat(persistencia_schema_e_migration): persistir InstallmentPlan (schema, repositórios, migration gerada) e estender financial_entries com vínculo de parcela
 ```
+
+## 19. Adendo — Correção e Hardening da DT-15 (2026-08-20, pré-Bloco 04)
+
+Após a aprovação técnica deste bloco (commit `131713b2e6ce23b3050be6df52c2937f93faed88`, já commitado/pushado), o proprietário autorizou uma rodada adicional de correção: fechar por completo a dívida técnica P2 registrada em DT-15/DT-17, nos três repositórios ainda pendentes (`FinancialEntryRepository`, `MonthlyPeriodRepository`, `CategoryBudgetRepository`), em vez de corrigir apenas o repositório citado na avaliação original — para não carregar nenhuma implementação baseada em `nextId()`/`information_schema` para o Bloco 04. Detalhamento completo da decisão em `Docs/02_architecture/decisoes_tecnicas.md`, **DT-18**.
+
+**Resumo do que foi feito:**
+- `FinancialEntryRepository`, `MonthlyPeriodRepository`, `CategoryBudgetRepository` (portas): `save()`/`nextId()` substituídos por `create()`/`update()` separados.
+- `DrizzleFinancialEntryRepository`, `DrizzleMonthlyPeriodRepository`, `DrizzleCategoryBudgetRepository`: reescritos para o mesmo padrão de `DrizzleAuthSessionRepository`/`DrizzleInstallmentPlanRepository` — `create()` via `INSERT` sem `id` + `ResultSetHeader.insertId`, `update()` nunca cria implicitamente, sempre verifica existência e household antes do `UPDATE`.
+- `InMemoryFinancialEntryRepository`, `InMemoryMonthlyPeriodRepository`, `InMemoryCategoryBudgetRepository`: mesmo contrato `create()`/`update()`; ganharam `seed()` (mesmo padrão de `InMemoryUserRepository`) para os testes de HTTP/serviço pré-existentes continuarem populando fixtures com `id` conhecido.
+- `CreateFinancialEntryService`, `OpenMonthlyPeriodService`, `PutCategoryBudgetService` e todos os serviços de transição de estado adaptados para `create()`/`update()` — nenhuma regra de negócio mudou.
+- Dois scripts de smoke-test manuais (`db-smoke-repositories.ts`, `db-smoke-category-budgets.ts`) atualizados para o novo contrato — **nenhum executado nesta rodada**.
+- Três arquivos de teste de repositório Drizzle reescritos com testes de `create()`/`update()` e guard estático de ausência de `information_schema`/`nextId`/`MAX(id)`; ~90 chamadas `.save(...)` de fixture em testes de HTTP/serviço convertidas para `.seed([...])`.
+- `database/migrations/README.md` e `Docs/03_contracts/contrato_banco_dados.md`: P4 resolvida (entradas de `0002`/`0003` documentadas) — no processo, foi encontrada e corrigida uma imprecisão adicional em `contrato_banco_dados.md` (`auth_sessions`/0003 ainda descritos como não aplicados, quando `apps/api/README.md` já registrava a aplicação em 2026-08-06).
+- DT-15 e DT-17 mantidos intactos (histórico nunca editado) — cada um ganhou uma linha **Status** apontando para a nova decisão DT-18, que registra a resolução.
+- `git grep -n "\.nextId("` em `apps/**`: zero ocorrências executáveis.
+
+**Validação:** API 624 (+15 sobre o baseline deste bloco), Web 366 (inalterado), Domain 212 (inalterado) — total 1202. Build, verify:runtime, lint, typecheck, typecheck:api-scripts, `drizzle-kit check`, `ddae-engine validate` (0 erros) e `ddae-engine audit` (0 erros, pendências P2 desta origem fechadas) sem regressão. Nenhuma migration aplicada, nenhum acesso ao Aiven, nenhum dado real alterado.
+
+**Commit desta correção:** ver `Docs/05_sessions/session_12_parcelamentos_e_compromissos_futuros/README.md` ou o histórico do Git na branch `feat/session-12-bloco-03-persistencia-schema-migration` — hash registrado no relatório final apresentado ao proprietário para esta rodada.
 
 _Lembrete: este commit não é executado automaticamente — exige confirmação explícita do usuário._

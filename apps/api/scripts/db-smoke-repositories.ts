@@ -20,13 +20,14 @@
  * aplicação hoje precisa persisti-los diretamente — ver DT-10); seus dados
  * sintéticos são inseridos via Drizzle direto (consultas parametrizadas,
  * nunca concatenação). `categories`/`household_members` TÊM repositório
- * Drizzle real, mas somente leitura (a porta não define `save`/`nextId`) —
+ * Drizzle real, mas somente leitura (a porta não define `create`/`update`) —
  * por isso a preparação sintética também usa INSERT direto, mas a leitura é
  * sempre feita através de `repositories.categories`/`repositories.members`,
  * nunca por fora deles. `financial_entries` e `monthly_periods` — os únicos
  * repositórios com escrita, e o objeto central deste bloco — são exercitados
  * de ponta a ponta (escrita e leitura) exclusivamente através dos
- * repositórios reais.
+ * repositórios reais, usando `create()`/`update()` com `id` sempre gerado
+ * pelo `AUTO_INCREMENT` nativo do banco (DT-15) — nunca `nextId()`.
  */
 import path from 'node:path'
 import process from 'node:process'
@@ -210,22 +211,20 @@ async function main(): Promise<void> {
           throw new Error('Smoke-test reprovado: CategoryRepository/HouseholdMemberRepository não leram os dados sintéticos inseridos.')
         }
 
-        // 2) Competência mensal via repositório real.
-        const periodId = await repositories.periods.nextId()
-        const period = await repositories.periods.save({
-          id: periodId,
+        // 2) Competência mensal via repositório real — id gerado pelo AUTO_INCREMENT nativo
+        // do banco (create(), DT-15), nunca calculado em código.
+        const period = await repositories.periods.create({
           householdId: householdAId,
           referenceMonth: '2026-07-01',
           status: 'open',
           closedAt: null,
           closedByUserId: null,
         })
-        console.log(`Competência sintética criada via repositório: id presente = ${period.id === periodId}`)
+        const periodId = period.id
+        console.log(`Competência sintética criada via repositório: id presente = ${period.id > 0}`)
 
         // 3) Movimentação sem responsável, via repositório real — leitura após escrita.
-        const entryWithoutMemberId = await repositories.entries.nextId()
-        await repositories.entries.save({
-          id: entryWithoutMemberId,
+        const createdWithoutMember = await repositories.entries.create({
           householdId: householdAId,
           periodId,
           categoryId: categoryAId,
@@ -240,6 +239,7 @@ async function main(): Promise<void> {
           realizationDate: null,
           notes: null,
         })
+        const entryWithoutMemberId = createdWithoutMember.id
         const reloadedWithoutMember = await repositories.entries.findById(entryWithoutMemberId)
         console.log(
           `Leitura após escrita (sem responsável): ${reloadedWithoutMember !== null && reloadedWithoutMember.responsibleMemberId === null ? 'aprovada' : 'reprovada'}`,
@@ -247,9 +247,7 @@ async function main(): Promise<void> {
 
         // 4) Movimentação com responsável do MESMO household — prova o preenchimento
         // interno da coluna auxiliar (nunca exposta ao domínio).
-        const entryWithMemberId = await repositories.entries.nextId()
-        await repositories.entries.save({
-          id: entryWithMemberId,
+        const createdWithMember = await repositories.entries.create({
           householdId: householdAId,
           periodId,
           categoryId: categoryAId,
@@ -264,6 +262,7 @@ async function main(): Promise<void> {
           realizationDate: null,
           notes: null,
         })
+        const entryWithMemberId = createdWithMember.id
         const reloadedWithMember = await repositories.entries.findById(entryWithMemberId)
         const domainExposesAuxiliaryColumn = reloadedWithMember !== null && 'responsibleMemberHouseholdId' in reloadedWithMember
         console.log(`Movimentação com responsável do mesmo household: aprovada`)
@@ -277,11 +276,9 @@ async function main(): Promise<void> {
 
         // 5) Tentativa de responsável de OUTRO household — deve ser rejeitada pela
         // FK composta/CHECK (DT-09), traduzida para HouseholdScopeViolationError.
-        const crossHouseholdEntryId = await repositories.entries.nextId()
         let crossHouseholdRejected = false
         try {
-          await repositories.entries.save({
-            id: crossHouseholdEntryId,
+          await repositories.entries.create({
             householdId: householdAId,
             periodId,
             categoryId: categoryAId,
@@ -315,7 +312,7 @@ async function main(): Promise<void> {
 
         // 7) Atualização suportada: pending.
         if (reloadedWithoutMember) {
-          const updated = await repositories.entries.save({ ...reloadedWithoutMember, status: 'pending' })
+          const updated = await repositories.entries.update({ ...reloadedWithoutMember, status: 'pending' })
           console.log(`Atualização suportada (status → pending): ${updated.status === 'pending' ? 'aprovada' : 'reprovada'}`)
         }
 

@@ -37,6 +37,13 @@ export function toDomainFinancialEntry(row: FinancialEntryRow): FinancialEntry {
 export function toPersistenceFinancialEntry(entry: FinancialEntry): NewFinancialEntry {
   return {
     id: entry.id,
+    ...toPersistenceNewFinancialEntry(entry),
+  }
+}
+
+/** Domínio → valores de inserção Drizzle, sem `id` — gerado pelo `AUTO_INCREMENT` nativo em `create()` (DT-15). */
+export function toPersistenceNewFinancialEntry(entry: Omit<FinancialEntry, 'id'>): Omit<NewFinancialEntry, 'id'> {
+  return {
     householdId: entry.householdId,
     periodId: entry.periodId,
     categoryId: entry.categoryId,

@@ -1,6 +1,11 @@
 import type { MonthlyPeriod } from '@finanhouse/domain'
 import type { MonthlyPeriodRepository } from '../../../application/ports/monthly-period-repository.js'
 
+/**
+ * `create()`/`update()` seguem o mesmo contrato da implementação Drizzle
+ * (DT-15): `id` sempre gerado aqui, nunca fornecido pelo chamador;
+ * `update()` nunca cria implicitamente uma competência inexistente.
+ */
 export class InMemoryMonthlyPeriodRepository implements MonthlyPeriodRepository {
   private periods = new Map<number, MonthlyPeriod>()
   private idCounter = 1
@@ -20,13 +25,27 @@ export class InMemoryMonthlyPeriodRepository implements MonthlyPeriodRepository 
     return [...this.periods.values()].filter((period) => period.householdId === householdId)
   }
 
-  async save(period: MonthlyPeriod): Promise<MonthlyPeriod> {
+  async create(period: Omit<MonthlyPeriod, 'id'>): Promise<MonthlyPeriod> {
+    const id = this.idCounter
+    this.idCounter += 1
+    const created: MonthlyPeriod = { id, ...period }
+    this.periods.set(id, created)
+    return created
+  }
+
+  /** Nunca cria: só atualiza uma competência já existente do mesmo household. */
+  async update(period: MonthlyPeriod): Promise<MonthlyPeriod> {
+    const existing = this.periods.get(period.id)
+    if (!existing || existing.householdId !== period.householdId) {
+      throw new Error(`Competência ${period.id} não existe ou pertence a outro household — atualização bloqueada.`)
+    }
     this.periods.set(period.id, period)
     return period
   }
 
-  async nextId(): Promise<number> {
-    return this.idCounter++
+  /** Popula o repositório para testes — não faz parte da interface do domínio; bypassa toda regra de negócio. */
+  seed(periods: MonthlyPeriod[]): void {
+    for (const period of periods) this.periods.set(period.id, period)
   }
 
   reset(): void {

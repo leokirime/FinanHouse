@@ -25,11 +25,11 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('GET .../budgets lista limites da competência, isolado por household', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
-    await repositories.periods.save({ ...PERIOD, id: 3, householdId: 20 })
+    repositories.periods.seed([PERIOD])
+    repositories.periods.seed([{ ...PERIOD, id: 3, householdId: 20 }])
     repositories.categories.seed([EXPENSE_CATEGORY])
-    await repositories.budgets.save({ id: 1, householdId: 10, periodId: PERIOD.id, categoryId: EXPENSE_CATEGORY.id, limitAmount: 150000n })
-    await repositories.budgets.save({ id: 2, householdId: 20, periodId: 3, categoryId: EXPENSE_CATEGORY.id, limitAmount: 999900n })
+    repositories.budgets.seed([{ id: 1, householdId: 10, periodId: PERIOD.id, categoryId: EXPENSE_CATEGORY.id, limitAmount: 150000n }])
+    repositories.budgets.seed([{ id: 2, householdId: 20, periodId: 3, categoryId: EXPENSE_CATEGORY.id, limitAmount: 999900n }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'GET', url: '/api/v1/households/10/periods/2026-08-01/budgets' })
@@ -46,7 +46,7 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('PUT .../budgets/:categoryId cria um novo limite (201), dinheiro como string decimal', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
+    repositories.periods.seed([PERIOD])
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
 
@@ -61,7 +61,7 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('PUT .../budgets/:categoryId é idempotente — segunda chamada atualiza (200), sem duplicar', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
+    repositories.periods.seed([PERIOD])
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
 
@@ -76,7 +76,7 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('PUT .../budgets/:categoryId rejeita número JSON (dinheiro precisa ser string) — 400', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
+    repositories.periods.seed([PERIOD])
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
 
@@ -86,7 +86,7 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('PUT .../budgets/:categoryId rejeita corpo com campo desconhecido (400) e não salva nada', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
+    repositories.periods.seed([PERIOD])
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
 
@@ -101,7 +101,7 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('PUT .../budgets/:categoryId rejeita categoria de receita (422, DOMAIN_RULE_REJECTED)', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
+    repositories.periods.seed([PERIOD])
     repositories.categories.seed([INCOME_CATEGORY])
     app = buildTestApp({ repositories })
 
@@ -112,7 +112,7 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('PUT .../budgets/:categoryId rejeita categoria de outro household (409, DOMAIN_CONFLICT — mesmo padrão de período/categoria referenciados em outro household, DT-09)', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
+    repositories.periods.seed([PERIOD])
     repositories.categories.seed([OTHER_HOUSEHOLD_CATEGORY])
     app = buildTestApp({ repositories })
 
@@ -124,7 +124,7 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('PUT .../budgets/:categoryId rejeita competência fechada (409)', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(CLOSED_PERIOD)
+    repositories.periods.seed([CLOSED_PERIOD])
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
 
@@ -134,9 +134,9 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('DELETE .../budgets/:categoryId remove o limite (204)', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
+    repositories.periods.seed([PERIOD])
     repositories.categories.seed([EXPENSE_CATEGORY])
-    await repositories.budgets.save({ id: 1, householdId: 10, periodId: PERIOD.id, categoryId: 1, limitAmount: 150000n })
+    repositories.budgets.seed([{ id: 1, householdId: 10, periodId: PERIOD.id, categoryId: 1, limitAmount: 150000n }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'DELETE', url: '/api/v1/households/10/periods/2026-08-01/budgets/1' })
@@ -146,7 +146,7 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('DELETE .../budgets/:categoryId retorna 404 quando o limite não existe', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
+    repositories.periods.seed([PERIOD])
     repositories.categories.seed([EXPENSE_CATEGORY])
     app = buildTestApp({ repositories })
 
@@ -156,10 +156,10 @@ describe('rotas de limites mensais por categoria', () => {
 
   it('isolamento: limite de outro household nunca aparece na listagem nem pode ser removido pela URL de outro household', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save(PERIOD)
-    await repositories.periods.save({ ...PERIOD, id: 5, householdId: 20 })
+    repositories.periods.seed([PERIOD])
+    repositories.periods.seed([{ ...PERIOD, id: 5, householdId: 20 }])
     repositories.categories.seed([EXPENSE_CATEGORY, OTHER_HOUSEHOLD_CATEGORY])
-    await repositories.budgets.save({ id: 1, householdId: 20, periodId: 5, categoryId: OTHER_HOUSEHOLD_CATEGORY.id, limitAmount: 150000n })
+    repositories.budgets.seed([{ id: 1, householdId: 20, periodId: 5, categoryId: OTHER_HOUSEHOLD_CATEGORY.id, limitAmount: 150000n }])
     app = buildTestApp({ repositories })
 
     const list = await app.inject({ method: 'GET', url: '/api/v1/households/10/periods/2026-08-01/budgets' })

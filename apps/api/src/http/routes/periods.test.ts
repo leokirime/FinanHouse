@@ -19,8 +19,8 @@ describe('rotas de competências mensais', () => {
 
   it('GET .../periods lista competências do household', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
-    await repositories.periods.save({ id: 2, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null }])
+    repositories.periods.seed([{ id: 2, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'GET', url: '/api/v1/households/10/periods' })
@@ -44,7 +44,7 @@ describe('rotas de competências mensais', () => {
 
   it('GET .../periods/:referenceMonth de outro household nunca é retornado (isolamento)', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'GET', url: '/api/v1/households/10/periods/2026-07-01' })
@@ -84,7 +84,7 @@ describe('rotas de competências mensais', () => {
 
   it('POST .../start-review transiciona open → review', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: '/api/v1/households/10/periods/2026-07-01/start-review' })
@@ -94,7 +94,7 @@ describe('rotas de competências mensais', () => {
 
   it('POST .../reopen-from-review transiciona review → open', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: '/api/v1/households/10/periods/2026-07-01/reopen-from-review' })
@@ -104,7 +104,7 @@ describe('rotas de competências mensais', () => {
 
   it('POST .../close transiciona review → closed com corpo válido', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({
@@ -120,7 +120,7 @@ describe('rotas de competências mensais', () => {
 
   it('POST .../close ignora closedByUserId enviado no corpo (campo desconhecido, 400) — nunca aceita usuário forjado', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({
@@ -133,7 +133,7 @@ describe('rotas de competências mensais', () => {
 
   it('POST .../close rejeita corpo sem closedAt (400)', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'review', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: '/api/v1/households/10/periods/2026-07-01/close', payload: {} })
@@ -142,14 +142,14 @@ describe('rotas de competências mensais', () => {
 
   it('POST .../reopen transiciona closed → review', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({
+    repositories.periods.seed([{
       id: 1,
       householdId: 10,
       referenceMonth: '2026-07-01',
       status: 'closed',
       closedAt: '2026-08-01',
       closedByUserId: 1,
-    })
+    }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: '/api/v1/households/10/periods/2026-07-01/reopen' })
@@ -159,7 +159,7 @@ describe('rotas de competências mensais', () => {
 
   it('transição de estado inválida retorna erro sanitizado de regra de domínio (não 500)', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 10, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     // "close" só é permitido a partir de "review" — período está "open".
@@ -174,7 +174,7 @@ describe('rotas de competências mensais', () => {
 
   it('ação em competência de outro household retorna 404, nunca altera o recurso', async () => {
     const repositories = buildAuthedRepositories()
-    await repositories.periods.save({ id: 1, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null })
+    repositories.periods.seed([{ id: 1, householdId: 20, referenceMonth: '2026-07-01', status: 'open', closedAt: null, closedByUserId: null }])
     app = buildTestApp({ repositories })
 
     const response = await app.inject({ method: 'POST', url: '/api/v1/households/10/periods/2026-07-01/start-review' })
