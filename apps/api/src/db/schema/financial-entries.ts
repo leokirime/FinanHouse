@@ -1,8 +1,9 @@
 import { sql } from 'drizzle-orm'
-import { bigint, check, date, decimal, foreignKey, index, mysqlTable, timestamp, varchar } from 'drizzle-orm/mysql-core'
+import { bigint, check, date, decimal, foreignKey, index, mysqlTable, timestamp, uniqueIndex, varchar } from 'drizzle-orm/mysql-core'
 import { categories } from './categories.js'
 import { households } from './households.js'
 import { householdMembers } from './household-members.js'
+import { installmentPlans } from './installment-plans.js'
 import { monthlyPeriods } from './monthly-periods.js'
 import { users } from './users.js'
 
@@ -49,6 +50,15 @@ export const financialEntries = mysqlTable(
     // (despesa). Nula enquanto status não é 'realized'.
     realizationDate: date('realization_date', { mode: 'string' }),
     notes: varchar('notes', { length: 500 }),
+    // Nullable — a maioria dos lançamentos não é parcelada. Os dois campos sempre se movem
+    // juntos (ver financial_entries_installment_coherence_check abaixo): nunca um preenchido
+    // sem o outro. installment_plan_id não usa .references() single-column: a integridade
+    // "pertence ao mesmo household" é imposta pela FK composta abaixo, mesmo padrão de
+    // period_id/category_id (Sessão 12, Bloco 03).
+    installmentPlanId: bigint('installment_plan_id', { mode: 'number', unsigned: true }),
+    // Posição da parcela dentro do plano (1..installmentCount) — nunca duplicado dentro do
+    // mesmo plano (ver financial_entries_installment_plan_number_unique abaixo).
+    installmentNumber: bigint('installment_number', { mode: 'number', unsigned: true }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow().onUpdateNow(),
   },
@@ -107,6 +117,29 @@ export const financialEntries = mysqlTable(
       name: 'financial_entries_responsible_member_household_fk',
       columns: [table.responsibleMemberId, table.responsibleMemberHouseholdId],
       foreignColumns: [householdMembers.id, householdMembers.householdId],
+    }).onDelete('restrict'),
+    // Garante que installment_number só é preenchido junto com installment_plan_id — nunca
+    // uma parcela "órfã" com número mas sem plano, nem um plano apontado sem número
+    // correspondente (Sessão 12, Bloco 03).
+    check(
+      'financial_entries_installment_coherence_check',
+      sql`(${table.installmentPlanId} is null and ${table.installmentNumber} is null) or (${table.installmentPlanId} is not null and ${table.installmentNumber} is not null)`,
+    ),
+    // Impede duas parcelas com o mesmo número dentro do mesmo plano (ex.: "Sofá 3/10" duas
+    // vezes). NULLs nunca colidem entre si num índice único do MySQL — lançamentos comuns
+    // (ambas as colunas null) nunca são bloqueados por este índice.
+    uniqueIndex('financial_entries_installment_plan_number_unique').on(table.installmentPlanId, table.installmentNumber),
+    // FK composta: garante no próprio banco que uma parcela só referencia um InstallmentPlan
+    // do MESMO household — mesmo padrão de period_id/category_id acima. RESTRICT (não SET
+    // NULL): mesma limitação já documentada para responsible_member_household_fk — o MySQL 8
+    // proíbe SET NULL numa coluna também referenciada por uma CHECK constraint (erro 3823),
+    // e installment_plan_id é referenciado pela CHECK de coerência acima. RESTRICT também é
+    // coerente com a decisão de produto: não existe exclusão global de um InstallmentPlan
+    // nesta versão (Bloco 01) — não há necessidade de nenhuma política de propagação.
+    foreignKey({
+      name: 'financial_entries_installment_plan_household_fk',
+      columns: [table.installmentPlanId, table.householdId],
+      foreignColumns: [installmentPlans.id, installmentPlans.householdId],
     }).onDelete('restrict'),
   ],
 )

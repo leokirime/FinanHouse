@@ -23,6 +23,8 @@ function buildRow(overrides: Partial<FinancialEntryRow> = {}): FinancialEntryRow
     dueDate: null,
     realizationDate: null,
     notes: null,
+    installmentPlanId: null,
+    installmentNumber: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     ...overrides,

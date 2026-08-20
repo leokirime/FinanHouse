@@ -1,6 +1,15 @@
 import { getTableConfig } from 'drizzle-orm/mysql-core'
 import { describe, expect, it } from 'vitest'
-import { categories, FINANCIAL_ENTRY_STATUSES, financialEntries, householdMembers, households, monthlyPeriods, users } from './index.js'
+import {
+  categories,
+  FINANCIAL_ENTRY_STATUSES,
+  financialEntries,
+  householdMembers,
+  households,
+  installmentPlans,
+  monthlyPeriods,
+  users,
+} from './index.js'
 
 const ALL_TABLES = { categories, financialEntries, householdMembers, households, monthlyPeriods, users }
 
@@ -158,5 +167,134 @@ describe('schema proposto — fundação', () => {
     const columnNames = columns.map((c) => c.name)
     expect(columnNames).toContain('realization_date')
     expect(columnNames).not.toContain('payment_date')
+  })
+})
+
+describe('installment_plans (Sessão 12, Bloco 03)', () => {
+  it('usa o nome de tabela installment_plans em snake_case', () => {
+    expect(getTableConfig(installmentPlans).name).toBe('installment_plans')
+  })
+
+  it('nenhuma coluna usa FLOAT ou DOUBLE', () => {
+    const { columns } = getTableConfig(installmentPlans)
+    for (const column of columns) {
+      expect(column.columnType, column.name).not.toMatch(/Float|Double/i)
+    }
+  })
+
+  it('usa DECIMAL(13,2) para total_amount — mesma estratégia monetária do projeto', () => {
+    const { columns } = getTableConfig(installmentPlans)
+    const totalAmount = columns.find((c) => c.name === 'total_amount')
+    expect(totalAmount?.getSQLType()).toBe('decimal(13,2)')
+  })
+
+  it('due_day, installment_count e demais colunas numéricas usam bigint unsigned, nunca int', () => {
+    const { columns } = getTableConfig(installmentPlans)
+    for (const name of ['id', 'household_id', 'category_id', 'installment_count', 'due_day', 'created_by_user_id']) {
+      const column = columns.find((c) => c.name === name)
+      expect(column?.columnType, name).toBe('MySqlBigInt53')
+    }
+  })
+
+  it('due_day é NOT NULL — obrigatório, nunca opcional (correção do Bloco 02)', () => {
+    const { columns } = getTableConfig(installmentPlans)
+    const dueDay = columns.find((c) => c.name === 'due_day')
+    expect(dueDay?.notNull).toBe(true)
+  })
+
+  it('created_at é NOT NULL com defaultNow — mesma convenção de monthly_periods/categories', () => {
+    const { columns } = getTableConfig(installmentPlans)
+    const createdAt = columns.find((c) => c.name === 'created_at')
+    expect(createdAt?.notNull).toBe(true)
+    expect(createdAt?.hasDefault).toBe(true)
+  })
+
+  it('declara unique(id, household_id) para servir de alvo da FK composta de financial_entries', () => {
+    const uniqueSets = getTableConfig(installmentPlans).uniqueConstraints.map((constraint) =>
+      constraint.columns
+        .map((column) => column.name)
+        .sort()
+        .join(','),
+    )
+    expect(uniqueSets).toContain('household_id,id')
+  })
+
+  it('declara CHECK constraints para total_amount > 0, installment_count >= 2 e due_day entre 1 e 31', () => {
+    const { checks } = getTableConfig(installmentPlans)
+    expect(checks.map((c) => c.name)).toEqual(
+      expect.arrayContaining([
+        'installment_plans_total_amount_positive',
+        'installment_plans_installment_count_min',
+        'installment_plans_due_day_range',
+      ]),
+    )
+  })
+
+  it('household_id e created_by_user_id têm foreign keys simples com RESTRICT (sem CASCADE)', () => {
+    const { foreignKeys } = getTableConfig(installmentPlans)
+    for (const columnName of ['household_id', 'created_by_user_id']) {
+      const fk = foreignKeys.find((f) => f.reference().columns.some((c) => c.name === columnName))
+      expect(fk?.onDelete, columnName).toBe('restrict')
+    }
+  })
+
+  it('category_id é protegido por foreign key COMPOSTA (category_id + household_id), com RESTRICT', () => {
+    const { foreignKeys } = getTableConfig(installmentPlans)
+    const categoryFk = foreignKeys.find((f) => f.reference().columns.some((c) => c.name === 'category_id'))
+    expect(categoryFk?.reference().columns.map((c) => c.name).sort()).toEqual(['category_id', 'household_id'])
+    expect(categoryFk?.reference().foreignColumns.map((c) => c.name).sort()).toEqual(['household_id', 'id'])
+    expect(categoryFk?.reference().foreignTable).toBe(categories)
+    expect(categoryFk?.onDelete).toBe('restrict')
+  })
+
+  it('não tem nenhuma foreign key para monthly_periods — first_reference_month é uma data solta, não uma competência real (Bloco 01/02)', () => {
+    const { foreignKeys } = getTableConfig(installmentPlans)
+    const periodFk = foreignKeys.find((f) => f.reference().foreignTable === monthlyPeriods)
+    expect(periodFk).toBeUndefined()
+  })
+})
+
+describe('financial_entries — extensão de parcelamento (Sessão 12, Bloco 03)', () => {
+  it('installment_plan_id e installment_number são nullable — lançamentos comuns continuam funcionando sem plano', () => {
+    const { columns } = getTableConfig(financialEntries)
+    const installmentPlanId = columns.find((c) => c.name === 'installment_plan_id')
+    const installmentNumber = columns.find((c) => c.name === 'installment_number')
+    expect(installmentPlanId?.notNull).toBe(false)
+    expect(installmentNumber?.notNull).toBe(false)
+  })
+
+  it('não ganhou installment_total nem duplicou total_amount/installment_count — esses campos vivem só em installment_plans', () => {
+    const { columns } = getTableConfig(financialEntries)
+    const columnNames = columns.map((c) => c.name)
+    expect(columnNames).not.toContain('installment_total')
+    expect(columnNames).not.toContain('total_amount')
+    expect(columnNames).not.toContain('installment_count')
+  })
+
+  it('declara CHECK garantindo que installment_plan_id e installment_number sempre se movem juntos (nunca um preenchido sem o outro)', () => {
+    const { checks } = getTableConfig(financialEntries)
+    const coherenceCheck = checks.find((c) => c.name === 'financial_entries_installment_coherence_check')
+    expect(coherenceCheck).toBeDefined()
+  })
+
+  it('declara índice único (installment_plan_id, installment_number) — impede duas parcelas com o mesmo número no mesmo plano', () => {
+    const uniqueSets = getTableConfig(financialEntries)
+      .indexes.filter((index) => index.config.unique)
+      .map((index) =>
+        index.config.columns
+          .map((column) => ('name' in column ? column.name : ''))
+          .sort()
+          .join(','),
+      )
+    expect(uniqueSets).toContain('installment_number,installment_plan_id')
+  })
+
+  it('installment_plan_id é protegido por foreign key COMPOSTA (installment_plan_id + household_id) para installment_plans, com RESTRICT (nunca CASCADE — Bloco 01: sem exclusão automática de parcelas ao remover um plano)', () => {
+    const { foreignKeys } = getTableConfig(financialEntries)
+    const planFk = foreignKeys.find((f) => f.reference().columns.some((c) => c.name === 'installment_plan_id'))
+    expect(planFk?.reference().columns.map((c) => c.name).sort()).toEqual(['household_id', 'installment_plan_id'])
+    expect(planFk?.reference().foreignColumns.map((c) => c.name).sort()).toEqual(['household_id', 'id'])
+    expect(planFk?.reference().foreignTable).toBe(installmentPlans)
+    expect(planFk?.onDelete).toBe('restrict')
   })
 })
