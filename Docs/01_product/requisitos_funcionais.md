@@ -19,6 +19,7 @@ Numere os requisitos para que possam ser referenciados por blocos e prompts (ex.
 | RF-07 | Planejar limites de orçamento por categoria de despesa e acompanhar consumo (realizado, pendente, planejado, projetado) por competência | Should | Implementado em memória no Bloco 09 (`e107716`), regrediu para pendente no Bloco 17 (corte para a API real removeu o estado em memória sem repor tabela/endpoint). **Concluído com persistência real no Bloco 18** (DT-13): tabela `category_budgets`, repositório Drizzle, serviços de aplicação, endpoints `.../periods/:referenceMonth/budgets`, hook dedicado `usePeriodBudgets` e UI real na Planejamento. Migration `0002_category_budgets.sql` aplicada a `finanhouse_dev` em 2026-08-04 com autorização explícita do proprietário, auditada e validada por smoke-test transacional |
 | RF-08 | Consultar histórico de competências e movimentações anteriores, somente leitura, com filtros por ano/status | Should | Concluído em memória (Bloco 10, integrado à `main` em `fd026da`) |
 | RF-09 | Autenticar os usuários já vinculados ao household (login por e-mail/senha, sessão real, logout) e proteger todas as rotas financeiras — sem cadastro público | Must | **Implementado no Bloco 19** (DT-14): tabela `auth_sessions` + `users.password_hash`, hash Argon2id, sessão por cookie `HttpOnly`, endpoints `.../auth/{login,session,logout}`, todas as rotas financeiras exigem sessão válida (401) e household correspondente (404 se divergente), `createdByUserId`/`closedByUserId` derivados da sessão (nunca do corpo), `AuthProvider`/`LoginPage`/`AppRoot` reais no frontend, `VITE_FINANHOUSE_HOUSEHOLD_ID` removida (household vem da sessão). Migration `0003_auth_sessions.sql` gerada e revisada; aplicação e configuração das senhas iniciais dependem de duas autorizações separadas do checkpoint do Bloco 19 |
+| RF-10 | Registrar uma compra parcelada uma única vez (descrição, valor total, categoria, número de parcelas) e gerar automaticamente uma `financial_entry` real por parcela, cada uma na sua própria competência, com status independente entre si | Should | **Planejamento iniciado na Sessão 12 (Bloco 01, 2026-08-19)** — nenhuma linha de código ainda. `installment_plans` era mencionado desde o Bloco 03 como extensão futura não modelada (`database/proposed-schema/extensoes-futuras.md`) |
 
 Detalhamento técnico completo das regras (transições de status, cálculos, estratégia monetária): `Docs/02_architecture/regras_dominio_financeiro.md`.
 
@@ -71,6 +72,14 @@ Para cada requisito, descreva como verificar que ele foi atendido (comportamento
 - [x] `createdByUserId`/`closedByUserId` são sempre derivados da sessão autenticada — o corpo da requisição nunca pode indicar outro usuário.
 - [x] Logout revoga a sessão no servidor e limpa o estado local — recarregar a página depois do logout continua exigindo login.
 - [ ] Migration `0003_auth_sessions.sql` aplicada em `finanhouse_dev` e senhas iniciais configuradas — pendentes de duas autorizações separadas (checkpoint do Bloco 19); até lá, o login não funciona em runtime real.
+
+### RF-10 — Parcelamentos e compromissos futuros
+- [ ] Um usuário consegue registrar uma compra parcelada uma única vez (descrição, categoria, valor total, número de parcelas), e o sistema gera automaticamente uma `financial_entry` real por parcela, uma por competência sucessiva a partir da competência informada.
+- [ ] A soma exata dos valores das parcelas geradas é sempre igual ao valor total informado — nenhuma perda/sobra de centavos por arredondamento (a diferença de arredondamento, se houver, é absorvida por uma ou mais parcelas de forma determinística).
+- [ ] Cada parcela tem status independente (`planned`/`pending`/`realized`/`cancelled`) — realizar/cancelar/excluir uma parcela nunca afeta as demais parcelas do mesmo plano.
+- [ ] Somente a parcela da competência corrente compõe os cálculos do Dashboard daquele mês — o valor total nunca entra de uma vez.
+- [ ] Parcelamentos pertencem ao household (carteira compartilhada) — nunca exclusivos do usuário que os criou; visíveis e operáveis por ambos os membros, mesma regra já vigente para todo o domínio financeiro (RF-09).
+- [ ] Nenhuma migration/schema é definido ainda — este requisito está em planejamento (Sessão 12, Bloco 01); os critérios acima serão detalhados/ajustados conforme os blocos avançam.
 
 ## 3. Perguntas Orientadoras
 
