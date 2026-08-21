@@ -155,7 +155,7 @@ _**Resolvida em 2026-08-20** — ver seção 19 (Adendo): `database/migrations/R
 ## 14. Riscos Restantes
 
 - ~~O risco P2 (DT-17) era o único risco material deixado em aberto por este bloco~~ — **resolvido em 2026-08-20** (ver seção 19, Adendo).
-- Migration `0004_deep_machine_man.sql` permanece gerada e não aplicada — nenhum ambiente (`finanhouse_dev` ou produção) reflete o novo schema até uma aplicação explícita e autorizada. Continua sendo o único item realmente em aberto.
+- ~~Migration `0004_deep_machine_man.sql` permanecia gerada e não aplicada~~ — **aplicada em 2026-08-20** a `finanhouse_dev`, com autorização explícita do proprietário (ver seção 20, Adendo II). Nenhum risco material remanescente conhecido neste bloco.
 
 ## 15. Evidências
 
@@ -198,6 +198,26 @@ Após a aprovação técnica deste bloco (commit `131713b2e6ce23b3050be6df52c293
 
 **Validação:** API 624 (+15 sobre o baseline deste bloco), Web 366 (inalterado), Domain 212 (inalterado) — total 1202. Build, verify:runtime, lint, typecheck, typecheck:api-scripts, `drizzle-kit check`, `ddae-engine validate` (0 erros) e `ddae-engine audit` (0 erros, pendências P2 desta origem fechadas) sem regressão. Nenhuma migration aplicada, nenhum acesso ao Aiven, nenhum dado real alterado.
 
-**Commit desta correção:** ver `Docs/05_sessions/session_12_parcelamentos_e_compromissos_futuros/README.md` ou o histórico do Git na branch `feat/session-12-bloco-03-persistencia-schema-migration` — hash registrado no relatório final apresentado ao proprietário para esta rodada.
+**Commit desta correção:** `3f4c12572191fa04e827b988a6843bc48d6550bb` (branch `feat/session-12-bloco-03-persistencia-schema-migration`, pushado).
 
-_Lembrete: este commit não é executado automaticamente — exige confirmação explícita do usuário._
+## 20. Adendo II — Aplicação da Migration 0004 em DEV (2026-08-20, conclusão operacional do Bloco 03)
+
+Após o Adendo (seção 19), o proprietário autorizou explicitamente aplicar `database/migrations/0004_deep_machine_man.sql` exclusivamente ao banco real de desenvolvimento `finanhouse_dev` (Aiven) — última pendência operacional (não técnica) do bloco.
+
+**Fluxo seguido:** comando oficial já existente do projeto (`CONFIRM_DATABASE_MIGRATION=true npm run db:migrate`, `apps/api/scripts/db-migrate.ts`, migrator padrão do `drizzle-orm/mysql2/migrator`) — nenhum comando novo inventado, nenhum SQL manual, nenhum `drizzle-kit push`.
+
+**Antes de aplicar:** `npm run db:check` confirmou `finanhouse_dev`/development/Aiven, TLS ativo. Um script de auditoria somente leitura temporário (`_tmp-audit-installment-plans.ts`, fora do conjunto oficial de scripts do projeto, removido após o uso — nunca commitado) registrou o snapshot "before": 9 tabelas presentes, 4 migrations no journal, `installment_plans` ausente (esperado), e as contagens reais das 8 tabelas estruturais (incluindo dados reais do bootstrap do Bloco 17: 2 `users`, 1 `households`, 2 `household_members`, 7 `categories`, 1 `monthly_periods`, 10 `auth_sessions`; `financial_entries`/`category_budgets` vazias). A SQL da migration foi revisada mais uma vez linha a linha (só `CREATE TABLE`/`ALTER TABLE ADD` aditivos — nenhum `DROP`/`TRUNCATE`/`DELETE`/`UPDATE`/`INSERT` de dados, nenhum `ON DELETE CASCADE`). `npx drizzle-kit check` (pré): "Everything's fine".
+
+**Aplicação:** `db:migrate` aplicou exatamente a migration `0004` (a única não registrada no journal) — sucesso, sem erro.
+
+**Depois de aplicar:** a mesma auditoria temporária, fase "after", confirmou: `installment_plans` presente com 0 registros; `financial_entries.installment_plan_id`/`installment_number` presentes e nullable; as 4 foreign keys todas `ON DELETE RESTRICT` (nenhuma `CASCADE`); os 2 índices `UNIQUE` presentes; as 4 `CHECK` constraints presentes; `installment_plans.id` com `auto_increment`; `first_reference_month` como `date`; `total_amount` como `decimal(13,2)`; journal com 5 migrations (antes: 4, exatamente +1); e as contagens das 8 tabelas estruturais **idênticas** antes/depois — nenhum dado real inserido, alterado ou removido. Detalhamento completo em `Docs/02_architecture/decisoes_tecnicas.md`, DT-17 (linha "Status (migration)").
+
+**Validação pós-migration:** build, verify:runtime, lint, typecheck, typecheck:api-scripts, `drizzle-kit check` (pós, também "Everything's fine"), `ddae-engine validate` (0 erros) e `ddae-engine audit` (0 erros, 0 P1/P2) sem regressão. Suíte completa inalterada: API 624, Web 366, Domain 212 — total 1202 (idêntico ao Adendo I, como esperado — a aplicação de uma migration não adiciona nem remove testes).
+
+**Não executado nesta rodada (fora de escopo, por instrução explícita):** nenhum smoke-test foi rodado (nenhum smoke-test específico para `installment_plans` existe ainda — criá-lo faria parte do Bloco 04); nenhum seed/bootstrap; nenhum acesso a `finanhouse_prod`; nenhuma criação de Bloco 04; nenhum merge.
+
+**Documentação atualizada nesta rodada:** `database/migrations/README.md`, `Docs/03_contracts/contrato_banco_dados.md` (remoção das marcações ⚠️ de "não aplicado" para `installment_plans`/colunas de parcelamento), `Docs/02_architecture/decisoes_tecnicas.md` (DT-17, nova linha de Status), este arquivo (seções 13/14/20).
+
+**Commit documental desta etapa:** hash registrado no relatório final apresentado ao proprietário.
+
+_Lembrete: nenhum commit é executado automaticamente — exige confirmação explícita do usuário a cada rodada._
