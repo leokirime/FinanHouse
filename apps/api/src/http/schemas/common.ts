@@ -52,6 +52,16 @@ export const householdAndEntryIdParamSchema = {
   },
 } as const
 
+export const householdAndInstallmentPlanIdParamSchema = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['householdId', 'installmentPlanId'],
+  properties: {
+    householdId: { type: 'string', pattern: idParamPattern },
+    installmentPlanId: { type: 'string', pattern: idParamPattern },
+  },
+} as const
+
 export const householdAndReferenceMonthParamSchema = {
   type: 'object',
   additionalProperties: false,

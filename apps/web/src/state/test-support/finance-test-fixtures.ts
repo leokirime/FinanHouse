@@ -50,13 +50,20 @@ export const fixtureMonthlyPeriods: MonthlyPeriod[] = [
 ]
 
 let nextEntryId = 1
-function entry(partial: Omit<FinancialEntry, 'id' | 'householdId' | 'createdByUserId' | 'responsibleMemberId' | 'notes'>): FinancialEntry {
+function entry(
+  partial: Omit<
+    FinancialEntry,
+    'id' | 'householdId' | 'createdByUserId' | 'responsibleMemberId' | 'notes' | 'installmentPlanId' | 'installmentNumber'
+  >,
+): FinancialEntry {
   return {
     id: nextEntryId++,
     householdId: FIXTURE_HOUSEHOLD_ID,
     createdByUserId: 1,
     responsibleMemberId: null,
     notes: null,
+    installmentPlanId: null,
+    installmentNumber: null,
     ...partial,
   }
 }

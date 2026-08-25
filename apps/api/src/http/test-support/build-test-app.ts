@@ -4,6 +4,8 @@ import {
   InMemoryCategoryRepository,
   InMemoryFinancialEntryRepository,
   InMemoryHouseholdMemberRepository,
+  InMemoryInstallmentPlanRepository,
+  InMemoryInstallmentTransactionRunner,
   InMemoryMonthlyPeriodRepository,
   InMemoryUserRepository,
 } from '../../infrastructure/repositories/memory/index.js'
@@ -24,6 +26,7 @@ export interface TestRepositories {
   budgets: InMemoryCategoryBudgetRepository
   users: InMemoryUserRepository
   authSessions: InMemoryAuthSessionRepository
+  installmentPlans: InMemoryInstallmentPlanRepository
 }
 
 /** Repositórios em memória — nunca abrem conexão real; usados só em testes. */
@@ -36,6 +39,7 @@ export function buildTestRepositories(): TestRepositories {
     budgets: new InMemoryCategoryBudgetRepository(),
     users: new InMemoryUserRepository(),
     authSessions: new InMemoryAuthSessionRepository(),
+    installmentPlans: new InMemoryInstallmentPlanRepository(),
   }
 }
 
@@ -126,13 +130,20 @@ function withAutoAuth(app: ReturnType<typeof createHttpApp>, repositories: TestR
 
 export function buildTestApp(options: BuildTestAppOptions = {}) {
   const repositories = options.repositories ?? buildTestRepositories()
+  const testRepositories = repositories as TestRepositories
   const app = createHttpApp({
     repositories,
     runtimeMode: 'test',
     logger: false,
     readiness: options.readiness,
+    installmentTransactionRunner: new InMemoryInstallmentTransactionRunner(
+      testRepositories.installmentPlans,
+      testRepositories.entries,
+      testRepositories.periods,
+      testRepositories.categories,
+    ),
   })
 
   if (options.autoAuth === false) return app
-  return withAutoAuth(app, repositories as TestRepositories)
+  return withAutoAuth(app, testRepositories)
 }

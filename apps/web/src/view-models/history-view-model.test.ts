@@ -180,6 +180,8 @@ describe('buildHistoryViewModel', () => {
         dueDate: null,
         realizationDate: null,
         notes: null,
+        installmentPlanId: null,
+        installmentNumber: null,
       },
     ]
     const viewModel = buildHistoryViewModel({

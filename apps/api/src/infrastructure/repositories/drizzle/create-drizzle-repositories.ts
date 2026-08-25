@@ -4,6 +4,7 @@ import type {
   CategoryRepository,
   FinancialEntryRepository,
   HouseholdMemberRepository,
+  InstallmentPlanRepository,
   MonthlyPeriodRepository,
   UserRepository,
 } from '../../../application/ports/index.js'
@@ -12,6 +13,7 @@ import { DrizzleCategoryBudgetRepository } from './drizzle-category-budget-repos
 import { DrizzleCategoryRepository } from './drizzle-category-repository.js'
 import { DrizzleFinancialEntryRepository } from './drizzle-financial-entry-repository.js'
 import { DrizzleHouseholdMemberRepository } from './drizzle-household-member-repository.js'
+import { DrizzleInstallmentPlanRepository } from './drizzle-installment-plan-repository.js'
 import { DrizzleMonthlyPeriodRepository } from './drizzle-monthly-period-repository.js'
 import { DrizzleUserRepository } from './drizzle-user-repository.js'
 import type { DrizzleDb } from './types.js'
@@ -24,6 +26,7 @@ export interface DrizzleRepositories {
   budgets: CategoryBudgetRepository
   users: UserRepository
   authSessions: AuthSessionRepository
+  installmentPlans: InstallmentPlanRepository
 }
 
 /**
@@ -44,5 +47,6 @@ export function createDrizzleRepositories(db: DrizzleDb): DrizzleRepositories {
     budgets: new DrizzleCategoryBudgetRepository(db),
     users: new DrizzleUserRepository(db),
     authSessions: new DrizzleAuthSessionRepository(db),
+    installmentPlans: new DrizzleInstallmentPlanRepository(db),
   }
 }

@@ -208,6 +208,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -233,6 +235,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     repositories.entries.seed([{
       id: 2,
@@ -249,6 +253,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -276,6 +282,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -307,6 +315,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -338,6 +348,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -369,6 +381,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -395,6 +409,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -421,6 +437,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: '2026-07-10',
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -447,6 +465,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -473,6 +493,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -499,6 +521,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -525,6 +549,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -564,6 +590,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -594,6 +622,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: '2026-07-10',
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -620,6 +650,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories, autoAuth: false })
 
@@ -646,6 +678,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     repositories.periods.seed([{
       id: 1,
@@ -681,6 +715,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: '2026-07-10',
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -707,6 +743,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: '2026-07-10',
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     repositories.periods.seed([{
       id: 1,
@@ -742,6 +780,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 
@@ -769,6 +809,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     repositories.entries.remove = async () => {
       throw new DatabaseConnectionError('Falha de conexão: host inacessível.')
@@ -798,6 +840,8 @@ describe('rotas de movimentações', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     }])
     app = buildTestApp({ repositories })
 

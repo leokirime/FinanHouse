@@ -4,6 +4,8 @@ import type {
   CategoryRepository,
   FinancialEntryRepository,
   HouseholdMemberRepository,
+  InstallmentPlanRepository,
+  InstallmentTransactionRunner,
   MonthlyPeriodRepository,
   UserRepository,
 } from '../application/ports/index.js'
@@ -16,6 +18,7 @@ import { registerCategoryBudgetRoutes } from './routes/category-budgets.js'
 import { registerCategoryRoutes } from './routes/categories.js'
 import { registerEntryRoutes } from './routes/entries.js'
 import { registerHealthRoute } from './routes/health.js'
+import { registerInstallmentPlanRoutes } from './routes/installment-plans.js'
 import { registerMemberRoutes } from './routes/members.js'
 import { registerPeriodRoutes } from './routes/periods.js'
 import { registerReadyRoute, type ReadinessCheck, type ReadinessResult } from './routes/ready.js'
@@ -29,6 +32,7 @@ export interface HttpAppRepositories {
   budgets: CategoryBudgetRepository
   users: UserRepository
   authSessions: AuthSessionRepository
+  installmentPlans: InstallmentPlanRepository
 }
 
 export type HttpRuntimeMode = 'development' | 'test' | 'production'
@@ -39,6 +43,14 @@ export interface CreateHttpAppOptions {
   runtimeMode: HttpRuntimeMode
   /** Injetada — nunca abre conexão real por conta própria; testes usam uma dependência falsa. */
   readiness?: ReadinessCheck
+  /**
+   * Unidade de trabalho para a criação atômica de plano + N parcelas (RS-01,
+   * Sessão 12, Bloco 04) — nunca faz parte de `repositories` (que representa
+   * repositórios não-transacionais, cada um com sua própria conexão/leitura
+   * ambiente); é uma dependência à parte, exatamente porque abre sua própria
+   * transação real ao ser usada.
+   */
+  installmentTransactionRunner: InstallmentTransactionRunner
 }
 
 const DEFAULT_READINESS: ReadinessCheck = async (): Promise<ReadinessResult> => ({
@@ -90,6 +102,7 @@ export function createHttpApp(options: CreateHttpAppOptions): FastifyInstance {
   registerPeriodRoutes(fastify, options.repositories)
   registerEntryRoutes(fastify, options.repositories)
   registerCategoryBudgetRoutes(fastify, options.repositories)
+  registerInstallmentPlanRoutes(fastify, options.repositories, options.installmentTransactionRunner)
 
   return fastify
 }

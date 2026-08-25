@@ -154,6 +154,8 @@ describe('FinancialEntriesPage — exclusão real de lançamentos (Bloco 20)', (
           dueDate: null,
           realizationDate: null,
           notes: null,
+          installmentPlanId: null,
+          installmentNumber: null,
         },
       ],
     }
@@ -189,6 +191,8 @@ describe('FinancialEntriesPage — exclusão real de lançamentos (Bloco 20)', (
           dueDate: null,
           realizationDate: '2026-01-05',
           notes: null,
+          installmentPlanId: null,
+          installmentNumber: null,
         },
       ],
     }

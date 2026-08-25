@@ -25,6 +25,8 @@ export function toDomainFinancialEntry(row: FinancialEntryRow): FinancialEntry {
     dueDate: row.dueDate,
     realizationDate: row.realizationDate,
     notes: row.notes,
+    installmentPlanId: row.installmentPlanId,
+    installmentNumber: row.installmentNumber,
   }
 }
 
@@ -58,5 +60,7 @@ export function toPersistenceNewFinancialEntry(entry: Omit<FinancialEntry, 'id'>
     dueDate: entry.dueDate,
     realizationDate: entry.realizationDate,
     notes: entry.notes,
+    installmentPlanId: entry.installmentPlanId,
+    installmentNumber: entry.installmentNumber,
   }
 }

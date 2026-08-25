@@ -52,4 +52,19 @@ export class InMemoryMonthlyPeriodRepository implements MonthlyPeriodRepository 
     this.periods.clear()
     this.idCounter = 1
   }
+
+  /**
+   * Estado interno para `InMemoryInstallmentTransactionRunner` (Sessão 12,
+   * Bloco 04) — nunca usado fora dele. Deliberadamente NÃO inclui
+   * `idCounter` — ver o comentário equivalente em
+   * `InMemoryFinancialEntryRepository#snapshot` (mesmo raciocínio de
+   * `AUTO_INCREMENT` real nunca ser revertido por `ROLLBACK`).
+   */
+  snapshot(): { periods: Map<number, MonthlyPeriod> } {
+    return { periods: new Map(this.periods) }
+  }
+
+  restore(snapshot: { periods: Map<number, MonthlyPeriod> }): void {
+    this.periods = new Map(snapshot.periods)
+  }
 }

@@ -49,5 +49,7 @@ export function financialEntryFromDto(dto: FinancialEntryDto): FinancialEntry {
     dueDate: dto.dueDate,
     realizationDate: dto.realizationDate,
     notes: dto.notes,
+    installmentPlanId: dto.installmentPlanId,
+    installmentNumber: dto.installmentNumber,
   }
 }

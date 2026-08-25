@@ -33,6 +33,8 @@ describe('financialEntryFromDto', () => {
       dueDate: '2026-08-05',
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     })
 
     expect(entry.expectedAmount).toBe(100000n)

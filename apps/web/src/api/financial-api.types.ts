@@ -45,6 +45,8 @@ export interface FinancialEntryDto {
   dueDate: string | null
   realizationDate: string | null
   notes: string | null
+  installmentPlanId: number | null
+  installmentNumber: number | null
 }
 
 export interface CreateFinancialEntryRequest {

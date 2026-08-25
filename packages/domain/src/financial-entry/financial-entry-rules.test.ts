@@ -96,6 +96,18 @@ describe('createFinancialEntry', () => {
     expect(entry.realizationDate).toBeNull()
   })
 
+  it('lançamento avulso: installmentPlanId/installmentNumber nulos por padrão, sem precisar informá-los (Sessão 12, Bloco 04)', () => {
+    const entry = createValidEntry()
+    expect(entry.installmentPlanId).toBeNull()
+    expect(entry.installmentNumber).toBeNull()
+  })
+
+  it('parcela: installmentPlanId/installmentNumber preservados quando informados', () => {
+    const entry = createValidEntry({ installmentPlanId: 7, installmentNumber: 3 })
+    expect(entry.installmentPlanId).toBe(7)
+    expect(entry.installmentNumber).toBe(3)
+  })
+
   it('rejeita expected_amount não positivo', () => {
     expect(() => createValidEntry({ expectedAmount: 0n })).toThrow(InvalidMoneyAmountError)
     expect(() => createValidEntry({ expectedAmount: -100n })).toThrow(InvalidMoneyAmountError)

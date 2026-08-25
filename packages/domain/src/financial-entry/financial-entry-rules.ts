@@ -126,6 +126,9 @@ export interface CreateFinancialEntryInput {
   expectedAmount: Money
   dueDate: string | null
   notes: string | null
+  /** Vínculo com um `InstallmentPlan` (Sessão 12, Bloco 04) — omitido por todo lançamento avulso, sempre `null`/`null` por padrão. Nunca um preenchido sem o outro. */
+  installmentPlanId?: number | null
+  installmentNumber?: number | null
 }
 
 export function createFinancialEntry(input: CreateFinancialEntryInput, context: FinancialEntryContext): FinancialEntry {
@@ -151,6 +154,8 @@ export function createFinancialEntry(input: CreateFinancialEntryInput, context: 
     dueDate: input.dueDate,
     realizationDate: null,
     notes: input.notes,
+    installmentPlanId: input.installmentPlanId ?? null,
+    installmentNumber: input.installmentNumber ?? null,
   }
   assertFinancialEntryRealizationInvariants(entry)
   return entry

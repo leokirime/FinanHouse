@@ -23,6 +23,8 @@ function entry(periodId: number, overrides: Partial<FinancialEntry> = {}): Finan
     dueDate: null,
     realizationDate: '2026-07-05',
     notes: null,
+    installmentPlanId: null,
+    installmentNumber: null,
     ...overrides,
   }
 }

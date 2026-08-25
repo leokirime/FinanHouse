@@ -3,10 +3,20 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { FastifyInstance } from 'fastify'
+import { InMemoryInstallmentTransactionRunner } from '../infrastructure/repositories/memory/index.js'
 import { createHttpApp } from './app.js'
 import { buildTestApp, buildTestRepositories } from './test-support/build-test-app.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+function testTransactionRunner(repositories: ReturnType<typeof buildTestRepositories>) {
+  return new InMemoryInstallmentTransactionRunner(
+    repositories.installmentPlans,
+    repositories.entries,
+    repositories.periods,
+    repositories.categories,
+  )
+}
 
 describe('createHttpApp', () => {
   let app: FastifyInstance | undefined
@@ -23,8 +33,14 @@ describe('createHttpApp', () => {
   })
 
   it('recusa runtimeMode "production" — a API ainda não tem autenticação real', () => {
+    const repositories = buildTestRepositories()
     expect(() =>
-      createHttpApp({ repositories: buildTestRepositories(), runtimeMode: 'production', logger: false }),
+      createHttpApp({
+        repositories,
+        runtimeMode: 'production',
+        logger: false,
+        installmentTransactionRunner: testTransactionRunner(repositories),
+      }),
     ).toThrow(/production/)
   })
 
@@ -32,8 +48,14 @@ describe('createHttpApp', () => {
     expect(() => {
       app = buildTestApp()
     }).not.toThrow()
+    const repositories = buildTestRepositories()
     expect(() =>
-      createHttpApp({ repositories: buildTestRepositories(), runtimeMode: 'development', logger: false }),
+      createHttpApp({
+        repositories,
+        runtimeMode: 'development',
+        logger: false,
+        installmentTransactionRunner: testTransactionRunner(repositories),
+      }),
     ).not.toThrow()
   })
 
