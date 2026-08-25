@@ -21,6 +21,13 @@ export function toDomainMonthlyPeriod(row: MonthlyPeriodRow): MonthlyPeriod {
 export function toPersistenceMonthlyPeriod(period: MonthlyPeriod): NewMonthlyPeriod {
   return {
     id: period.id,
+    ...toPersistenceNewMonthlyPeriod(period),
+  }
+}
+
+/** Domínio → valores de inserção Drizzle, sem `id` — gerado pelo `AUTO_INCREMENT` nativo em `create()` (DT-15). */
+export function toPersistenceNewMonthlyPeriod(period: Omit<MonthlyPeriod, 'id'>): Omit<NewMonthlyPeriod, 'id'> {
+  return {
     householdId: period.householdId,
     referenceMonth: period.referenceMonth,
     status: period.status,

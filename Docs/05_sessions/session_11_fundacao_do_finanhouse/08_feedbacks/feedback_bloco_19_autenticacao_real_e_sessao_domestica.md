@@ -136,7 +136,8 @@ _Nenhuma pendência crítica identificada._
 
 ### P2 — Importante
 
-- `drizzle-category-budget-repository.ts`, `drizzle-financial-entry-repository.ts` e `drizzle-monthly-period-repository.ts` compartilham o mesmo padrão de geração de `id` corrigido em `auth_sessions` (`information_schema.TABLES.AUTO_INCREMENT` + `save()` único insere-ou-atualiza) — os próprios comentários originais desses arquivos já reconheciam o risco. Risco menor que o de sessões (ação deliberada do usuário, exceto `ensurePeriod`, que roda a cada carga do Dashboard), mas real. Correção registrada em DT-15, sugerida como bloco futuro dedicado.
+_Original (registrada neste bloco): `drizzle-category-budget-repository.ts`, `drizzle-financial-entry-repository.ts` e `drizzle-monthly-period-repository.ts` compartilhavam o mesmo padrão de geração de `id` corrigido em `auth_sessions` (`information_schema.TABLES.AUTO_INCREMENT` + `save()` único insere-ou-atualiza) — os próprios comentários originais desses arquivos já reconheciam o risco. Risco menor que o de sessões (ação deliberada do usuário, exceto `ensurePeriod`, que roda a cada carga do Dashboard), mas real. Correção registrada em DT-15, sugerida como bloco futuro dedicado._
+_**Resolvida em 2026-08-20** (rodada de correção/hardening pré-Bloco 04 da Sessão 12, DT-18): os três repositórios foram corrigidos por completo — `create()`/`update()` separados, `id` sempre via `ResultSetHeader.insertId`, `nextId()` removido das três portas e implementações. Ver `Docs/05_sessions/session_12_parcelamentos_e_compromissos_futuros/08_feedbacks/feedback_bloco_03_persistencia_schema_e_migration.md` para o detalhamento completo desta correção e `Docs/02_architecture/decisoes_tecnicas.md` (DT-18) para a decisão registrada. Nenhuma pendência P2 técnica ativa remanescente desta origem._
 
 ### P3 — Melhoria Recomendada
 

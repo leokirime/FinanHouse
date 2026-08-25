@@ -25,8 +25,7 @@ describe('serviços de limite mensal por categoria (repositórios em memória)',
     periods.reset()
     categories.reset()
     categories.seed([expenseCategory, incomeCategory, inactiveCategory, otherHouseholdCategory])
-    await periods.save(openPeriod)
-    await periods.save(closedPeriod)
+    periods.seed([openPeriod, closedPeriod])
   })
 
   it('PUT cria um novo limite quando ainda não existe (created: true)', async () => {
@@ -145,7 +144,7 @@ describe('serviços de limite mensal por categoria (repositórios em memória)',
   })
 
   it('DELETE rejeita competência fechada', async () => {
-    await budgets.save({ id: 1, householdId: HOUSEHOLD_ID, periodId: closedPeriod.id, categoryId: expenseCategory.id, limitAmount: parseMoney('100.00') })
+    budgets.seed([{ id: 1, householdId: HOUSEHOLD_ID, periodId: closedPeriod.id, categoryId: expenseCategory.id, limitAmount: parseMoney('100.00') }])
     await expect(
       new DeleteCategoryBudgetService(deps).execute({ householdId: HOUSEHOLD_ID, periodId: closedPeriod.id, categoryId: expenseCategory.id }),
     ).rejects.toThrow()

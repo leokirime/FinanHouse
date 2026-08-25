@@ -62,9 +62,11 @@ export class CreateFinancialEntryService {
 
   async execute(input: Omit<CreateFinancialEntryInput, 'id'>): Promise<FinancialEntry> {
     const context = await loadContext(this.deps, input.periodId, input.categoryId, input.responsibleMemberId)
-    const id = await this.deps.entries.nextId()
-    const entry = createFinancialEntry({ ...input, id }, context)
-    return this.deps.entries.save(entry)
+    // `id: 0` é um placeholder descartado — `createFinancialEntry` exige `id` no input (nunca usado
+    // em validação, só copiado para a entidade retornada); o `id` real vem de `entries.create()`,
+    // gerado pelo AUTO_INCREMENT nativo do banco (DT-15), nunca calculado aqui.
+    const { id: _placeholder, ...draft } = createFinancialEntry({ ...input, id: 0 }, context)
+    return this.deps.entries.create(draft)
   }
 }
 
@@ -80,7 +82,7 @@ export class UpdateFinancialEntryService {
       changes.responsibleMemberId !== undefined ? changes.responsibleMemberId : entry.responsibleMemberId,
     )
     const updated = updateFinancialEntry(entry, changes, context)
-    return this.deps.entries.save(updated)
+    return this.deps.entries.update(updated)
   }
 }
 
@@ -91,7 +93,7 @@ export class MarkFinancialEntryAsPendingService {
     const entry = await loadEntry(this.deps, id)
     const period = await this.deps.periods.findById(entry.periodId)
     if (!period) throw new PeriodNotFoundError(`Competência ${entry.periodId} não encontrada.`)
-    return this.deps.entries.save(markFinancialEntryAsPending(entry, period))
+    return this.deps.entries.update(markFinancialEntryAsPending(entry, period))
   }
 }
 
@@ -102,7 +104,7 @@ export class RealizeFinancialEntryService {
     const entry = await loadEntry(this.deps, id)
     const period = await this.deps.periods.findById(entry.periodId)
     if (!period) throw new PeriodNotFoundError(`Competência ${entry.periodId} não encontrada.`)
-    return this.deps.entries.save(realizeFinancialEntry(entry, period, input))
+    return this.deps.entries.update(realizeFinancialEntry(entry, period, input))
   }
 }
 
@@ -113,7 +115,7 @@ export class CancelFinancialEntryService {
     const entry = await loadEntry(this.deps, id)
     const period = await this.deps.periods.findById(entry.periodId)
     if (!period) throw new PeriodNotFoundError(`Competência ${entry.periodId} não encontrada.`)
-    return this.deps.entries.save(cancelFinancialEntry(entry, period))
+    return this.deps.entries.update(cancelFinancialEntry(entry, period))
   }
 }
 
@@ -143,7 +145,7 @@ export class RevertFinancialEntryRealizationService {
     const entry = await loadEntry(this.deps, id)
     const period = await this.deps.periods.findById(entry.periodId)
     if (!period) throw new PeriodNotFoundError(`Competência ${entry.periodId} não encontrada.`)
-    return this.deps.entries.save(revertFinancialEntryRealization(entry, period))
+    return this.deps.entries.update(revertFinancialEntryRealization(entry, period))
   }
 }
 
@@ -155,7 +157,7 @@ export class CorrectFinancialEntryToPlannedService {
     const entry = await loadEntry(this.deps, id)
     const period = await this.deps.periods.findById(entry.periodId)
     if (!period) throw new PeriodNotFoundError(`Competência ${entry.periodId} não encontrada.`)
-    return this.deps.entries.save(correctFinancialEntryToPlanned(entry, period))
+    return this.deps.entries.update(correctFinancialEntryToPlanned(entry, period))
   }
 }
 
@@ -167,6 +169,6 @@ export class ReopenFinancialEntryService {
     const entry = await loadEntry(this.deps, id)
     const period = await this.deps.periods.findById(entry.periodId)
     if (!period) throw new PeriodNotFoundError(`Competência ${entry.periodId} não encontrada.`)
-    return this.deps.entries.save(reactivateFinancialEntry(entry, period))
+    return this.deps.entries.update(reactivateFinancialEntry(entry, period))
   }
 }

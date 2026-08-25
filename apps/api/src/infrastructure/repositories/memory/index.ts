@@ -3,5 +3,6 @@ export { InMemoryCategoryBudgetRepository } from './in-memory-category-budget-re
 export { InMemoryCategoryRepository } from './in-memory-category-repository.js'
 export { InMemoryFinancialEntryRepository } from './in-memory-financial-entry-repository.js'
 export { InMemoryHouseholdMemberRepository } from './in-memory-household-member-repository.js'
+export { InMemoryInstallmentPlanRepository } from './in-memory-installment-plan-repository.js'
 export { InMemoryMonthlyPeriodRepository } from './in-memory-monthly-period-repository.js'
 export { InMemoryUserRepository } from './in-memory-user-repository.js'
