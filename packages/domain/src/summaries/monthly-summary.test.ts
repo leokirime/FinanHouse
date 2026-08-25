@@ -21,6 +21,8 @@ function entry(overrides: Partial<FinancialEntry> = {}): FinancialEntry {
     dueDate: null,
     realizationDate: null,
     notes: null,
+    installmentPlanId: null,
+    installmentNumber: null,
     ...overrides,
   }
 }

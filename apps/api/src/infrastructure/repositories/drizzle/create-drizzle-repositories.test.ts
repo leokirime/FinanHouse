@@ -8,6 +8,7 @@ import { DrizzleCategoryBudgetRepository } from './drizzle-category-budget-repos
 import { DrizzleCategoryRepository } from './drizzle-category-repository.js'
 import { DrizzleFinancialEntryRepository } from './drizzle-financial-entry-repository.js'
 import { DrizzleHouseholdMemberRepository } from './drizzle-household-member-repository.js'
+import { DrizzleInstallmentPlanRepository } from './drizzle-installment-plan-repository.js'
 import { DrizzleMonthlyPeriodRepository } from './drizzle-monthly-period-repository.js'
 import { DrizzleUserRepository } from './drizzle-user-repository.js'
 import { FakeDrizzleDb } from './test-support/fake-drizzle-db.js'
@@ -16,7 +17,7 @@ import type { DrizzleDb } from './types.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 describe('createDrizzleRepositories', () => {
-  it('devolve exatamente as sete portas existentes no contrato do projeto', () => {
+  it('devolve exatamente as oito portas existentes no contrato do projeto', () => {
     const db = new FakeDrizzleDb([])
     const repositories = createDrizzleRepositories(db as unknown as DrizzleDb)
 
@@ -27,7 +28,17 @@ describe('createDrizzleRepositories', () => {
     expect(repositories.budgets).toBeInstanceOf(DrizzleCategoryBudgetRepository)
     expect(repositories.users).toBeInstanceOf(DrizzleUserRepository)
     expect(repositories.authSessions).toBeInstanceOf(DrizzleAuthSessionRepository)
-    expect(Object.keys(repositories).sort()).toEqual(['authSessions', 'budgets', 'categories', 'entries', 'members', 'periods', 'users'])
+    expect(repositories.installmentPlans).toBeInstanceOf(DrizzleInstallmentPlanRepository)
+    expect(Object.keys(repositories).sort()).toEqual([
+      'authSessions',
+      'budgets',
+      'categories',
+      'entries',
+      'installmentPlans',
+      'members',
+      'periods',
+      'users',
+    ])
   })
 
   it('não abre conexão ao ser chamada — apenas compõe repositórios sobre a instância recebida', () => {

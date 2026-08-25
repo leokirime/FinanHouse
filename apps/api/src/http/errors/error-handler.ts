@@ -9,7 +9,9 @@ import {
   HouseholdMismatchError,
   InactiveCategoryError,
   InactiveHouseholdMemberError,
+  InstallmentPlanNotFoundError,
   InvalidDateError,
+  InvalidInstallmentPlanError,
   InvalidMoneyAmountError,
   InvalidPeriodTransitionError,
   InvalidStatusTransitionError,
@@ -47,6 +49,7 @@ const DOMAIN_NOT_FOUND_ERRORS = [
   FinancialEntryNotFoundError,
   HouseholdMemberNotFoundError,
   CategoryBudgetNotFoundError,
+  InstallmentPlanNotFoundError,
 ]
 
 /** Falha de autenticação/sessão — sempre 401 com mensagem genérica (nunca revela qual caso, DT-14). */
@@ -71,6 +74,7 @@ const DOMAIN_UNPROCESSABLE_ERRORS = [
   CategoryEntryTypeMismatchError,
   InactiveCategoryError,
   InactiveHouseholdMemberError,
+  InvalidInstallmentPlanError,
 ]
 
 function matchesAny(error: unknown, classes: Array<new (...args: never[]) => Error>): boolean {

@@ -21,6 +21,9 @@ export interface FinancialEntryDto {
   dueDate: string | null
   realizationDate: string | null
   notes: string | null
+  /** `null`/`null` para lançamento avulso; ambos preenchidos para uma parcela (Sessão 12, Bloco 04). */
+  installmentPlanId: number | null
+  installmentNumber: number | null
 }
 
 export function toFinancialEntryDto(entry: FinancialEntry): FinancialEntryDto {
@@ -39,5 +42,7 @@ export function toFinancialEntryDto(entry: FinancialEntry): FinancialEntryDto {
     dueDate: entry.dueDate,
     realizationDate: entry.realizationDate,
     notes: entry.notes,
+    installmentPlanId: entry.installmentPlanId,
+    installmentNumber: entry.installmentNumber,
   }
 }

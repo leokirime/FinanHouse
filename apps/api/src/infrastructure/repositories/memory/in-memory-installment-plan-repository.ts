@@ -32,4 +32,19 @@ export class InMemoryInstallmentPlanRepository implements InstallmentPlanReposit
     this.plans.clear()
     this.nextIdCounter = 1
   }
+
+  /**
+   * Estado interno para `InMemoryInstallmentTransactionRunner` (Sessão 12,
+   * Bloco 04) — nunca usado fora dele. Deliberadamente NÃO inclui
+   * `nextIdCounter` — ver o comentário equivalente em
+   * `InMemoryFinancialEntryRepository#snapshot` (mesmo raciocínio de
+   * `AUTO_INCREMENT` real nunca ser revertido por `ROLLBACK`).
+   */
+  snapshot(): { plans: Map<number, InstallmentPlan> } {
+    return { plans: new Map(this.plans) }
+  }
+
+  restore(snapshot: { plans: Map<number, InstallmentPlan> }): void {
+    this.plans = new Map(snapshot.plans)
+  }
 }

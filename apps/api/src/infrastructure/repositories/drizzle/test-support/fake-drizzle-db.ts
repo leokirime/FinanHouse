@@ -155,4 +155,21 @@ export class FakeDrizzleDb {
   }
 
   executeRows: Row[] = []
+
+  /**
+   * `db.transaction(async (tx) => ...)` — usado por `DrizzleInstallmentTransactionRunner`
+   * (Sessão 12, Bloco 04). Este fake não simula rollback real (a garantia de
+   * atomicidade em produção vem inteiramente do MySQL/Drizzle, não de código
+   * de aplicação) — só passa a própria instância como `tx`, para provar que
+   * os repositórios construídos dentro do callback recebem a MESMA conexão.
+   * A prova de rollback fica a cargo de `InMemoryInstallmentTransactionRunner`
+   * (`in-memory-installment-transaction-runner.test.ts`), que reproduz
+   * atomicidade de verdade via snapshot/restore.
+   */
+  transactionCalls = 0
+
+  async transaction<T>(callback: (tx: FakeDrizzleDb) => Promise<T>): Promise<T> {
+    this.transactionCalls += 1
+    return callback(this)
+  }
 }

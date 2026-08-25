@@ -89,6 +89,8 @@ describe('toPersistenceFinancialEntry', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     })
     expect(values.responsibleMemberId).toBe(50)
     expect(values.responsibleMemberHouseholdId).toBe(10)
@@ -110,6 +112,8 @@ describe('toPersistenceFinancialEntry', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     })
     expect(values.responsibleMemberId).toBeNull()
     expect(values.responsibleMemberHouseholdId).toBeNull()
@@ -131,6 +135,8 @@ describe('toPersistenceFinancialEntry', () => {
       dueDate: null,
       realizationDate: null,
       notes: null,
+      installmentPlanId: null,
+      installmentNumber: null,
     })
     expect(values.expectedAmount).toBe('5000.00')
     expect(values.actualAmount).toBe('5000.00')

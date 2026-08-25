@@ -40,6 +40,7 @@ import {
 } from '../src/db/smoke-repositories-guard.js'
 import { createHttpApp } from '../src/http/app.js'
 import { createDrizzleRepositories } from '../src/infrastructure/repositories/drizzle/index.js'
+import { DrizzleInstallmentTransactionRunner } from '../src/infrastructure/repositories/drizzle/drizzle-installment-transaction-runner.js'
 import type { DrizzleDb } from '../src/infrastructure/repositories/drizzle/types.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -147,6 +148,9 @@ async function main(): Promise<void> {
           repositories,
           runtimeMode: 'development',
           logger: false,
+          // Nunca usada por este smoke (não exercita rotas de parcelamento) — apenas satisfaz o
+          // contrato de `createHttpApp` (Sessão 12, Bloco 04).
+          installmentTransactionRunner: new DrizzleInstallmentTransactionRunner(tx as unknown as DrizzleDb),
           readiness: async () => ({
             ready: true,
             checks: { configResolved: true, poolAvailable: true, connectionOk: true, tlsActive: true },

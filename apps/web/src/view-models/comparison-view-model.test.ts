@@ -37,6 +37,8 @@ function entry(periodId: number, overrides: Partial<FinancialEntry>): FinancialE
     dueDate: '2026-07-10',
     realizationDate: status === 'realized' ? '2026-07-10' : null,
     notes: null,
+    installmentPlanId: null,
+    installmentNumber: null,
     ...overrides,
   }
 }

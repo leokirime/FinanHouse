@@ -27,6 +27,13 @@ export class InMemoryFinancialEntryRepository implements FinancialEntryRepositor
     return [...this.entries.values()].filter((entry) => entry.householdId === householdId)
   }
 
+  /** Sempre escopada por household — nunca consulta por plano sem essa dimensão (Sessão 12, Bloco 04). */
+  async findByInstallmentPlan(householdId: number, installmentPlanId: number): Promise<FinancialEntry[]> {
+    return [...this.entries.values()].filter(
+      (entry) => entry.householdId === householdId && entry.installmentPlanId === installmentPlanId,
+    )
+  }
+
   async create(entry: Omit<FinancialEntry, 'id'>): Promise<FinancialEntry> {
     const id = this.idCounter
     this.idCounter += 1
@@ -60,5 +67,23 @@ export class InMemoryFinancialEntryRepository implements FinancialEntryRepositor
   reset(): void {
     this.entries.clear()
     this.idCounter = 1
+  }
+
+  /**
+   * Estado interno para `InMemoryInstallmentTransactionRunner` (Sessão 12,
+   * Bloco 04) — nunca usado fora dele. Deliberadamente NÃO inclui
+   * `idCounter`: um `AUTO_INCREMENT` real do MySQL nunca é "devolvido" por um
+   * `ROLLBACK" — o contador avança de forma monotônica e definitiva mesmo
+   * quando o `INSERT` correspondente é desfeito (é exatamente por isso que
+   * lacunas de id são normais e nunca um bug). Reverter o contador aqui
+   * criaria um comportamento mais permissivo que o banco real, mascarando um
+   * possível reaproveitamento de id que nunca aconteceria em produção.
+   */
+  snapshot(): { entries: Map<number, FinancialEntry> } {
+    return { entries: new Map(this.entries) }
+  }
+
+  restore(snapshot: { entries: Map<number, FinancialEntry> }): void {
+    this.entries = new Map(snapshot.entries)
   }
 }

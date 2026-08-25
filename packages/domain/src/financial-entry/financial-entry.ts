@@ -29,6 +29,16 @@ export interface FinancialEntry {
   /** Data em que a movimentação foi de fato recebida (receita) ou paga (despesa), YYYY-MM-DD. */
   realizationDate: string | null
   notes: string | null
+  /**
+   * Vínculo com um `InstallmentPlan` (Sessão 12, Bloco 04) — sempre ambos
+   * `null` (lançamento avulso) ou ambos preenchidos (parcela), nunca um sem
+   * o outro. `number | null` deliberadamente, nunca opcional (`?:`): toda
+   * movimentação precisa declarar explicitamente se pertence ou não a um
+   * plano, nunca deixar a relação ambígua por omissão.
+   */
+  installmentPlanId: number | null
+  /** Posição da parcela dentro do plano (1..installmentCount) — sempre `null` junto com `installmentPlanId` null. */
+  installmentNumber: number | null
 }
 
 export function isRealized(entry: Pick<FinancialEntry, 'status'>): boolean {

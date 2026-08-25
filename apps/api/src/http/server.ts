@@ -15,6 +15,7 @@ import { DatabaseConfigError, resolveDatabaseConfig } from '../config/database-c
 import { connectWithRetry } from '../db/connect-with-retry.js'
 import { createDatabasePool, type DatabasePool } from '../db/pool.js'
 import { createDrizzleRepositories } from '../infrastructure/repositories/drizzle/create-drizzle-repositories.js'
+import { DrizzleInstallmentTransactionRunner } from '../infrastructure/repositories/drizzle/drizzle-installment-transaction-runner.js'
 import { createHttpApp, type HttpRuntimeMode } from './app.js'
 import { classifyListenError } from './listen-error-classifier.js'
 import type { ReadinessCheck } from './routes/ready.js'
@@ -116,6 +117,7 @@ export async function startHttpServer(): Promise<RunningHttpServer> {
     runtimeMode: resolveRuntimeMode(),
     logger: true,
     readiness: createReadinessCheck(dbPool),
+    installmentTransactionRunner: new DrizzleInstallmentTransactionRunner(db),
   })
 
   const port = process.env.PORT ? Number(process.env.PORT) : DEFAULT_PORT

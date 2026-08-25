@@ -16,6 +16,8 @@ export interface FinancialEntryRepository {
   findById(id: number): Promise<FinancialEntry | null>
   findByPeriod(periodId: number): Promise<FinancialEntry[]>
   findByHousehold(householdId: number): Promise<FinancialEntry[]>
+  /** Parcelas de um `InstallmentPlan`, sempre escopadas por household — nunca consultar por plano sem household (Sessão 12, Bloco 04). */
+  findByInstallmentPlan(householdId: number, installmentPlanId: number): Promise<FinancialEntry[]>
   /** Sempre insere uma linha nova — `id` gerado pelo `AUTO_INCREMENT` nativo do banco, nunca calculado em código; nunca aceita `id` do chamador. */
   create(entry: Omit<FinancialEntry, 'id'>): Promise<FinancialEntry>
   /** Só atualiza uma movimentação já existente — nunca cria implicitamente; o household de um registro existente nunca pode ser alterado por esta operação. */

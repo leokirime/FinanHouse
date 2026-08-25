@@ -238,6 +238,8 @@ async function main(): Promise<void> {
           dueDate: null,
           realizationDate: null,
           notes: null,
+          installmentPlanId: null,
+          installmentNumber: null,
         })
         const entryWithoutMemberId = createdWithoutMember.id
         const reloadedWithoutMember = await repositories.entries.findById(entryWithoutMemberId)
@@ -261,6 +263,8 @@ async function main(): Promise<void> {
           dueDate: null,
           realizationDate: null,
           notes: null,
+          installmentPlanId: null,
+          installmentNumber: null,
         })
         const entryWithMemberId = createdWithMember.id
         const reloadedWithMember = await repositories.entries.findById(entryWithMemberId)
@@ -292,6 +296,8 @@ async function main(): Promise<void> {
             dueDate: null,
             realizationDate: null,
             notes: null,
+            installmentPlanId: null,
+            installmentNumber: null,
           })
         } catch (error) {
           crossHouseholdRejected = error instanceof HouseholdScopeViolationError

@@ -56,6 +56,8 @@ function newEntryInput(overrides: Partial<Parameters<DrizzleFinancialEntryReposi
     dueDate: null,
     realizationDate: null,
     notes: null,
+    installmentPlanId: null,
+    installmentNumber: null,
     ...overrides,
   }
 }
@@ -147,11 +149,14 @@ describe('DrizzleFinancialEntryRepository', () => {
       await expect(repository.create(newEntryInput())).rejects.toBeInstanceOf(PersistenceError)
     })
 
-    it('create() de uma movimentação comum continua funcionando normalmente mesmo com parcelas de um InstallmentPlan já persistidas (Sessão 12, Bloco 03)', async () => {
+    it('create() de uma movimentação comum continua funcionando normalmente mesmo com parcelas de um InstallmentPlan já persistidas (Sessão 12, Bloco 03/04)', async () => {
       const { repository, db } = repositoryWith([buildRow({ id: 1, installmentPlanId: 7, installmentNumber: 2 })])
       const entry = await repository.create(newEntryInput({ description: 'Movimentação avulsa' }))
       expect(entry.description).toBe('Movimentação avulsa')
-      expect(db.insertedValues[0]).not.toHaveProperty('installmentPlanId')
+      // Desde o Bloco 04, installmentPlanId/installmentNumber fazem parte do tipo de domínio
+      // FinancialEntry — sempre presentes no INSERT (nunca omitidos), mas null para lançamento avulso.
+      expect(db.insertedValues[0]?.installmentPlanId).toBeNull()
+      expect(db.insertedValues[0]?.installmentNumber).toBeNull()
     })
   })
 
@@ -182,6 +187,8 @@ describe('DrizzleFinancialEntryRepository', () => {
         dueDate: null,
         realizationDate: null,
         notes: null,
+        installmentPlanId: null,
+        installmentNumber: null,
       })
       expect(updated.status).toBe('pending')
       expect(db.insertedValues[0]?.status).toBe('pending')
@@ -206,6 +213,8 @@ describe('DrizzleFinancialEntryRepository', () => {
         dueDate: null,
         realizationDate: null,
         notes: null,
+        installmentPlanId: null,
+        installmentNumber: null,
       })
       expect(db.insertedValues[0]?.responsibleMemberId).toBeNull()
       expect(db.insertedValues[0]?.responsibleMemberHouseholdId).toBeNull()
@@ -229,6 +238,8 @@ describe('DrizzleFinancialEntryRepository', () => {
           dueDate: null,
           realizationDate: null,
           notes: null,
+          installmentPlanId: null,
+          installmentNumber: null,
         }),
       ).rejects.toBeInstanceOf(HouseholdScopeViolationError)
       expect(db.insertedValues).toHaveLength(0)
@@ -252,6 +263,8 @@ describe('DrizzleFinancialEntryRepository', () => {
           dueDate: null,
           realizationDate: null,
           notes: null,
+          installmentPlanId: null,
+          installmentNumber: null,
         }),
       ).rejects.toBeInstanceOf(HouseholdScopeViolationError)
       expect(db.insertedValues).toHaveLength(0)
@@ -275,6 +288,8 @@ describe('DrizzleFinancialEntryRepository', () => {
           dueDate: null,
           realizationDate: null,
           notes: null,
+          installmentPlanId: null,
+          installmentNumber: null,
         }),
       ).rejects.toBeInstanceOf(PersistenceError)
     })

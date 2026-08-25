@@ -55,6 +55,19 @@ export class DrizzleFinancialEntryRepository implements FinancialEntryRepository
     }
   }
 
+  /** Sempre escopada por household — nunca consulta por plano sem essa dimensão (Sessão 12, Bloco 04). */
+  async findByInstallmentPlan(householdId: number, installmentPlanId: number): Promise<FinancialEntry[]> {
+    try {
+      const rows = await this.db
+        .select()
+        .from(financialEntries)
+        .where(and(eq(financialEntries.householdId, householdId), eq(financialEntries.installmentPlanId, installmentPlanId)))
+      return rows.map(toDomainFinancialEntry)
+    } catch (error) {
+      throw translatePersistenceError(error)
+    }
+  }
+
   /** Sempre insere uma linha nova — nunca fornece `id`; o valor real vem de `ResultSetHeader.insertId`, lido de volta pelo próprio banco de forma atômica. */
   async create(entry: Omit<FinancialEntry, 'id'>): Promise<FinancialEntry> {
     try {
