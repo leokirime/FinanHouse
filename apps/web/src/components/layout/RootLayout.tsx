@@ -6,6 +6,7 @@ import { DashboardHeader } from './DashboardHeader.tsx'
 const AREA_TITLE_BY_PATH: Record<string, string> = {
   '/': 'Visão geral',
   '/movimentacoes': 'Movimentações',
+  '/movimentacoes/parcelamentos': 'Parcelamentos',
   '/comparativo': 'Comparativo',
   '/planejamento': 'Planejamento',
   '/historico': 'Histórico',

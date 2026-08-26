@@ -1,6 +1,7 @@
 import type { FinancialEntry } from '@finanhouse/domain'
 import { useMemo, useState } from 'react'
 import { DeleteEntryDialog } from '../components/financial-entries/DeleteEntryDialog.tsx'
+import { FinancialAreaTabs } from '../components/financial-entries/FinancialAreaTabs.tsx'
 import { FinancialEntryEmptyState } from '../components/financial-entries/FinancialEntryEmptyState.tsx'
 import { FinancialEntryFilters } from '../components/financial-entries/FinancialEntryFilters.tsx'
 import { FinancialEntryForm } from '../components/financial-entries/FinancialEntryForm.tsx'
@@ -28,6 +29,8 @@ export function FinancialEntriesPage() {
 
   return (
     <div className="fh-financial-entries-page">
+      <FinancialAreaTabs />
+
       <div className="fh-card fh-card--elevated fh-financial-entries-page__intro">
         <div>
           <h2>Movimentações</h2>

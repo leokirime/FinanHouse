@@ -1,8 +1,8 @@
 # Contrato da API HTTP
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-06
+> Projeto: FinanHouse · Atualizado em: 2026-08-25
 
-> Este contrato descreve a API HTTP implementada a partir do Bloco 16 (DT-11), estendida nos Blocos 17 (movimentações reais no frontend), 18 (limites mensais por categoria, DT-13), 19 (autenticação real e sessão, DT-14) e 20 (exclusão real de movimentações). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (Bloco 17 em diante — como o frontend consome esta API, sem repetir o wire format) nem com `Docs/03_contracts/contrato_autenticacao.md` (fluxo completo de login/sessão, Bloco 19).
+> Este contrato descreve a API HTTP implementada a partir do Bloco 16 (DT-11), estendida nos Blocos 17 (movimentações reais no frontend), 18 (limites mensais por categoria, DT-13), 19 (autenticação real e sessão, DT-14), 20 (exclusão real de movimentações) e Sessão 12/Bloco 04 (parcelamentos, RS-01, DT-19). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (Bloco 17 em diante — como o frontend consome esta API, sem repetir o wire format) nem com `Docs/03_contracts/contrato_autenticacao.md` (fluxo completo de login/sessão, Bloco 19).
 
 ## 1. Objetivo
 
@@ -88,6 +88,29 @@ Todas as demais rotas abaixo (`/api/v1/households/:householdId/...`) exigem sess
 
 Regras de domínio reaproveitadas sem duplicação: categoria precisa ser `expense`/`active` (senão 422, `CategoryEntryTypeMismatchError`/`InactiveCategoryError`); competência `closed` bloqueia criação/edição/remoção (422, mesma regra de `assertPeriodAllowsBudgetChanges` usada por movimentações); categoria ou competência de outro household nunca é 404 — sempre 409 `DOMAIN_CONFLICT` (seção 3, mesmo padrão de `financial_entries`). Limite mensal e movimentações (`planned`/`pending`/`realized`) são independentes — remover ou nunca definir um limite não afeta o registro de movimentações da categoria.
 
+### Parcelamentos (Sessão 12, Bloco 04/05, RS-01)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| GET | `.../installment-plans` | Lista os planos de parcelamento do household (`InstallmentPlanDto[]`, sem as parcelas). |
+| GET | `.../installment-plans/:installmentPlanId` | Detalhe de um plano: `{ plan, installments }` — `installments` é a lista real de `FinancialEntry` geradas por ele. 404 se não existir ou pertencer a outro household. |
+| POST | `.../installment-plans` | Cria atomicamente o plano **e** todas as suas parcelas (`CreateInstallmentPurchaseService`) — uma única transação real (`db.transaction()`), nunca commits parciais. 201, corpo `{ plan, installments }`. `createdByUserId`/`householdId` nunca fazem parte do corpo — vêm da sessão autenticada e da URL (mesmo padrão de `POST .../entries`, DT-14). |
+
+Corpo do `POST` (`CreateInstallmentPurchaseRequest`):
+
+```json
+{
+  "description": "Sofá",
+  "categoryId": 3,
+  "totalAmount": "3000.00",
+  "installmentCount": 10,
+  "firstReferenceMonth": "2026-08-01",
+  "dueDay": 10
+}
+```
+
+Regras de domínio reaproveitadas sem duplicação: categoria precisa existir e pertencer ao household (senão 404/409, verificado antes de qualquer escrita); `installmentCount` inteiro, mínimo 2 — **sem máximo arbitrário** (a API chegou a impor `maximum: 60` durante a implementação do Bloco 04, sem nenhum requisito formal que sustentasse esse valor; removido na revisão pré-merge — ver DT-19); `dueDay` 1–31, ajustado automaticamente pelo domínio para o último dia válido de meses mais curtos; competência de cada parcela resolvida/criada sob demanda (mesma política idempotente de `PUT .../periods/:referenceMonth`); divisão de valores via `splitMoney` (bigint-safe, sem `Number`/ponto flutuante). O plano é **estruturalmente imutável** neste MVP — não existe `PUT`/`PATCH`/`DELETE` para o plano (editar/excluir uma parcela individual continua possível via `.../entries/:entryId`, como qualquer outra movimentação, sem afetar as parcelas irmãs).
+
 Todas as rotas reaproveitam os serviços de aplicação já existentes (`apps/api/src/application/services/`) — nenhuma regra de domínio é duplicada nos handlers HTTP.
 
 ## 5. Inputs
@@ -133,7 +156,7 @@ Formato de sucesso:
 
 DTOs nunca retornam entidades internas, linhas Drizzle ou objetos do driver — sempre um mapeador explícito (`apps/api/src/http/mappers/`). Dinheiro sai sempre como string decimal; datas no mesmo formato de entrada. **`responsible_member_household_id` (coluna auxiliar de persistência, DT-09/DT-10) nunca aparece em nenhum DTO.**
 
-Exemplo — `FinancialEntryDto`:
+Exemplo — `FinancialEntryDto` (`installmentPlanId`/`installmentNumber` sempre presentes desde o Bloco 04 — `null` em ambos para lançamento avulso, preenchidos em ambos para uma parcela; nunca um preenchido sem o outro):
 
 ```json
 {
@@ -151,10 +174,55 @@ Exemplo — `FinancialEntryDto`:
     "actualAmount": null,
     "dueDate": "2026-08-05",
     "realizationDate": null,
-    "notes": null
+    "notes": null,
+    "installmentPlanId": null,
+    "installmentNumber": null
   }
 }
 ```
+
+Exemplo — `InstallmentPurchaseDto` (`GET`/`POST .../installment-plans`, parcelas truncadas para brevidade):
+
+```json
+{
+  "data": {
+    "plan": {
+      "id": 7,
+      "householdId": 10,
+      "description": "Sofá",
+      "categoryId": 3,
+      "totalAmount": "3000.00",
+      "installmentCount": 10,
+      "firstReferenceMonth": "2026-08-01",
+      "dueDay": 10,
+      "createdByUserId": 10,
+      "createdAt": "2026-08-24T10:00:00.000Z"
+    },
+    "installments": [
+      {
+        "id": 101,
+        "householdId": 10,
+        "periodId": 12,
+        "categoryId": 3,
+        "responsibleMemberId": null,
+        "createdByUserId": 10,
+        "entryType": "expense",
+        "status": "planned",
+        "description": "Sofá 1/10",
+        "expectedAmount": "300.00",
+        "actualAmount": null,
+        "dueDate": "2026-08-10",
+        "realizationDate": null,
+        "notes": null,
+        "installmentPlanId": 7,
+        "installmentNumber": 1
+      }
+    ]
+  }
+}
+```
+
+`GET .../installment-plans` (lista) devolve `data: InstallmentPlanDto[]` (só os planos, sem `installments`).
 
 Exemplo — `CategoryBudgetDto` (`GET`/`PUT .../budgets`):
 

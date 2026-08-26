@@ -1,0 +1,8 @@
+.fh-installment-form__preview {
+  background: var(--fh-purple-soft);
+  border: 1px solid var(--fh-purple-border);
+  color: var(--fh-text);
+  border-radius: var(--fh-radius-sm);
+  padding: var(--fh-space-3);
+  font-size: 13px;
+}

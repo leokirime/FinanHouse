@@ -85,3 +85,36 @@ export interface CategoryBudgetDto {
 export interface PutCategoryBudgetRequest {
   limitAmount: string
 }
+
+/** Formato exato devolvido pela API (Sessão 12, Bloco 04) — dinheiro como string decimal, nunca `number`/`bigint`. */
+export interface InstallmentPlanDto {
+  id: number
+  householdId: number
+  description: string
+  categoryId: number
+  totalAmount: string
+  installmentCount: number
+  firstReferenceMonth: string
+  dueDay: number
+  createdByUserId: number
+  createdAt: string
+}
+
+export interface InstallmentPurchaseDto {
+  plan: InstallmentPlanDto
+  installments: FinancialEntryDto[]
+}
+
+/**
+ * `createdByUserId`/`householdId` nunca fazem parte do corpo — vêm da sessão
+ * autenticada no backend (mesmo padrão de `CreateFinancialEntryRequest`,
+ * Bloco 19/DT-14, reafirmado para parcelamentos no Bloco 04).
+ */
+export interface CreateInstallmentPurchaseRequest {
+  description: string
+  categoryId: number
+  totalAmount: string
+  installmentCount: number
+  firstReferenceMonth: string
+  dueDay: number
+}

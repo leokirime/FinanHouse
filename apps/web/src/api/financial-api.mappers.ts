@@ -1,5 +1,15 @@
-import { formatMoney, parseMoney, type Category, type CategoryBudget, type FinancialEntry, type HouseholdMember, type Money, type MonthlyPeriod } from '@finanhouse/domain'
-import type { CategoryBudgetDto, CategoryDto, FinancialEntryDto, HouseholdMemberDto, MonthlyPeriodDto } from './financial-api.types.ts'
+import {
+  formatMoney,
+  parseMoney,
+  type Category,
+  type CategoryBudget,
+  type FinancialEntry,
+  type HouseholdMember,
+  type InstallmentPlan,
+  type Money,
+  type MonthlyPeriod,
+} from '@finanhouse/domain'
+import type { CategoryBudgetDto, CategoryDto, FinancialEntryDto, HouseholdMemberDto, InstallmentPlanDto, MonthlyPeriodDto } from './financial-api.types.ts'
 
 /** Fronteira dinheiro (string decimal ↔ `Money`/`bigint`) — sempre via `parseMoney`/`formatMoney`, nunca `Number()`/`parseFloat`. */
 export function moneyFromDto(value: string): Money {
@@ -51,5 +61,20 @@ export function financialEntryFromDto(dto: FinancialEntryDto): FinancialEntry {
     notes: dto.notes,
     installmentPlanId: dto.installmentPlanId,
     installmentNumber: dto.installmentNumber,
+  }
+}
+
+export function installmentPlanFromDto(dto: InstallmentPlanDto): InstallmentPlan {
+  return {
+    id: dto.id,
+    householdId: dto.householdId,
+    description: dto.description,
+    categoryId: dto.categoryId,
+    totalAmount: moneyFromDto(dto.totalAmount),
+    installmentCount: dto.installmentCount,
+    firstReferenceMonth: dto.firstReferenceMonth,
+    dueDay: dto.dueDay,
+    createdByUserId: dto.createdByUserId,
+    createdAt: dto.createdAt,
   }
 }

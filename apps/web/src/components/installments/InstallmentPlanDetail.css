@@ -1,0 +1,59 @@
+.fh-installment-detail {
+  padding: var(--fh-space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-4);
+}
+
+.fh-installment-detail__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--fh-space-4);
+  flex-wrap: wrap;
+}
+
+.fh-installment-detail__header h3 {
+  font-size: 16px;
+  margin-bottom: var(--fh-space-1);
+}
+
+.fh-installment-detail__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--fh-space-2);
+}
+
+.fh-installment-detail__item {
+  display: flex;
+  align-items: center;
+  gap: var(--fh-space-4);
+  padding: var(--fh-space-3);
+  background: var(--fh-bg-elevated);
+  border: 1px solid var(--fh-border);
+  border-radius: var(--fh-radius-sm);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.fh-installment-detail__number {
+  font-weight: 600;
+  min-width: 48px;
+}
+
+.fh-installment-detail__amount {
+  min-width: 96px;
+}
+
+.fh-installment-detail__due {
+  color: var(--fh-text-secondary);
+  min-width: 72px;
+}
+
+@media (max-width: 480px) {
+  .fh-installment-detail__item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--fh-space-1);
+  }
+}
