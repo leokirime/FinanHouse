@@ -6,6 +6,7 @@ import { ComparisonPage } from './pages/ComparisonPage.tsx'
 import { DashboardPage } from './pages/DashboardPage.tsx'
 import { FinancialEntriesPage } from './pages/FinancialEntriesPage.tsx'
 import { HistoryPage } from './pages/HistoryPage.tsx'
+import { InstallmentPlansPage } from './pages/InstallmentPlansPage.tsx'
 import { PlanningPage } from './pages/PlanningPage.tsx'
 
 /**
@@ -31,6 +32,7 @@ function App() {
       <Route element={<RootLayout />}>
         <Route index element={<DashboardPage />} />
         <Route path="movimentacoes" element={<FinancialEntriesPage />} />
+        <Route path="movimentacoes/parcelamentos" element={<InstallmentPlansPage />} />
         <Route path="comparativo" element={<ComparisonPage />} />
         <Route path="planejamento" element={<PlanningPage />} />
         <Route path="historico" element={<HistoryPage />} />

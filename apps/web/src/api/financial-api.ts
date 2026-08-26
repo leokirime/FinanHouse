@@ -1,4 +1,4 @@
-import type { Category, CategoryBudget, FinancialEntry, HouseholdMember, Money, MonthlyPeriod } from '@finanhouse/domain'
+import type { Category, CategoryBudget, FinancialEntry, HouseholdMember, InstallmentPlan, Money, MonthlyPeriod } from '@finanhouse/domain'
 import { apiRequest } from './api-client.ts'
 import type { ApiConfig } from './api-config.ts'
 import {
@@ -6,6 +6,7 @@ import {
   categoryFromDto,
   financialEntryFromDto,
   householdMemberFromDto,
+  installmentPlanFromDto,
   monthlyPeriodFromDto,
   moneyToDto,
 } from './financial-api.mappers.ts'
@@ -13,8 +14,11 @@ import type {
   CategoryBudgetDto,
   CategoryDto,
   CreateFinancialEntryRequest,
+  CreateInstallmentPurchaseRequest,
   FinancialEntryDto,
   HouseholdMemberDto,
+  InstallmentPlanDto,
+  InstallmentPurchaseDto,
   MonthlyPeriodDto,
   PutCategoryBudgetRequest,
   UpdateFinancialEntryRequest,
@@ -157,4 +161,46 @@ export async function putBudget(config: ApiConfig, referenceMonth: string, categ
 
 export async function deleteBudget(config: ApiConfig, referenceMonth: string, categoryId: number, signal?: AbortSignal): Promise<void> {
   await apiRequest<void>(config, scopedPath(config, `/periods/${referenceMonth}/budgets/${categoryId}`), { method: 'DELETE', signal })
+}
+
+export interface InstallmentPurchaseResult {
+  plan: InstallmentPlan
+  installments: FinancialEntry[]
+}
+
+function installmentPurchaseFromDto(dto: InstallmentPurchaseDto): InstallmentPurchaseResult {
+  return { plan: installmentPlanFromDto(dto.plan), installments: dto.installments.map(financialEntryFromDto) }
+}
+
+export async function listInstallmentPlans(config: ApiConfig, signal?: AbortSignal): Promise<InstallmentPlan[]> {
+  const dtos = await apiRequest<InstallmentPlanDto[]>(config, scopedPath(config, '/installment-plans'), { signal })
+  return dtos.map(installmentPlanFromDto)
+}
+
+export async function getInstallmentPlanDetail(config: ApiConfig, installmentPlanId: number, signal?: AbortSignal): Promise<InstallmentPurchaseResult> {
+  const dto = await apiRequest<InstallmentPurchaseDto>(config, scopedPath(config, `/installment-plans/${installmentPlanId}`), { signal })
+  return installmentPurchaseFromDto(dto)
+}
+
+export interface CreateInstallmentPurchaseInput {
+  description: string
+  categoryId: number
+  totalAmount: Money
+  installmentCount: number
+  firstReferenceMonth: string
+  dueDay: number
+}
+
+/** `createdByUserId` nunca é enviado — vem da sessão autenticada no backend (mesmo padrão de `createEntry`, Bloco 19/DT-14). */
+export async function createInstallmentPurchase(config: ApiConfig, input: CreateInstallmentPurchaseInput, signal?: AbortSignal): Promise<InstallmentPurchaseResult> {
+  const body: CreateInstallmentPurchaseRequest = {
+    description: input.description,
+    categoryId: input.categoryId,
+    totalAmount: moneyToDto(input.totalAmount),
+    installmentCount: input.installmentCount,
+    firstReferenceMonth: input.firstReferenceMonth,
+    dueDay: input.dueDay,
+  }
+  const dto = await apiRequest<InstallmentPurchaseDto>(config, scopedPath(config, '/installment-plans'), { method: 'POST', body, signal })
+  return installmentPurchaseFromDto(dto)
 }

@@ -1,6 +1,6 @@
 # Contrato Frontend-Backend
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-06
+> Projeto: FinanHouse · Atualizado em: 2026-08-25
 
 > Este contrato é a fonte da verdade da interface entre frontend e backend. Mudar um endpoint sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Para o formato exato de rotas/DTOs/erros, ver `Docs/03_contracts/contrato_api_http.md` (Bloco 16) — este documento cobre especificamente como o **frontend** (`apps/web`, Bloco 17) consome essa API, não repete o wire format.
 
@@ -36,12 +36,17 @@ Consumidos pelo frontend (subconjunto de `contrato_api_http.md`, seção 4):
 | GET | `.../periods/:referenceMonth/budgets` | Carga dos limites por categoria da competência selecionada (`usePeriodBudgets`, hook dedicado a `PlanningPage` — fora de `FinanceProvider`) |
 | PUT | `.../periods/:referenceMonth/budgets/:categoryId` | `createOrUpdate()` de `usePeriodBudgets` — define/edita um limite (idempotente) |
 | DELETE | `.../periods/:referenceMonth/budgets/:categoryId` | `remove()` de `usePeriodBudgets` — remove um limite |
+| GET | `.../installment-plans` | Carga da lista de parcelamentos (`useInstallmentPlans`, hook dedicado a `InstallmentPlansPage` — fora de `FinanceProvider`, mesmo padrão de `usePeriodBudgets`) |
+| GET | `.../installment-plans/:installmentPlanId` | Detalhe de um plano selecionado na lista (`useInstallmentPlanDetail`) — busca de novo a cada troca de plano |
+| POST | `.../installment-plans` | `create()` de `useInstallmentPlans` — cria o plano e todas as parcelas atomicamente (Sessão 12, Bloco 04/05); `createdByUserId`/`householdId` nunca são enviados |
 
 Autenticação: sessão real por cookie `HttpOnly` desde o Bloco 19 (DT-14) — ver `Docs/03_contracts/contrato_autenticacao.md`. `AppRoot.tsx` nunca monta `FinanceProvider` antes de `AuthProvider` confirmar `status: 'authenticated'`.
 
 ## 4. Inputs
 
 Formato idêntico ao descrito em `contrato_api_http.md`, seção 5 (dinheiro como string decimal via `moneyToDto`/`formatMoney`, datas `YYYY-MM-DD`). O frontend nunca constrói o corpo manualmente fora de `apps/web/src/api/financial-api.ts`.
+
+**Entrada monetária do usuário (Sessão 12, Bloco 05):** o formulário de parcelamentos (`InstallmentPlanForm`) é o único ponto do frontend que aceita dinheiro digitado em formato de exibição pt-BR (vírgula decimal, ponto de milhar opcional — ex.: `"3000,00"`, `"3.000,00"`) em vez do formato canônico do contrato. `parseMoneyPtBr` (`apps/web/src/utils/format-money-pt-br.ts`) normaliza o texto para a string decimal canônica (`"3000.00"`) antes de `parseMoney` — nunca `Number`/`parseFloat` como fonte de verdade, nenhuma aritmética de ponto flutuante envolvida. O contrato HTTP em si não muda: o corpo do `POST` sempre envia `totalAmount` no formato `"3000.00"` (seção 5 de `contrato_api_http.md`), como qualquer outro valor monetário desta API. Os demais formulários do frontend (`FinancialEntryForm`, `RealizeEntryDialog`, `BudgetFormDialog`) continuam aceitando o valor já em formato canônico (`parseMoney` direto) — normalizar essa entrada para pt-BR em todo o app é uma melhoria futura, fora do escopo deste bloco.
 
 ## 5. Outputs
 

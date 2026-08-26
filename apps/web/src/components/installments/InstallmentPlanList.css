@@ -1,0 +1,75 @@
+.fh-installment-list {
+  padding: var(--fh-space-5);
+  overflow-x: auto;
+}
+
+.fh-installment-list__table {
+  font-size: 13px;
+}
+
+.fh-installment-list__table th {
+  text-align: left;
+  color: var(--fh-text-muted);
+  font-weight: 500;
+  font-size: 12px;
+  padding: var(--fh-space-2) var(--fh-space-3);
+  border-bottom: 1px solid var(--fh-border);
+  white-space: nowrap;
+}
+
+.fh-installment-list__table td {
+  padding: var(--fh-space-3);
+  border-bottom: 1px solid var(--fh-border);
+  vertical-align: top;
+}
+
+.fh-installment-list__row[data-selected='true'] {
+  background: var(--fh-purple-soft);
+}
+
+.fh-installment-list__select {
+  background: transparent;
+  border: none;
+  color: var(--fh-purple-strong);
+  font-weight: 600;
+  text-align: left;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Tabela vira lista empilhada em telas estreitas — sem rolagem horizontal (mesmo padrão de FinancialEntryList.css). */
+@media (max-width: 900px) {
+  .fh-installment-list__table thead {
+    display: none;
+  }
+
+  .fh-installment-list__table,
+  .fh-installment-list__table tbody,
+  .fh-installment-list__table tr,
+  .fh-installment-list__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .fh-installment-list__table tr {
+    padding: var(--fh-space-3) 0;
+    border-bottom: 1px solid var(--fh-border);
+  }
+
+  .fh-installment-list__table td {
+    border-bottom: none;
+    padding: 2px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--fh-space-3);
+  }
+
+  .fh-installment-list__table td::before {
+    content: attr(data-label);
+    color: var(--fh-text-muted);
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+}
