@@ -27,7 +27,7 @@ export function DeleteEntryDialog({ entry, onClose }: DeleteEntryDialogProps) {
     <EntryDialog titleId={titleId} title="Excluir lançamento?" onClose={onClose}>
       <div className="fh-entry-form">
         <p>
-          Este lançamento será removido permanentemente do FinanHouse. <strong>"{entry.description}"</strong> não
+          Este lançamento será removido permanentemente do HouseManager. <strong>"{entry.description}"</strong> não
           poderá ser recuperado depois.
         </p>
 

@@ -1,6 +1,6 @@
 # Contrato da API HTTP
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-25
+> Projeto: HouseManager · Atualizado em: 2026-08-25
 
 > Este contrato descreve a API HTTP implementada a partir do Bloco 16 (DT-11), estendida nos Blocos 17 (movimentações reais no frontend), 18 (limites mensais por categoria, DT-13), 19 (autenticação real e sessão, DT-14), 20 (exclusão real de movimentações) e Sessão 12/Bloco 04 (parcelamentos, RS-01, DT-19). É a fonte da verdade da superfície HTTP da API — mudar uma rota, um formato de erro ou uma regra de validação sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Não confundir com `Docs/03_contracts/contrato_frontend_backend.md` (Bloco 17 em diante — como o frontend consome esta API, sem repetir o wire format) nem com `Docs/03_contracts/contrato_autenticacao.md` (fluxo completo de login/sessão, Bloco 19).
 

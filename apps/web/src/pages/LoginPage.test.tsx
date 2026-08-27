@@ -20,7 +20,7 @@ function renderLoginPage(overrides: Partial<AuthContextValue> = {}, state?: Auth
 describe('LoginPage', () => {
   it('renderiza marca, título e os dois campos com labels acessíveis', () => {
     renderLoginPage()
-    expect(screen.getByRole('heading', { name: 'Entrar no Finanhouse' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Entrar no HouseManager' })).toBeTruthy()
     expect(screen.getByLabelText('E-mail')).toBeTruthy()
     expect(screen.getByLabelText('Senha')).toBeTruthy()
     expect(screen.getByRole('button', { name: 'Entrar' })).toBeTruthy()
@@ -146,8 +146,8 @@ describe('LoginPage', () => {
   })
 
   it('exibe mensagem de erro separada quando a API está indisponível', () => {
-    renderLoginPage({}, { status: 'unauthenticated', pendingLogin: false, loginError: 'Não foi possível conectar ao FinanHouse. Verifique se a API local está em execução.' })
-    expect(screen.getByRole('alert').textContent).toMatch(/conectar ao FinanHouse/)
+    renderLoginPage({}, { status: 'unauthenticated', pendingLogin: false, loginError: 'Não foi possível conectar ao HouseManager. Verifique se a API local está em execução.' })
+    expect(screen.getByRole('alert').textContent).toMatch(/conectar ao HouseManager/)
   })
 
   it('exibe mensagem de rate limit sem nenhum texto técnico do backend', () => {

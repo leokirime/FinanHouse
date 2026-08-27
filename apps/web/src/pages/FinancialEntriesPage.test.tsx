@@ -100,7 +100,7 @@ describe('FinancialEntriesPage — exclusão real de lançamentos (Bloco 20)', (
 
     const dialog = screen.getByRole('dialog')
     expect(within(dialog).getByRole('heading', { name: 'Excluir lançamento?' })).toBeTruthy()
-    expect(within(dialog).getByText(/removido permanentemente do FinanHouse/)).toBeTruthy()
+    expect(within(dialog).getByText(/removido permanentemente do HouseManager/)).toBeTruthy()
     expect(screen.getByText('Viagem de fim de semana (planejada)')).toBeTruthy()
   })
 

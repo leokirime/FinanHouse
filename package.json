@@ -2,7 +2,7 @@
   "name": "finanhouse",
   "private": true,
   "version": "0.1.0",
-  "description": "Controle financeiro doméstico do Finanhouse — monorepo.",
+  "description": "Central de gerenciamento doméstico do HouseManager — monorepo.",
   "workspaces": [
     "apps/*",
     "packages/*",

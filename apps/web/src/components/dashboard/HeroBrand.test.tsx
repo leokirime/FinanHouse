@@ -18,14 +18,14 @@ const overview: PeriodOverviewViewModel = {
 describe('HeroBrand', () => {
   it('renderiza a imagem oficial da logo como <img>, com o alt correto', () => {
     render(<HeroBrand overview={overview} />)
-    const image = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
+    const image = screen.getByRole('img', { name: 'HouseManager — Casa, evolução e equilíbrio' })
     expect(image.tagName).toBe('IMG')
     expect(image.getAttribute('src')).toBeTruthy()
   })
 
   it('não renderiza a logo como imagem de fundo CSS', () => {
     render(<HeroBrand overview={overview} />)
-    const image = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
+    const image = screen.getByRole('img', { name: 'HouseManager — Casa, evolução e equilíbrio' })
     expect((image as HTMLElement).style.backgroundImage).toBe('')
   })
 
@@ -49,7 +49,7 @@ describe('HeroBrand', () => {
 
   it('não referencia URL externa nem base64 no src da imagem', () => {
     render(<HeroBrand overview={overview} />)
-    const image = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
+    const image = screen.getByRole('img', { name: 'HouseManager — Casa, evolução e equilíbrio' })
     const src = image.getAttribute('src') ?? ''
     expect(src.startsWith('http://')).toBe(false)
     expect(src.startsWith('https://')).toBe(false)
@@ -63,7 +63,7 @@ describe('HeroBrand', () => {
 
   it('a imagem carrega a classe de posicionamento decorativo (fh-hero__logo)', () => {
     render(<HeroBrand overview={overview} />)
-    const image = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
+    const image = screen.getByRole('img', { name: 'HouseManager — Casa, evolução e equilíbrio' })
     expect(image.className).toContain('fh-hero__logo')
   })
 
@@ -126,7 +126,7 @@ describe('HeroBrand — posicionamento da marca (correção retrospectiva do Blo
 
   it('a imagem da marca continua a mesma referência de asset (nenhuma edição/geração de imagem)', () => {
     render(<HeroBrand overview={overview} />)
-    const image = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
+    const image = screen.getByRole('img', { name: 'HouseManager — Casa, evolução e equilíbrio' })
     expect(image.getAttribute('src')).toMatch(/finanhouse-logo-hero/)
   })
 

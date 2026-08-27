@@ -1,5 +1,5 @@
 /**
- * Design tokens do Finanhouse — identidade preta/roxa (Bloco 06).
+ * Design tokens do HouseManager — identidade preta/roxa (Bloco 06).
  * Não usar valores hexadecimais soltos em componentes: sempre referenciar
  * um token daqui. Ver Docs/07_design_system/ para o racional de cada grupo.
  */
@@ -76,7 +76,7 @@
   :root {
     /* O produto é intencionalmente escuro por padrão (identidade da marca).
        Mantém o mesmo tema também em ambientes claros do sistema operacional
-       para preservar a identidade visual definida para o Finanhouse. */
+       para preservar a identidade visual definida para o HouseManager. */
     color-scheme: dark;
   }
 }

@@ -1,6 +1,6 @@
 # Proposta de Solução
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Preencha depois de `visao_produto.md`. Esta proposta é a resposta concreta ao problema descrito lá — não uma lista de features desconectadas.
 

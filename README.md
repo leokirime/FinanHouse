@@ -1,4 +1,6 @@
-# Finanhouse
+# HouseManager
+
+> Anteriormente conhecido como FinanHouse — identidade pública atualizada na Sessão 13 (`Docs/05_sessions/session_13_renomeacao_finanhouse_para_housemanager/`). Identificadores técnicos internos (banco `finanhouse_dev`, namespace `@finanhouse/domain`, classes CSS `fh-*`) permanecem inalterados.
 
 ## Natureza
 

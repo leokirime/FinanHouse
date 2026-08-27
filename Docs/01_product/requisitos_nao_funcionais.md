@@ -1,6 +1,6 @@
 # Requisitos Não Funcionais
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Requisitos não funcionais costumam ser ignorados até causarem um incidente. Preencha com limites concretos e mensuráveis, não com adjetivos ("rápido", "seguro").
 

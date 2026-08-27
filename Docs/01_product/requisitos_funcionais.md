@@ -1,6 +1,6 @@
 # Requisitos Funcionais
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-04
+> Projeto: HouseManager · Atualizado em: 2026-08-04
 
 > Todo bloco de implementação deve referenciar um requisito listado aqui. Se uma tarefa não tem requisito correspondente, atualize esta lista antes de implementar — não implemente "por inferência".
 

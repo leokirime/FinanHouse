@@ -77,7 +77,7 @@ describe('Sidebar', () => {
 
   it('renderiza a marca institucional (imagem real) no topo, antes dos itens de navegação', () => {
     const { container } = renderWithProviders(<Sidebar />)
-    const image = screen.getByRole('img', { name: 'Finanhouse' })
+    const image = screen.getByRole('img', { name: 'HouseManager' })
     expect(image.getAttribute('src')).toMatch(/finanhouse-logo-hero/)
 
     // Ordem no DOM: a marca (dentro de .fh-sidebar__brand) vem antes de .fh-sidebar__nav.
@@ -91,7 +91,7 @@ describe('Sidebar', () => {
 
   it('a marca institucional é um link acessível para a visão geral ("/")', () => {
     renderWithProviders(<Sidebar />)
-    const brandLink = screen.getByRole('link', { name: 'Ir para a visão geral do FinanHouse' })
+    const brandLink = screen.getByRole('link', { name: 'Ir para a visão geral do HouseManager' })
     expect(brandLink.getAttribute('href')).toBe('/')
   })
 

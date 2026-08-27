@@ -1,6 +1,6 @@
 # Contrato Frontend-Backend
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-25
+> Projeto: HouseManager · Atualizado em: 2026-08-25
 
 > Este contrato é a fonte da verdade da interface entre frontend e backend. Mudar um endpoint sem atualizar este documento é uma quebra de contrato, mesmo que o código "funcione". Para o formato exato de rotas/DTOs/erros, ver `Docs/03_contracts/contrato_api_http.md` (Bloco 16) — este documento cobre especificamente como o **frontend** (`apps/web`, Bloco 17) consome essa API, não repete o wire format.
 

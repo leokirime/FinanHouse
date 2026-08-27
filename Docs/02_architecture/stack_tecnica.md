@@ -1,6 +1,6 @@
 # Stack Técnica
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Liste o que é usado de fato no projeto, com versão quando relevante — não um catálogo de tudo que poderia ser usado.
 

@@ -1,6 +1,6 @@
 # Regras do Domínio Financeiro
 
-> Projeto: FinanHouse · Gerado no Bloco 05 (`bloco_05_regras_de_dominio_e_servicos_financeiros`) · 2026-07-25
+> Projeto: HouseManager · Gerado no Bloco 05 (`bloco_05_regras_de_dominio_e_servicos_financeiros`) · 2026-07-25
 
 > Este documento descreve o **comportamento** implementado em `packages/domain/src/` e `apps/api/src/application/`. A fonte de verdade é sempre o código e seus testes — este documento explica o *porquê* das decisões, não repete o que já está óbvio no código.
 

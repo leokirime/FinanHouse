@@ -1,6 +1,6 @@
 # Contrato de Deploy
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Detalhe operacional de execução de deploy vai em `Docs/08_deploy/`. Aqui o foco é o contrato: o que cada lado (código, infraestrutura, pipeline) garante ao outro.
 

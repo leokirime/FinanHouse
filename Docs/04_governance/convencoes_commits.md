@@ -1,6 +1,6 @@
 # Convenções de Commits
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Toda sugestão de commit semântico em feedbacks e prompts da DDAE Engine segue este padrão. Nenhum commit é feito sem confirmação explícita do usuário — ver `Docs/00_ddae_engine/regras_ddae_engine.md`, regra 6.
 

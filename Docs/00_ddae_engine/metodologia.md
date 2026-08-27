@@ -1,6 +1,6 @@
 # Metodologia DDAE Engine
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 ## 1. O que é DDAE Engine
 

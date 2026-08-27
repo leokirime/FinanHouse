@@ -1,6 +1,6 @@
 # apps/web
 
-Frontend do Finanhouse: React + Vite + TypeScript + React Router.
+Frontend do HouseManager: React + Vite + TypeScript + React Router.
 
 ## Executar localmente
 

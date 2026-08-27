@@ -1,6 +1,6 @@
 # Contrato de Banco de Dados
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-20
+> Projeto: HouseManager · Atualizado em: 2026-08-20
 
 > Este contrato define o que o código pode assumir sobre o esquema do banco. Mudança de esquema sem migração registrada aqui é uma quebra de contrato.
 

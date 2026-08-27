@@ -82,7 +82,7 @@ export function LoginPage() {
 
       <div className="fh-login-page__panel">
         <div className="fh-login-page__card fh-card fh-card--elevated">
-          <h1>Entrar no Finanhouse</h1>
+          <h1>Entrar no HouseManager</h1>
           <p className="fh-login-page__description fh-text-secondary">Acesse sua conta para acompanhar as finanças da sua casa.</p>
 
           <form className="fh-login-page__form" onSubmit={handleSubmit} noValidate>

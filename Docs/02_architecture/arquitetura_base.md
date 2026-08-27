@@ -1,6 +1,6 @@
 # Arquitetura Base
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Descreva a arquitetura como ela é (ou será), não como um diagrama idealizado. Se uma decisão aqui é cara de reverter, registre-a também em `decisoes_tecnicas.md`.
 

@@ -13,8 +13,8 @@ describe('index.html', () => {
     expect(html).not.toContain('lang="en"')
   })
 
-  it('tem o título "Finanhouse"', () => {
-    expect(html).toContain('<title>Finanhouse</title>')
+  it('tem o título "HouseManager"', () => {
+    expect(html).toContain('<title>HouseManager</title>')
   })
 
   it('declara charset UTF-8', () => {
