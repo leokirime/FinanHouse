@@ -1,6 +1,6 @@
 # Feedback — Bloco 05: Frontend de criação e visualização de parcelamentos
 
-> Sessão: 12 (parcelamentos_e_compromissos_futuros) · Projeto: FinanHouse · Atualizado em: 2026-08-25
+> Sessão: 12 (parcelamentos_e_compromissos_futuros) · Projeto: FinanHouse · Atualizado em: 2026-08-26
 
 ## 1. Resumo Executivo
 
@@ -145,7 +145,7 @@ Nenhum risco ativo novo identificado.
 - `npm run test` (raiz): **API 667 passed (667), Web 420 passed (420), Domain 214 passed (214)** — 0 falhas em qualquer workspace.
 - `npx ddae-engine audit`: Status OK, 0 erros, 0 P1/P2, "Nenhuma pendência P1/P2 encontrada."
 - `git diff --check`: limpo.
-- **Aprovação visual do proprietário do projeto (2026-08-25):** fluxo testado manualmente em Movimentações → Parcelamentos — criação, listagem e detalhe aprovados. Um parcelamento pode ter sido criado manualmente pelo proprietário durante esse teste, via a interface, contra a API real (Aiven DEV) — essa eventual escrita não foi feita nem revertida pelo Claude, e não faz parte do escopo de código deste bloco.
+- **Aprovação visual do proprietário do projeto (2026-08-26):** fluxo testado manualmente em Movimentações → Parcelamentos — criação, listagem e detalhe aprovados. Um parcelamento pode ter sido criado manualmente pelo proprietário durante esse teste, via a interface, contra a API real (Aiven DEV) — essa eventual escrita não foi feita nem revertida pelo Claude, e não faz parte do escopo de código deste bloco.
 
 ## 16. Resultado Final
 
@@ -153,7 +153,7 @@ Nenhum risco ativo novo identificado.
 - [ ] Bloco concluído com ressalvas (ver pendências)
 - [ ] Bloco bloqueado
 
-**Aprovado visualmente pelo proprietário do projeto em 2026-08-25.**
+**Aprovado visualmente pelo proprietário do projeto em 2026-08-26.**
 
 ## 17. Próximo Bloco Recomendado
 
