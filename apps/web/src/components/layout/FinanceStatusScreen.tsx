@@ -45,7 +45,7 @@ export function FinanceStatusScreen(props: FinanceStatusScreenProps) {
       <div className="fh-status-screen" role="status" aria-live="polite">
         <div className="fh-status-screen__card">
           <div className="fh-status-screen__spinner" aria-hidden="true" />
-          <h1>{props.title ?? 'Carregando o Finanhouse'}</h1>
+          <h1>{props.title ?? 'Carregando o HouseManager'}</h1>
           <p className="fh-text-secondary">{props.description ?? 'Buscando categorias, membros, competência e movimentações na API real.'}</p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 # packages/domain
 
-Tipos e regras de negócio do domínio financeiro do Finanhouse, **independentes de framework** — não importa Drizzle, mysql2, nem nada específico de `apps/api`. Os tipos aqui espelham conceitualmente o schema proposto em `apps/api/src/db/schema/` (fonte de verdade da persistência), mas são definidos de forma independente para poderem ser usados também por `apps/web` sem trazer dependências de banco.
+Tipos e regras de negócio do domínio financeiro do HouseManager, **independentes de framework** — não importa Drizzle, mysql2, nem nada específico de `apps/api`. Os tipos aqui espelham conceitualmente o schema proposto em `apps/api/src/db/schema/` (fonte de verdade da persistência), mas são definidos de forma independente para poderem ser usados também por `apps/web` sem trazer dependências de banco.
 
 ## Estrutura
 

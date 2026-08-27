@@ -1,6 +1,6 @@
 # Matriz de Riscos
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Esta matriz é o consolidado de riscos de todo o projeto (produto, arquitetura, segurança, operação). Riscos detalhados por área continuam vivendo em seus documentos específicos (`Docs/02_architecture/riscos_arquiteturais.md`, `Docs/06_quality_gates/security_gate.md`, etc.) — aqui entra a visão executiva.
 

@@ -1,6 +1,6 @@
 # Contrato de Autenticação
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-04
+> Projeto: HouseManager · Atualizado em: 2026-08-04
 
 > Mudanças neste contrato afetam segurança diretamente. Qualquer alteração aqui deve passar pelo `Docs/06_quality_gates/security_gate.md` antes de ir para produção.
 

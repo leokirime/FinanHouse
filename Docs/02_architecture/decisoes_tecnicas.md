@@ -1,12 +1,26 @@
 # Decisões Técnicas
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-25
+> Projeto: HouseManager · Atualizado em: 2026-08-25
 
 > Registre apenas decisões caras de reverter (troca de framework, modelo de dados, estratégia de autenticação, etc.) — não decisões triviais de estilo de código.
 
 ## 1. Decisões Registradas
 
 Use uma entrada por decisão, mais recente primeiro. Nunca edite uma decisão antiga para "corrigi-la" — registre uma nova decisão que a supersede.
+
+### DT-20 — Identidade pública renomeada de FinanHouse para HouseManager; identificadores técnicos internos preservados (Sessão 13, Bloco 01)
+
+- **Data:** 2026-08-27
+- **Contexto:** O proprietário do projeto decidiu que "HouseManager" passa a ser a identidade pública do produto — uma central de gerenciamento da casa, da qual finanças é um domínio importante, mas não o produto inteiro (visão de módulos futuros: Início, Finanças, Agenda, Casa, Histórico — nenhum implementado nesta sessão). Executado numa Session 13 isolada (worktree separado, `feat/session-13-renomeacao-housemanager`, base `main` em `7b27f02703de6cfa4719d561fafd7467b4646021`), deliberadamente sem misturar com o desenvolvimento funcional em andamento da Sessão 12 (Bloco 06 aberto, não commitado).
+- **Decisão:** renomeação seletiva, nunca substituição global — cada ocorrência de "FinanHouse" foi classificada por contexto antes de qualquer edição (inventário completo registrado no feedback do bloco). Regra aplicada:
+  - **Identidade pública (renomeado):** `<title>` do HTML, marca institucional (`Brand`/`HeroBrand`: alt text, texto tipográfico "HouseManager"/abreviação "HM"), heading de login ("Entrar no HouseManager"), mensagens de erro/status voltadas ao usuário (`AuthProvider`, `FinanceStatusScreen`, `AppRoot`, `DeleteEntryDialog`), `aria-label`s da `Sidebar`, `description` do `package.json` raiz, READMEs descritivos (raiz + `apps/api`, `apps/web`, `packages/domain`, `packages/ui`, `assets/brand`, `assets/images`), e o cabeçalho `> Projeto: HouseManager ·` em 29 documentos DDAE **atuais/vivos** (`Docs/00_ddae_engine/`, `Docs/01_product/`, `Docs/02_architecture/`, `Docs/03_contracts/`, `Docs/04_governance/`).
+  - **Identificadores técnicos internos (preservados):** namespace de pacote `@finanhouse/domain` (todo import/`package.json`), classes CSS `fh-*`, variável/arquivo de asset `finanhouseLogoHero`/`finanhouse-logo-hero.png`, `name: "finanhouse"` do `package.json` raiz, e-mails de teste `@finanhouse.invalid`.
+  - **Infraestrutura (preservada):** banco `finanhouse_dev`/`finanhouse_prod`, usuário `finanhouse_dev_app`, projeto/serviço Aiven `finanhouse`/`finanhouse-mysql`, todas as variáveis de ambiente `FINANHOUSE_*`/`VITE_FINANHOUSE_HOUSEHOLD_ID`, cookie de sessão `finanhouse_session`.
+  - **Histórico (preservado, nunca reescrito):** todos os documentos DDAE de `Docs/05_sessions/session_01` a `session_12` (feedbacks, prompts, blocos, decisões já encerradas) — incluindo o narrativa histórica extensa em `README.md` (seção "Banco de dados") que registra decisões datadas de blocos passados.
+  - **Pendência visual registrada, não resolvida nesta sessão:** o asset `assets/images/finanhouse-logo-hero.png` contém a palavra "Finanhouse" desenhada graficamente dentro da própria imagem (wordmark). O arquivo foi preservado (nenhuma tentativa de redesenhar/fabricar uma logo via código) — a substituição por uma versão com "HouseManager" é uma pendência explícita para uma rodada futura de design/branding.
+- **Por que não renomear `@finanhouse/domain`/CSS `fh-*`/infraestrutura:** nenhum desses identificadores é visível ao usuário final; renomeá-los provocaria ripple real (imports, lockfile, build, tooling, possível perda de sessão/cookie) sem nenhum benefício funcional — exatamente o tipo de troca "cara de reverter, sem ganho" que esta decisão técnica existe para evitar.
+- **Testado:** suíte completa sem regressão de comportamento — apenas texto de branding e um teste de asset (`index.test.ts`) atualizados para refletir a nova identidade; nenhuma lógica de negócio alterada.
+- **Consequências:** ao abrir a aplicação, nenhum texto público do fluxo normal (login, sidebar, dashboard, diálogos, mensagens de erro) exibe mais "FinanHouse", exceto o asset visual pendente (logo) e o histórico DDAE preservado. Nenhuma migration, alteração de banco, endpoint, storage key ou variável de ambiente foi necessária.
 
 ### DT-19 — Persistência atômica de compra parcelada via `db.transaction()` nativo (RS-01, Sessão 12, Bloco 04)
 

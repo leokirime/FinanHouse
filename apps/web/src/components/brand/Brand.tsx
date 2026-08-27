@@ -4,7 +4,7 @@ export interface BrandProps {
   /**
    * Caminho para o arquivo de logo oficial (`assets/images/`), quando
    * fornecido. Enquanto nenhum `logoSrc` é passado, o componente usa
-   * somente o nome "Finanhouse" em modo tipográfico — nunca um ícone
+   * somente o nome "HouseManager" em modo tipográfico — nunca um ícone
    * inventado.
    */
   logoSrc?: string
@@ -22,14 +22,14 @@ export function Brand({ logoSrc, compact = false, size = 'default' }: BrandProps
   if (logoSrc) {
     return (
       <div className="fh-brand" data-size={size}>
-        <img src={logoSrc} alt="Finanhouse" className="fh-brand__logo" />
+        <img src={logoSrc} alt="HouseManager" className="fh-brand__logo" />
       </div>
     )
   }
 
   return (
     <div className="fh-brand" data-mode="typographic" data-size={size}>
-      <span className="fh-brand__name">{compact ? 'FH' : 'Finanhouse'}</span>
+      <span className="fh-brand__name">{compact ? 'HM' : 'HouseManager'}</span>
     </div>
   )
 }

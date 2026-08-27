@@ -1,6 +1,6 @@
 # Arquitetura Visual do Dashboard
 
-> Projeto: FinanHouse · Gerado no Bloco 06 (`bloco_06_dashboard_visual_com_dados_simulados`) · 2026-07-25
+> Projeto: HouseManager · Gerado no Bloco 06 (`bloco_06_dashboard_visual_com_dados_simulados`) · 2026-07-25
 
 > Este documento descreve como o dashboard visual (`apps/web`) é construído sobre dados **inteiramente simulados**. Não representa e não deve ser lido como evidência de conexão com o MySQL real ou de persistência de dados — ambos permanecem fora de escopo deste bloco (ver `Docs/02_architecture/regras_dominio_financeiro.md`, seção 11).
 

@@ -1,6 +1,6 @@
 # Convenções de Código
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Convenções aqui valem para humanos e agentes de IA igualmente. Um agente que gera código fora destas convenções deve ser corrigido no mesmo bloco, não "depois".
 

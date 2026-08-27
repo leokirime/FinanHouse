@@ -1,6 +1,6 @@
 # apps/api
 
-API do Finanhouse: Node.js + TypeScript.
+API do HouseManager: Node.js + TypeScript.
 
 ## Executar localmente
 

@@ -1,6 +1,6 @@
 # Riscos Arquiteturais
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Riscos aqui são sobre a arquitetura em si (escalabilidade, manutenibilidade, acoplamento) — riscos de produto vão em `Docs/01_product/visao_produto.md`, riscos de segurança específicos vão em `Docs/06_quality_gates/security_gate.md`.
 

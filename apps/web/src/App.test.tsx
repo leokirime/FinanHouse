@@ -35,10 +35,10 @@ describe('App', () => {
   it('exibe a marca oficial duas vezes: institucional na sidebar e decorativa no hero', () => {
     renderWithProviders(<App />)
     // Sidebar: ocorrência institucional permanente, imagem real (não mais modo tipográfico).
-    const sidebarImage = screen.getByRole('img', { name: 'Finanhouse' })
+    const sidebarImage = screen.getByRole('img', { name: 'HouseManager' })
     expect(sidebarImage.getAttribute('src')).toMatch(/finanhouse-logo-hero/)
     // Hero: ocorrência decorativa, imagem real com o slogan completo no alt.
-    const heroImage = screen.getByRole('img', { name: 'Finanhouse — Casa, evolução e equilíbrio' })
+    const heroImage = screen.getByRole('img', { name: 'HouseManager — Casa, evolução e equilíbrio' })
     expect(heroImage.tagName).toBe('IMG')
     // As duas são elementos <img> distintos — nunca a mesma ocorrência duplicada por engano.
     expect(sidebarImage).not.toBe(heroImage)

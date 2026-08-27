@@ -56,7 +56,7 @@ function reducer(state: AuthState, event: InternalEvent): AuthState {
  */
 function safeLoginErrorMessage(error: unknown): string {
   if (error instanceof ApiError) {
-    if (error.kind === 'network') return 'Não foi possível conectar ao FinanHouse. Verifique se a API local está em execução.'
+    if (error.kind === 'network') return 'Não foi possível conectar ao HouseManager. Verifique se a API local está em execução.'
     if (error.kind === 'timeout') return 'A API não respondeu a tempo. Tente novamente.'
     if (error.kind === 'rate_limited') return 'Muitas tentativas de acesso. Aguarde alguns minutos e tente novamente.'
     return error.message

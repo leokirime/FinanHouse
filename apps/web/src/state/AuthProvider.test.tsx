@@ -170,7 +170,7 @@ describe('AuthProvider — login', () => {
 
     await waitFor(() => {
       if (result.current.state.status !== 'unauthenticated') throw new Error('esperado unauthenticated')
-      expect(result.current.state.loginError).toBe('Não foi possível conectar ao FinanHouse. Verifique se a API local está em execução.')
+      expect(result.current.state.loginError).toBe('Não foi possível conectar ao HouseManager. Verifique se a API local está em execução.')
     })
   })
 

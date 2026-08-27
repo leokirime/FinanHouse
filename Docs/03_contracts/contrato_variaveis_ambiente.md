@@ -1,6 +1,6 @@
 # Contrato de Variáveis de Ambiente
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-31
+> Projeto: HouseManager · Atualizado em: 2026-07-31
 
 > Nenhum valor real de segredo (chave de API, senha, connection string) deve aparecer neste arquivo — apenas nome, propósito e formato esperado.
 

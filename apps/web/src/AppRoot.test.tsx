@@ -68,7 +68,7 @@ describe('AppRoot — fluxo completo de autenticação', () => {
     vi.stubGlobal('fetch', createFetchMock({ 'GET /api/v1/auth/session': () => jsonResponse({ error: { code: 'UNAUTHENTICATED', message: 'Sessão ausente.' } }, 401) }))
     renderApp()
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Entrar no Finanhouse' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Entrar no HouseManager' })).toBeTruthy())
     expect(screen.queryByText('Receitas realizadas')).toBeNull()
   })
 
@@ -108,7 +108,7 @@ describe('AppRoot — fluxo completo de autenticação', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Entrar' }))
 
     await waitFor(() => expect(screen.getByRole('alert').textContent).toBe('E-mail ou senha inválidos.'))
-    expect(screen.getByRole('heading', { name: 'Entrar no Finanhouse' })).toBeTruthy()
+    expect(screen.getByRole('heading', { name: 'Entrar no HouseManager' })).toBeTruthy()
   })
 
   it('sessão já autenticada abre o sistema diretamente, sem passar pela tela de login', async () => {
@@ -116,7 +116,7 @@ describe('AppRoot — fluxo completo de autenticação', () => {
     renderApp()
 
     await waitFor(() => expect(screen.getByText('Receitas realizadas')).toBeTruthy())
-    expect(screen.queryByRole('heading', { name: 'Entrar no Finanhouse' })).toBeNull()
+    expect(screen.queryByRole('heading', { name: 'Entrar no HouseManager' })).toBeNull()
   })
 
   it('logout limpa os dados financeiros e volta para a tela de login', async () => {
@@ -133,7 +133,7 @@ describe('AppRoot — fluxo completo de autenticação', () => {
     await waitFor(() => expect(screen.getByText('Receitas realizadas')).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Entrar no Finanhouse' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Entrar no HouseManager' })).toBeTruthy())
     expect(screen.queryByText('Dona da Casa')).toBeNull()
     expect(screen.queryByText('Receitas realizadas')).toBeNull()
   })
@@ -160,7 +160,7 @@ describe('AppRoot — fluxo completo de autenticação', () => {
 
     await waitFor(() => expect(screen.getByText('Receitas realizadas')).toBeTruthy())
     fireEvent.click(screen.getByRole('button', { name: 'Sair' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Entrar no Finanhouse' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Entrar no HouseManager' })).toBeTruthy())
     first.unmount()
 
     // "Recarregar" simulado remontando a árvore — uma nova checagem de sessão deve continuar 401.
@@ -171,7 +171,7 @@ describe('AppRoot — fluxo completo de autenticação', () => {
         </AuthProvider>
       </MemoryRouter>,
     )
-    await waitFor(() => expect(rerendered.getByRole('heading', { name: 'Entrar no Finanhouse' })).toBeTruthy())
+    await waitFor(() => expect(rerendered.getByRole('heading', { name: 'Entrar no HouseManager' })).toBeTruthy())
   })
 
   it('nenhum token de sessão aparece em localStorage ou sessionStorage em nenhum momento', async () => {
@@ -212,7 +212,7 @@ describe('AppRoot — fluxo completo de autenticação', () => {
     )
     renderApp()
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'Entrar no Finanhouse' })).toBeTruthy())
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Entrar no HouseManager' })).toBeTruthy())
     expect(sessionCalls).toBe(1)
   })
 })

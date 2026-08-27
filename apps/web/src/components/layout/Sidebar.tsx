@@ -31,11 +31,11 @@ export function Sidebar() {
   return (
     <aside className="fh-sidebar" aria-label="Barra lateral">
       <div className="fh-sidebar__brand">
-        <Link to="/" className="fh-sidebar__brand-link" aria-label="Ir para a visão geral do FinanHouse">
+        <Link to="/" className="fh-sidebar__brand-link" aria-label="Ir para a visão geral do HouseManager">
           <Brand logoSrc={finanhouseLogoHero} size="sidebar" />
         </Link>
       </div>
-      <nav className="fh-sidebar__nav" aria-label="Áreas do Finanhouse">
+      <nav className="fh-sidebar__nav" aria-label="Áreas do HouseManager">
         <ul>
           {NAV_ITEMS.map((item) =>
             item.available ? (

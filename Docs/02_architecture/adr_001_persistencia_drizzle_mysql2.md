@@ -1,6 +1,6 @@
 # ADR-001 — Persistência: Drizzle ORM + mysql2
 
-> Projeto: FinanHouse · Data: 2026-07-25 · Status: Aceito
+> Projeto: HouseManager · Data: 2026-07-25 · Status: Aceito
 
 ## Contexto
 

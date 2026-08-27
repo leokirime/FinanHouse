@@ -17,7 +17,7 @@ export function AppRoot() {
   const { state: authState, retry } = useAuth()
 
   if (authState.status === 'loading') {
-    return <FinanceStatusScreen kind="loading" title="Verificando sua sessão" description="Confirmando se você já está autenticado no Finanhouse." />
+    return <FinanceStatusScreen kind="loading" title="Verificando sua sessão" description="Confirmando se você já está autenticado no HouseManager." />
   }
 
   if (authState.status === 'error') {
