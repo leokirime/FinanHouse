@@ -91,6 +91,7 @@ describe('http/server.ts — startHttpServer() (comportamental, com dependência
 
   afterEach(() => {
     vi.restoreAllMocks()
+    vi.unstubAllEnvs()
     vi.doUnmock('../db/pool.js')
     vi.doUnmock('./app.js')
     vi.doUnmock('../config/database-config.js')
@@ -188,5 +189,59 @@ describe('http/server.ts — startHttpServer() (comportamental, com dependência
 
     expect(listenMock).toHaveBeenCalledWith({ port: 3000, host: '127.0.0.1' })
     expect(exitSpy).not.toHaveBeenCalled()
+  })
+
+  /**
+   * Sessão 14, Bloco 01 — remediação do NO-GO de deploy pós-Sessão 12: prova
+   * de ponta a ponta (não só nos módulos de configuração isolados) de que
+   * `startHttpServer()` falha fechado em produção sem configuração explícita,
+   * e funciona normalmente com configuração válida — nunca chega a criar a
+   * app HTTP nem a chamar `listen()` quando a configuração é insegura.
+   */
+  describe('produção — pré-condições de host/CORS (fail closed, ponta a ponta)', () => {
+    it('NODE_ENV=production sem HTTP_HOST/CORS_ALLOWED_ORIGINS: nunca chega a resolver o banco nem a criar a app HTTP', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      const { exitSpy, errorSpy, createHttpAppMock } = mockCommonDependencies({
+        connectWithRetryResult: { ok: true, attempts: 1 },
+      })
+
+      const { startHttpServer } = await import('./server.js')
+      await expect(startHttpServer()).rejects.toThrow(ProcessExitCalled)
+
+      expect(createHttpAppMock).not.toHaveBeenCalled()
+      expect(exitSpy).toHaveBeenCalledWith(1)
+      const loggedMessage = errorSpy.mock.calls.map((call) => call.join(' ')).join('\n')
+      expect(loggedMessage).toContain('Configuração inválida')
+    })
+
+    it('NODE_ENV=production com HTTP_HOST=127.0.0.1 (mesmo com CORS configurado): rejeita antes de qualquer conexão de banco', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.stubEnv('HTTP_HOST', '127.0.0.1')
+      vi.stubEnv('CORS_ALLOWED_ORIGINS', 'https://app.housemanager.example')
+      const { exitSpy, createHttpAppMock } = mockCommonDependencies({
+        connectWithRetryResult: { ok: true, attempts: 1 },
+      })
+
+      const { startHttpServer } = await import('./server.js')
+      await expect(startHttpServer()).rejects.toThrow(ProcessExitCalled)
+
+      expect(createHttpAppMock).not.toHaveBeenCalled()
+      expect(exitSpy).toHaveBeenCalledWith(1)
+    })
+
+    it('NODE_ENV=production com HTTP_HOST/CORS_ALLOWED_ORIGINS válidos: escuta no host configurado, sem chamar process.exit', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.stubEnv('HTTP_HOST', '0.0.0.0')
+      vi.stubEnv('CORS_ALLOWED_ORIGINS', 'https://app.housemanager.example')
+      const { exitSpy, listenMock } = mockCommonDependencies({
+        connectWithRetryResult: { ok: true, attempts: 1 },
+      })
+
+      const { startHttpServer } = await import('./server.js')
+      await startHttpServer()
+
+      expect(listenMock).toHaveBeenCalledWith({ port: 3000, host: '0.0.0.0' })
+      expect(exitSpy).not.toHaveBeenCalled()
+    })
   })
 })
