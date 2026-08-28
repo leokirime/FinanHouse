@@ -1,13 +1,21 @@
-import { useState } from 'react'
+import type { FinancialEntry } from '@finanhouse/domain'
+import { useMemo, useState } from 'react'
 import type { InstallmentPurchaseResult } from '../api/financial-api.ts'
 import { FinancialAreaTabs } from '../components/financial-entries/FinancialAreaTabs.tsx'
+import { RealizeEntryDialog } from '../components/financial-entries/RealizeEntryDialog.tsx'
 import { InstallmentPlanDetail } from '../components/installments/InstallmentPlanDetail.tsx'
 import { InstallmentPlanEmptyState } from '../components/installments/InstallmentPlanEmptyState.tsx'
 import { InstallmentPlanForm } from '../components/installments/InstallmentPlanForm.tsx'
 import { InstallmentPlanList } from '../components/installments/InstallmentPlanList.tsx'
+import { InstallmentPlanStatusFilterTabs } from '../components/installments/InstallmentPlanStatusFilterTabs.tsx'
 import { useInstallmentPlanDetail } from '../hooks/use-installment-plan-detail.ts'
 import { useInstallmentPlans } from '../hooks/use-installment-plans.ts'
 import { useReadyFinance } from '../hooks/use-finance.ts'
+import {
+  DEFAULT_INSTALLMENT_PLAN_STATUS_FILTER,
+  filterInstallmentPlansByStatus,
+  type InstallmentPlanStatusFilter,
+} from '../view-models/installment-plan-view-model.ts'
 import './FinancialEntriesPage.css'
 
 /**
@@ -22,8 +30,34 @@ export function InstallmentPlansPage() {
   const installmentPlans = useInstallmentPlans()
   const [showForm, setShowForm] = useState(false)
   const [detailSource, setDetailSource] = useState<DetailSource | null>(null)
+  const [statusFilter, setStatusFilter] = useState<InstallmentPlanStatusFilter>(DEFAULT_INSTALLMENT_PLAN_STATUS_FILTER)
+  const [realizingEntry, setRealizingEntry] = useState<FinancialEntry | null>(null)
 
   const fetchedDetail = useInstallmentPlanDetail(detailSource?.kind === 'selected' ? detailSource.id : null)
+
+  /**
+   * Fecha o diálogo de realização (mesmo `RealizeEntryDialog` de
+   * Movimentações, reaproveitado sem alteração) e atualiza o detalhe do
+   * parcelamento para refletir a parcela recém-paga — a mesma `FinancialEntry`,
+   * nunca um lançamento novo (ajuste pós-validação visual: integração
+   * Parcelamentos ↔ Lançamentos). Para o detalhe "recém-criado" (sem
+   * mecanismo próprio de refetch), a fonte passa a ser "selected", que busca
+   * via GET e responde a `retry()`.
+   */
+  function handleRealizeDialogClose() {
+    setRealizingEntry(null)
+    if (detailSource?.kind === 'created') {
+      setDetailSource({ kind: 'selected', id: detailSource.result.plan.id })
+    } else {
+      fetchedDetail.retry()
+    }
+  }
+
+  // Concluído é derivado (realizedCount === installmentCount) a cada renderização — nunca um status persistido (ajuste pós-validação visual do Bloco 06).
+  const visiblePlans = useMemo(
+    () => filterInstallmentPlansByStatus(installmentPlans.plans, state.entries, statusFilter),
+    [installmentPlans.plans, state.entries, statusFilter],
+  )
 
   const activeDetail =
     detailSource?.kind === 'created'
@@ -69,18 +103,40 @@ export function InstallmentPlansPage() {
       )}
 
       {installmentPlans.status === 'ready' && installmentPlans.plans.length > 0 && (
-        <InstallmentPlanList
-          plans={installmentPlans.plans}
-          categories={state.categories}
-          entries={state.entries}
-          selectedPlanId={detailSource?.kind === 'selected' ? detailSource.id : (activeDetail?.plan.id ?? null)}
-          onSelect={(plan) => setDetailSource({ kind: 'selected', id: plan.id })}
-        />
+        <>
+          <InstallmentPlanStatusFilterTabs value={statusFilter} onChange={setStatusFilter} />
+
+          {visiblePlans.length === 0 ? (
+            <div className="fh-financial-entries__empty">
+              <p>{statusFilter === 'completed' ? 'Nenhum parcelamento concluído.' : 'Nenhum parcelamento em andamento.'}</p>
+              {statusFilter !== 'completed' && (
+                <button type="button" className="fh-financial-entries-page__new" onClick={() => setShowForm(true)}>
+                  Novo parcelamento
+                </button>
+              )}
+            </div>
+          ) : (
+            <InstallmentPlanList
+              plans={visiblePlans}
+              categories={state.categories}
+              entries={state.entries}
+              selectedPlanId={detailSource?.kind === 'selected' ? detailSource.id : (activeDetail?.plan.id ?? null)}
+              onSelect={(plan) => setDetailSource({ kind: 'selected', id: plan.id })}
+            />
+          )}
+        </>
       )}
 
       {activeDetail && (
-        <InstallmentPlanDetail plan={activeDetail.plan} installments={activeDetail.installments} onClose={() => setDetailSource(null)} />
+        <InstallmentPlanDetail
+          plan={activeDetail.plan}
+          installments={activeDetail.installments}
+          onClose={() => setDetailSource(null)}
+          onRealize={setRealizingEntry}
+        />
       )}
+
+      {realizingEntry && <RealizeEntryDialog entry={realizingEntry} onClose={handleRealizeDialogClose} />}
 
       {showForm && (
         <InstallmentPlanForm

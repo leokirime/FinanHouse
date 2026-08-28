@@ -27,6 +27,13 @@
   background: var(--fh-purple-soft);
 }
 
+.fh-installment-list__progress {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--fh-space-1);
+  align-items: center;
+}
+
 .fh-installment-list__select {
   background: transparent;
   border: none;

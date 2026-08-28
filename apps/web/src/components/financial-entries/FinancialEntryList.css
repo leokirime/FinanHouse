@@ -23,6 +23,19 @@
   vertical-align: top;
 }
 
+.fh-entry-list__description {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  align-items: baseline;
+}
+
+/* Indicador de parcela — puramente textual (nunca depende só de cor). */
+.fh-entry-list__installment-label {
+  color: var(--fh-text-secondary);
+  white-space: nowrap;
+}
+
 /* Tabela vira lista empilhada em telas estreitas — sem rolagem horizontal. */
 @media (max-width: 900px) {
   .fh-entry-list__table thead {

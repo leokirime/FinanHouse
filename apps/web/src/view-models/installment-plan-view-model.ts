@@ -52,6 +52,8 @@ export interface InstallmentPlanProgress {
   realizedCount: number
   totalCount: number
   label: string
+  /** Derivado — nunca persistido (seção 2/9 do ajuste pós-validação visual do Bloco 06: "concluído" nunca é um status gravado em `installment_plans`). `true` somente quando TODAS as `installmentCount` parcelas foram realizadas; uma parcela ausente/cancelada/excluída nunca é tratada como equivalente a realizada. */
+  isCompleted: boolean
 }
 
 /**
@@ -63,7 +65,37 @@ export interface InstallmentPlanProgress {
  */
 export function buildInstallmentPlanProgress(plan: InstallmentPlan, entries: FinancialEntry[]): InstallmentPlanProgress {
   const realizedCount = entries.filter((entry) => entry.installmentPlanId === plan.id && entry.status === 'realized').length
-  return { realizedCount, totalCount: plan.installmentCount, label: `${realizedCount} de ${plan.installmentCount} parcelas realizadas` }
+  return {
+    realizedCount,
+    totalCount: plan.installmentCount,
+    label: `${realizedCount} de ${plan.installmentCount} parcelas realizadas`,
+    isCompleted: realizedCount === plan.installmentCount,
+  }
+}
+
+export type InstallmentPlanStatusFilter = 'active' | 'completed' | 'all'
+
+export const DEFAULT_INSTALLMENT_PLAN_STATUS_FILTER: InstallmentPlanStatusFilter = 'active'
+
+export const INSTALLMENT_PLAN_STATUS_FILTER_LABELS: Record<InstallmentPlanStatusFilter, string> = {
+  active: 'Em andamento',
+  completed: 'Concluídos',
+  all: 'Todos',
+}
+
+/**
+ * Regra única de "em andamento vs. concluído" — centralizada aqui para não
+ * ser reimplementada em cada componente (seção 5 do ajuste pós-validação
+ * visual do Bloco 06). Nunca exclui plano/parcela nem altera cálculo
+ * financeiro — apenas decide o que aparece na visão padrão de Parcelamentos.
+ */
+export function filterInstallmentPlansByStatus(
+  plans: InstallmentPlan[],
+  entries: FinancialEntry[],
+  filter: InstallmentPlanStatusFilter,
+): InstallmentPlan[] {
+  if (filter === 'all') return plans
+  return plans.filter((plan) => buildInstallmentPlanProgress(plan, entries).isCompleted === (filter === 'completed'))
 }
 
 export interface InstallmentPlanRowViewModel {
@@ -105,6 +137,8 @@ export interface InstallmentRowViewModel {
   dueDateLabel: string | null
   status: FinancialEntryStatus
   statusLabel: string
+  /** planned|pending → realized — mesma regra de `financial-entries-view-model.ts` (`canRealize`), nunca reimplementada como transição paralela (ajuste pós-validação visual: integração Parcelamentos ↔ Lançamentos). */
+  canRealize: boolean
 }
 
 /** Parcelas de UM plano, ordenadas por número — mesma semântica de status de qualquer `FinancialEntry` (seção 10 do prompt: "não criar semântica diferente"). */
@@ -114,6 +148,7 @@ export function buildInstallmentRows(plan: InstallmentPlan, installments: Financ
     .map((entry) => ({
       id: entry.id,
       installmentNumber: entry.installmentNumber,
+      canRealize: entry.status === 'planned' || entry.status === 'pending',
       totalCount: plan.installmentCount,
       amountLabel: formatMoneyPtBr(entry.expectedAmount),
       dueDateLabel: entry.dueDate ? formatDatePtBrShort(entry.dueDate) : null,

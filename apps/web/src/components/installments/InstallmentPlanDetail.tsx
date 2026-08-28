@@ -8,10 +8,13 @@ export interface InstallmentPlanDetailProps {
   plan: InstallmentPlan
   installments: FinancialEntry[]
   onClose: () => void
+  /** Reaproveita o mesmo fluxo de realização de Movimentações (`RealizeEntryDialog`) — a parcela é a MESMA `FinancialEntry`, nunca um lançamento novo (ajuste pós-validação visual: integração Parcelamentos ↔ Lançamentos). */
+  onRealize: (entry: FinancialEntry) => void
 }
 
-export function InstallmentPlanDetail({ plan, installments, onClose }: InstallmentPlanDetailProps) {
+export function InstallmentPlanDetail({ plan, installments, onClose, onRealize }: InstallmentPlanDetailProps) {
   const rows = buildInstallmentRows(plan, installments)
+  const installmentsById = new Map(installments.map((entry) => [entry.id, entry]))
 
   return (
     <div className="fh-card fh-installment-detail">
@@ -37,6 +40,15 @@ export function InstallmentPlanDetail({ plan, installments, onClose }: Installme
             <span className="fh-installment-detail__amount">{row.amountLabel}</span>
             <span className="fh-installment-detail__due">{row.dueDateLabel ?? 'Sem vencimento'}</span>
             <FinancialEntryStatusBadge status={row.status} label={row.statusLabel} />
+            {row.canRealize && (
+              <button
+                type="button"
+                aria-label={`Marcar parcela ${row.installmentNumber ?? '—'} de ${row.totalCount} como paga`}
+                onClick={() => onRealize(installmentsById.get(row.id)!)}
+              >
+                Marcar como pago
+              </button>
+            )}
           </li>
         ))}
       </ul>

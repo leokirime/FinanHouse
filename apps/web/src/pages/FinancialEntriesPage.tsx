@@ -8,6 +8,7 @@ import { FinancialEntryForm } from '../components/financial-entries/FinancialEnt
 import { FinancialEntryList } from '../components/financial-entries/FinancialEntryList.tsx'
 import { RealizeEntryDialog } from '../components/financial-entries/RealizeEntryDialog.tsx'
 import { useReadyFinance } from '../hooks/use-finance.ts'
+import { useInstallmentPlans } from '../hooks/use-installment-plans.ts'
 import { DEFAULT_FINANCIAL_ENTRIES_FILTERS, filterFinancialEntries, type FinancialEntriesFilters } from '../view-models/financial-entries-view-model.ts'
 import './FinancialEntriesPage.css'
 
@@ -17,6 +18,13 @@ export function FinancialEntriesPage() {
   const { state, dispatch } = useReadyFinance()
   const [filters, setFilters] = useState<FinancialEntriesFilters>(DEFAULT_FINANCIAL_ENTRIES_FILTERS)
   const [dialog, setDialog] = useState<DialogState>(null)
+
+  // Só para rotulagem visual ("Parcela N/Total") — nunca usado em cálculo financeiro (Sessão 12, Bloco 06).
+  const installmentPlans = useInstallmentPlans()
+  const installmentCountsByPlanId = useMemo(
+    () => new Map(installmentPlans.plans.map((plan) => [plan.id, plan.installmentCount])),
+    [installmentPlans.plans],
+  )
 
   const filteredEntries = useMemo(
     () => filterFinancialEntries(state.entries, state.categories, state.currentPeriodId, filters),
@@ -66,6 +74,7 @@ export function FinancialEntriesPage() {
           onEdit={(entry) => setDialog({ kind: 'edit', entry })}
           onRealize={(entry) => setDialog({ kind: 'realize', entry })}
           onDelete={(entry) => setDialog({ kind: 'delete', entry })}
+          installmentCountsByPlanId={installmentCountsByPlanId}
         />
       )}
 

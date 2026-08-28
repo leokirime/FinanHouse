@@ -236,3 +236,68 @@ describe('buildComparisonViewModel', () => {
     expect(viewModel.comparedPeriod?.id).toBe(1)
   })
 })
+
+/**
+ * Sessão 12, Bloco 06, Caso D — duas parcelas do mesmo `InstallmentPlan` em
+ * meses consecutivos: cada competência carrega só a sua própria parcela;
+ * o total do plano (R$ 3.000,00) nunca aparece em nenhum dos dois meses.
+ * `compareMonthlyPeriods`/`compareExpenseCategoryTotals` já filtram por
+ * `periodId` — nenhuma alteração de produção foi necessária.
+ */
+describe('buildComparisonViewModel — parcelas de InstallmentPlan em meses consecutivos (Sessão 12, Bloco 06, Caso D)', () => {
+  const AUGUST_PERIOD_ID = 301
+  const SEPTEMBER_PERIOD_ID = 302
+  const installmentPlanId = 999
+
+  const periods = [period(SEPTEMBER_PERIOD_ID, '2026-09-01'), period(AUGUST_PERIOD_ID, '2026-08-01')]
+
+  const installment1 = entry(AUGUST_PERIOD_ID, {
+    categoryId: CATEGORY_HOUSING,
+    description: 'Geladeira 1/10',
+    expectedAmount: parseMoney('300.00'),
+    status: 'realized',
+    installmentPlanId,
+    installmentNumber: 1,
+  })
+  const installment2 = entry(SEPTEMBER_PERIOD_ID, {
+    categoryId: CATEGORY_HOUSING,
+    description: 'Geladeira 2/10',
+    expectedAmount: parseMoney('300.00'),
+    status: 'realized',
+    installmentPlanId,
+    installmentNumber: 2,
+  })
+
+  it('agosto carrega só R$ 300,00 (parcela 1); setembro carrega só R$ 300,00 (parcela 2) — nunca R$ 3.000,00 em nenhum dos dois', () => {
+    const viewModel = buildComparisonViewModel({
+      periods,
+      entries: [installment1, installment2],
+      categories: fixtureCategories,
+      basePeriodId: SEPTEMBER_PERIOD_ID,
+      comparedPeriodId: AUGUST_PERIOD_ID,
+    })
+
+    const expenseIndicator = viewModel.indicators.find((indicator) => indicator.key === 'realizedExpense')
+    expect(expenseIndicator?.base.label).toBe('R$ 300,00') // setembro
+    expect(expenseIndicator?.compared.label).toBe('R$ 300,00') // agosto
+    expect(expenseIndicator?.base.label).not.toBe('R$ 3.000,00')
+    expect(expenseIndicator?.compared.label).not.toBe('R$ 600,00')
+
+    const housingComparison = viewModel.categoryComparisons.find((row) => row.categoryId === CATEGORY_HOUSING)
+    expect(housingComparison?.base.label).toBe('R$ 300,00')
+    expect(housingComparison?.compared.label).toBe('R$ 300,00')
+  })
+
+  it('não há duplicação quando as duas parcelas pertencem ao mesmo plano — cada competência soma exatamente a sua', () => {
+    const viewModel = buildComparisonViewModel({
+      periods,
+      entries: [installment1, installment2],
+      categories: fixtureCategories,
+      basePeriodId: SEPTEMBER_PERIOD_ID,
+      comparedPeriodId: AUGUST_PERIOD_ID,
+    })
+    const total = viewModel.indicators.find((indicator) => indicator.key === 'realizedExpense')
+    const sumOfBoth = (total?.base.raw ?? 0n) + (total?.compared.raw ?? 0n)
+    expect(sumOfBoth).toBe(parseMoney('600.00')) // 300 + 300, nunca 3000 + 3000 nem 3000 sozinho
+  })
+})
