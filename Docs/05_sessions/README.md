@@ -1,6 +1,6 @@
 # Sessões
 
-> Projeto: FinanHouse · Atualizado em: 2026-08-19
+> Projeto: FinanHouse · Atualizado em: 2026-08-28
 
 ## 1. O que é uma sessão
 
@@ -66,6 +66,6 @@ Ver `Docs/00_ddae_engine/metodologia.md` para o fluxo completo e `Docs/00_ddae_e
 | Sessão | Nome | Status | Blocos |
 |---|---|---|---|
 | `session_11_fundacao_do_finanhouse` | Fundação do FinanHouse | Em andamento — 20 blocos concluídos (Bloco 20 mergeado em `main`, commit `ae6bf3d`) | 20 |
-| `session_12_parcelamentos_e_compromissos_futuros` | Parcelamentos e Compromissos Futuros | Em andamento — Bloco 01 (planejamento funcional e contratos) | 1 |
+| `session_12_parcelamentos_e_compromissos_futuros` | Parcelamentos e Compromissos Futuros | **Encerrada — Aprovada** (7/7 blocos, `09_validation/fechamento_sessao.md`; Bloco 07 mergeado em `main`, commit `db7b5199724a9603432c68432ab66a97fe0db4a1`) | 7 |
 
 `session_01_project_foundation` a `session_10_final_audit` são pastas do scaffold automático padrão do `ddae-engine` (categorias genéricas pré-criadas por uma versão anterior da ferramenta) — **nenhuma delas foi usada como sessão real neste projeto**: estão vazias (0 blocos cada) e não representam trabalho concluído nem em andamento. Mantidas sem alteração por decisão explícita (ver o feedback do Bloco 01 da Sessão 12, pendência P4) — não renumeradas, não consolidadas, não removidas.
