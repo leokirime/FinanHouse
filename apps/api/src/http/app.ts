@@ -10,6 +10,7 @@ import type {
   UserRepository,
 } from '../application/ports/index.js'
 import Fastify, { type FastifyBaseLogger, type FastifyInstance } from 'fastify'
+import { assertOriginsSafeForProduction, DEVELOPMENT_DEFAULT_ORIGINS } from '../config/cors-config.js'
 import { createErrorHandler } from './errors/error-handler.js'
 import { registerAuthPlugin } from './plugins/auth.js'
 import { registerCorsPlugin } from './plugins/cors.js'
@@ -51,6 +52,15 @@ export interface CreateHttpAppOptions {
    * transação real ao ser usada.
    */
   installmentTransactionRunner: InstallmentTransactionRunner
+  /**
+   * Origens permitidas de CORS. Fora de produção, o padrão são as origens
+   * locais do Vite (`config/cors-config.ts`) quando omitida. Em produção é
+   * validada por `assertOriginsSafeForProduction` mesmo se fornecida
+   * diretamente (defesa em profundidade — `http/server.ts` já a resolve a
+   * partir de `CORS_ALLOWED_ORIGINS` antes de chegar aqui, mas esta função
+   * nunca confia cegamente em quem a chama).
+   */
+  corsAllowedOrigins?: string[]
 }
 
 const DEFAULT_READINESS: ReadinessCheck = async (): Promise<ReadinessResult> => ({
@@ -65,16 +75,20 @@ const DEFAULT_READINESS: ReadinessCheck = async (): Promise<ReadinessResult> => 
  * ser usada em testes via `app.inject()` sem qualquer conexão real.
  *
  * Desde o Bloco 19 (DT-14) a API exige sessão real para toda rota
- * financeira, mas isso não é suficiente para produção por si só: bind e CORS
- * continuam estritamente locais (`http/server.ts`, `plugins/cors.ts`), não
- * há HTTPS, e a matriz completa de segurança de produção nunca foi validada
- * — por isso `runtimeMode: 'production'` continua recusado.
+ * financeira. Até a Sessão 14 (Bloco 01), `runtimeMode: 'production'` era
+ * recusado incondicionalmente porque bind/CORS eram estritamente locais e
+ * nenhuma pré-condição de produção era validada. Isso foi substituído por uma
+ * validação real de pré-condições (`assertOriginsSafeForProduction`) — em
+ * produção, a aplicação só é construída se as origens de CORS forem
+ * explicitamente configuradas e nenhuma apontar para localhost/127.0.0.1;
+ * falha fechado (fail closed) caso contrário. Bind de host, HTTPS e a
+ * topologia de cookie same-origin continuam responsabilidade de
+ * `http/server.ts`/infraestrutura de deploy — esta função nunca abre socket.
  */
 export function createHttpApp(options: CreateHttpAppOptions): FastifyInstance {
+  const corsAllowedOrigins = options.corsAllowedOrigins ?? DEVELOPMENT_DEFAULT_ORIGINS
   if (options.runtimeMode === 'production') {
-    throw new Error(
-      'createHttpApp: modo "production" recusado — bind/CORS continuam estritamente locais (Bloco 16/19) e esta API não deve ser executada em produção.',
-    )
+    assertOriginsSafeForProduction(corsAllowedOrigins)
   }
 
   const fastify = Fastify({
@@ -88,7 +102,7 @@ export function createHttpApp(options: CreateHttpAppOptions): FastifyInstance {
   })
 
   fastify.setErrorHandler(createErrorHandler())
-  registerCorsPlugin(fastify)
+  registerCorsPlugin(fastify, corsAllowedOrigins)
 
   const authDeps = { users: options.repositories.users, members: options.repositories.members, sessions: options.repositories.authSessions }
 

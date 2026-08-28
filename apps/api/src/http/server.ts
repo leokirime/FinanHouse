@@ -3,15 +3,19 @@
  * Aqui, e só aqui: lê `.env.local`, resolve a config real, cria o pool de
  * conexões, decide o modo de execução e efetivamente escuta uma porta.
  *
- * Bind estritamente local: sempre `127.0.0.1`, nunca configurável, nunca em
- * todas as interfaces de rede — a API não tem autenticação real (Bloco 16) e
- * não pode ficar acessível fora da máquina local.
+ * Bind e CORS são resolvidos a partir do ambiente (`HTTP_HOST`,
+ * `CORS_ALLOWED_ORIGINS`) — em desenvolvimento/teste caem para os padrões
+ * locais existentes (`127.0.0.1`, origens do Vite); em produção são
+ * obrigatórios e nunca aceitam localhost/127.0.0.1 (fail closed —
+ * `config/http-bind-config.ts`/`config/cors-config.ts`, Sessão 14, Bloco 01).
  */
 import path from 'node:path'
 import process from 'node:process'
 import { fileURLToPath } from 'node:url'
 import { drizzle } from 'drizzle-orm/mysql2'
+import { CorsConfigError, resolveCorsAllowedOrigins } from '../config/cors-config.js'
 import { DatabaseConfigError, resolveDatabaseConfig } from '../config/database-config.js'
+import { HttpBindConfigError, resolveBindHost } from '../config/http-bind-config.js'
 import { connectWithRetry } from '../db/connect-with-retry.js'
 import { createDatabasePool, type DatabasePool } from '../db/pool.js'
 import { createDrizzleRepositories } from '../infrastructure/repositories/drizzle/create-drizzle-repositories.js'
@@ -24,7 +28,6 @@ import { formatStartupFailureMessage } from './startup-diagnostics.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ENV_LOCAL_PATH = path.resolve(__dirname, '../../.env.local')
 
-const LOCAL_HOST = '127.0.0.1'
 const DEFAULT_PORT = 3000
 
 function loadLocalEnv(): void {
@@ -70,6 +73,29 @@ export interface RunningHttpServer {
 export async function startHttpServer(): Promise<RunningHttpServer> {
   loadLocalEnv()
 
+  const runtimeMode = resolveRuntimeMode()
+
+  // Falha antes de qualquer conexão de banco — uma configuração HTTP inválida
+  // (bind/CORS) não deveria gastar uma tentativa de conexão com o Aiven antes
+  // de ser percebida.
+  let bindHost: string
+  try {
+    bindHost = resolveBindHost(runtimeMode, process.env)
+  } catch (error) {
+    const message = error instanceof HttpBindConfigError ? error.message : 'Configuração de host HTTP inválida.'
+    console.error(`Configuração inválida: ${message}`)
+    process.exit(1)
+  }
+
+  let corsAllowedOrigins: string[]
+  try {
+    corsAllowedOrigins = resolveCorsAllowedOrigins(process.env, runtimeMode)
+  } catch (error) {
+    const message = error instanceof CorsConfigError ? error.message : 'Configuração de CORS inválida.'
+    console.error(`Configuração inválida: ${message}`)
+    process.exit(1)
+  }
+
   let config
   try {
     config = resolveDatabaseConfig(process.env)
@@ -114,16 +140,17 @@ export async function startHttpServer(): Promise<RunningHttpServer> {
 
   const app = createHttpApp({
     repositories,
-    runtimeMode: resolveRuntimeMode(),
+    runtimeMode,
     logger: true,
     readiness: createReadinessCheck(dbPool),
     installmentTransactionRunner: new DrizzleInstallmentTransactionRunner(db),
+    corsAllowedOrigins,
   })
 
   const port = process.env.PORT ? Number(process.env.PORT) : DEFAULT_PORT
 
   try {
-    await app.listen({ port, host: LOCAL_HOST })
+    await app.listen({ port, host: bindHost })
   } catch (error) {
     // Deliberadamente NÃO usa o classificador de erros de banco: uma falha de
     // `listen()` (porta em uso, permissão negada) não tem nenhuma relação com
