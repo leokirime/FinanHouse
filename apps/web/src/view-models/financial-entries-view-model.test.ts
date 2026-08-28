@@ -1,5 +1,7 @@
+import type { FinancialEntry } from '@finanhouse/domain'
+import { parseMoney } from '@finanhouse/domain'
 import { describe, expect, it } from 'vitest'
-import { CATEGORY_FOOD, fixtureCategories, fixtureFinancialEntries, FIXTURE_CURRENT_PERIOD_ID } from '../state/test-support/finance-test-fixtures.ts'
+import { CATEGORY_FOOD, fixtureCategories, fixtureFinancialEntries, FIXTURE_CURRENT_PERIOD_ID, FIXTURE_HOUSEHOLD_ID } from '../state/test-support/finance-test-fixtures.ts'
 import {
   buildFinancialEntryRow,
   DEFAULT_FINANCIAL_ENTRIES_FILTERS,
@@ -112,5 +114,64 @@ describe('buildFinancialEntryRow', () => {
     expect(cancelledRow.canEdit).toBe(false)
     expect(cancelledRow.canReactivate).toBe(true)
     expect(cancelledRow.canDelete).toBe(false)
+  })
+})
+
+/**
+ * Sessão 12, Bloco 06 — lacuna identificada na abertura do bloco: nenhuma
+ * ocorrência de `installmentPlanId`/`installmentNumber` existia em
+ * `financial-entries-view-model.ts` (confirmado por `grep` antes desta
+ * implementação) — uma parcela aparecia em Movimentações indistinguível de
+ * um lançamento avulso. `installmentLabel` é o ajuste mínimo: puramente
+ * visual, nunca usado em cálculo, nunca persiste, total sempre vem de
+ * `InstallmentPlan.installmentCount` (nunca inferido/recalculado aqui).
+ */
+describe('buildFinancialEntryRow — rotulagem de parcela (Sessão 12, Bloco 06)', () => {
+  function installmentEntry(installmentNumber: number): FinancialEntry {
+    return {
+      id: 9800,
+      householdId: FIXTURE_HOUSEHOLD_ID,
+      periodId: FIXTURE_CURRENT_PERIOD_ID,
+      categoryId: CATEGORY_FOOD,
+      responsibleMemberId: null,
+      createdByUserId: 1,
+      entryType: 'expense',
+      status: 'planned',
+      description: 'Geladeira',
+      expectedAmount: parseMoney('300.00'),
+      actualAmount: null,
+      dueDate: '2026-07-10',
+      realizationDate: null,
+      notes: null,
+      installmentPlanId: 999,
+      installmentNumber,
+    }
+  }
+
+  it('lançamento avulso (installmentPlanId/installmentNumber null) não recebe nenhum rótulo de parcela', () => {
+    const avulso = currentEntries.find((entry) => entry.installmentPlanId === null)!
+    const row = buildFinancialEntryRow(avulso, fixtureCategories)
+    expect(row.installmentLabel).toBeNull()
+  })
+
+  it('com o total do plano disponível, mostra "Parcela N/Total"', () => {
+    const row = buildFinancialEntryRow(installmentEntry(3), fixtureCategories, new Map([[999, 10]]))
+    expect(row.installmentLabel).toBe('Parcela 3/10')
+  })
+
+  it('sem o total do plano disponível (mapa ausente ou plano não encontrado), mostra só "Parcela N" — nunca inventa o total', () => {
+    const rowSemMapa = buildFinancialEntryRow(installmentEntry(3), fixtureCategories)
+    expect(rowSemMapa.installmentLabel).toBe('Parcela 3')
+
+    const rowPlanoNaoEncontrado = buildFinancialEntryRow(installmentEntry(3), fixtureCategories, new Map([[111, 5]]))
+    expect(rowPlanoNaoEncontrado.installmentLabel).toBe('Parcela 3')
+  })
+
+  it('o rótulo nunca depende de contar parcelas irmãs nem de inferir pela descrição — é puramente function do próprio entry + do mapa de totais', () => {
+    // A descrição não menciona "10" em lugar nenhum; ainda assim o total exibido vem do mapa, nunca de heurística textual.
+    const entry = installmentEntry(1)
+    expect(entry.description).toBe('Geladeira')
+    const row = buildFinancialEntryRow(entry, fixtureCategories, new Map([[999, 10]]))
+    expect(row.installmentLabel).toBe('Parcela 1/10')
   })
 })

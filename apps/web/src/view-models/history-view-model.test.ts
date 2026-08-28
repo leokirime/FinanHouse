@@ -267,3 +267,100 @@ describe('buildHistoryViewModel', () => {
     expect(viewModel.accessibleSummary).toContain('planejada')
   })
 })
+
+/**
+ * Sessão 12, Bloco 06, Caso E — cada competência do Histórico lista somente
+ * a `FinancialEntry` que pertence a ela; o plano nunca é reconstruído como
+ * um lançamento único. `buildEntryRows`/`buildStatusCounts` já filtram por
+ * `periodId` — nenhuma alteração de produção foi necessária.
+ */
+describe('buildHistoryViewModel — parcelas de InstallmentPlan por competência (Sessão 12, Bloco 06, Caso E)', () => {
+  const AUGUST_PERIOD_ID = 401
+  const SEPTEMBER_PERIOD_ID = 402
+  const installmentPlanId = 999
+
+  const periods = [period(AUGUST_PERIOD_ID, '2026-08-01'), period(SEPTEMBER_PERIOD_ID, '2026-09-01')]
+
+  const installment1: FinancialEntry = {
+    id: 9700,
+    householdId: 1,
+    periodId: AUGUST_PERIOD_ID,
+    categoryId: CATEGORY_HOUSING,
+    responsibleMemberId: null,
+    createdByUserId: 1,
+    entryType: 'expense',
+    status: 'realized',
+    description: 'Geladeira 1/10',
+    expectedAmount: parseMoney('300.00'),
+    actualAmount: parseMoney('300.00'),
+    dueDate: '2026-08-10',
+    realizationDate: '2026-08-10',
+    notes: null,
+    installmentPlanId,
+    installmentNumber: 1,
+  }
+  const installment2: FinancialEntry = {
+    ...installment1,
+    id: 9701,
+    periodId: SEPTEMBER_PERIOD_ID,
+    description: 'Geladeira 2/10',
+    dueDate: '2026-09-10',
+    realizationDate: '2026-09-10',
+    installmentNumber: 2,
+  }
+  const avulso: FinancialEntry = {
+    id: 9702,
+    householdId: 1,
+    periodId: AUGUST_PERIOD_ID,
+    categoryId: CATEGORY_FOOD,
+    responsibleMemberId: null,
+    createdByUserId: 1,
+    entryType: 'expense',
+    status: 'realized',
+    description: 'Supermercado',
+    expectedAmount: parseMoney('80.00'),
+    actualAmount: parseMoney('80.00'),
+    dueDate: '2026-08-05',
+    realizationDate: '2026-08-05',
+    notes: null,
+    installmentPlanId: null,
+    installmentNumber: null,
+  }
+
+  it('histórico de agosto lista a parcela 1 e o lançamento avulso, nunca a parcela 2', () => {
+    const viewModel = buildHistoryViewModel({
+      periods,
+      entries: [installment1, installment2, avulso],
+      categories: fixtureCategories,
+      selectedPeriodId: AUGUST_PERIOD_ID,
+      filters: DEFAULT_HISTORY_FILTERS,
+    })
+    const descriptions = viewModel.entries.map((entry) => entry.description)
+    expect(descriptions).toContain('Geladeira 1/10')
+    expect(descriptions).toContain('Supermercado')
+    expect(descriptions).not.toContain('Geladeira 2/10')
+  })
+
+  it('histórico de setembro lista somente a parcela 2, nunca a parcela 1 nem o avulso de agosto', () => {
+    const viewModel = buildHistoryViewModel({
+      periods,
+      entries: [installment1, installment2, avulso],
+      categories: fixtureCategories,
+      selectedPeriodId: SEPTEMBER_PERIOD_ID,
+      filters: DEFAULT_HISTORY_FILTERS,
+    })
+    const descriptions = viewModel.entries.map((entry) => entry.description)
+    expect(descriptions).toEqual(['Geladeira 2/10'])
+  })
+
+  it('filtro de status existente continua funcionando normalmente sobre uma parcela, como qualquer outro lançamento', () => {
+    const viewModel = buildHistoryViewModel({
+      periods,
+      entries: [installment1, avulso],
+      categories: fixtureCategories,
+      selectedPeriodId: AUGUST_PERIOD_ID,
+      filters: { ...DEFAULT_HISTORY_FILTERS, entryStatus: 'realized' },
+    })
+    expect(viewModel.entries.map((entry) => entry.description)).toEqual(['Geladeira 1/10', 'Supermercado'])
+  })
+})

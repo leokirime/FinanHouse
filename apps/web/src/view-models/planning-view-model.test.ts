@@ -211,3 +211,71 @@ describe('buildPlanningViewModel', () => {
     expect(viewModel.summary?.exceededCount).toBe(0)
   })
 })
+
+/**
+ * Sessão 12, Bloco 06, Caso C — uma parcela `planned` de `InstallmentPlan`
+ * entra no previsto/projetado da categoria real, exatamente como qualquer
+ * outra `FinancialEntry` planejada, nunca como realizado antes de sua
+ * própria transição de status. `buildCategoryBudgetSummaries`/`buildRow`
+ * não fazem nenhuma distinção especial para `installmentPlanId` — nenhuma
+ * alteração de produção foi necessária.
+ */
+describe('buildPlanningViewModel — parcela de InstallmentPlan (Sessão 12, Bloco 06, Caso C)', () => {
+  const periodId = 201
+  const installmentPlanId = 999
+  const period201 = period(periodId, '2026-08-01')
+
+  function installmentEntry(status: FinancialEntry['status']): FinancialEntry {
+    return {
+      id: 9600,
+      householdId: FIXTURE_HOUSEHOLD_ID,
+      periodId,
+      categoryId: CATEGORY_HOUSING,
+      responsibleMemberId: null,
+      createdByUserId: 1,
+      entryType: 'expense',
+      status,
+      description: 'Geladeira 1/10',
+      expectedAmount: parseMoney('300.00'),
+      actualAmount: status === 'realized' ? parseMoney('300.00') : null,
+      dueDate: '2026-08-10',
+      realizationDate: status === 'realized' ? '2026-08-10' : null,
+      notes: null,
+      installmentPlanId,
+      installmentNumber: 1,
+    }
+  }
+
+  it('parcela planned entra no previsto da categoria real, com valor da própria parcela — nunca como realizado', () => {
+    const viewModel = buildPlanningViewModel({
+      periods: [period201],
+      selectedPeriodId: periodId,
+      categories: fixtureCategories,
+      entries: [installmentEntry('planned')],
+      budgets: [],
+    })
+    const housingRow = viewModel.rows.find((row) => row.categoryId === CATEGORY_HOUSING)
+    expect(housingRow?.planned.label).toBe('R$ 300,00')
+    expect(housingRow?.realized.label).toBe('R$ 0,00')
+    expect(housingRow?.projected.label).toBe('R$ 300,00')
+
+    const plannedEntries = viewModel.plannedEntries.filter((entry) => entry.categoryName === housingRow?.categoryName)
+    expect(plannedEntries).toHaveLength(1)
+    expect(plannedEntries[0]?.amountLabel).toBe('R$ 300,00')
+  })
+
+  it('após a parcela ser realizada, segue a mesma semântica de qualquer FinancialEntry realizada (Caso F)', () => {
+    const viewModel = buildPlanningViewModel({
+      periods: [period201],
+      selectedPeriodId: periodId,
+      categories: fixtureCategories,
+      entries: [installmentEntry('realized')],
+      budgets: [],
+    })
+    const housingRow = viewModel.rows.find((row) => row.categoryId === CATEGORY_HOUSING)
+    expect(housingRow?.realized.label).toBe('R$ 300,00')
+    expect(housingRow?.planned.label).toBe('R$ 0,00')
+    // Nenhuma duplicação: o total projetado continua sendo o valor de uma única parcela.
+    expect(housingRow?.projected.label).toBe('R$ 300,00')
+  })
+})

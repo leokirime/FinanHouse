@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { FinanceReadyState } from '../state/finance-types.ts'
-import { createTestFinanceState, FIXTURE_HOUSEHOLD_ID } from '../state/test-support/finance-test-fixtures.ts'
+import { createTestFinanceState, FIXTURE_CURRENT_PERIOD_ID, FIXTURE_HOUSEHOLD_ID } from '../state/test-support/finance-test-fixtures.ts'
 import { fireEvent, renderWithProviders, screen, within } from '../test-utils.tsx'
 import { FinancialEntriesPage } from './FinancialEntriesPage.tsx'
 
@@ -204,5 +204,60 @@ describe('FinancialEntriesPage — exclusão real de lançamentos (Bloco 20)', (
     expect(screen.getByRole('dialog')).toBeTruthy()
     expect(screen.getByRole('alert')).toBeTruthy()
     expect(screen.getByText('Realizada em competência fechada')).toBeTruthy()
+  })
+})
+
+describe('FinancialEntriesPage — independência entre parcelas de um mesmo plano (Sessão 12, Bloco 06)', () => {
+  function siblingInstallment(id: number, installmentNumber: number, description: string) {
+    return {
+      id,
+      householdId: FIXTURE_HOUSEHOLD_ID,
+      periodId: FIXTURE_CURRENT_PERIOD_ID,
+      categoryId: 4,
+      responsibleMemberId: null,
+      createdByUserId: 1,
+      entryType: 'expense' as const,
+      status: 'planned' as const,
+      description,
+      expectedAmount: 30000n,
+      actualAmount: null,
+      dueDate: '2026-07-10',
+      realizationDate: null,
+      notes: null,
+      installmentPlanId: 777,
+      installmentNumber,
+    }
+  }
+
+  it('realizar a parcela 2/3 não altera status, valor ou rótulo das parcelas irmãs 1/3 e 3/3', () => {
+    const base = createTestFinanceState()
+    const state: FinanceReadyState = {
+      ...base,
+      entries: [
+        ...base.entries,
+        siblingInstallment(9701, 1, 'Geladeira parcela 1'),
+        siblingInstallment(9702, 2, 'Geladeira parcela 2'),
+        siblingInstallment(9703, 3, 'Geladeira parcela 3'),
+      ],
+    }
+    renderWithProviders(<FinancialEntriesPage />, { financeState: state })
+
+    fireEvent.click(within(rowFor('Geladeira parcela 2')).getByRole('button', { name: 'Realizar' }))
+    fireEvent.change(screen.getByLabelText('Data de realização'), { target: { value: '2026-07-15' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Confirmar realização' }))
+
+    expect(screen.queryByRole('dialog')).toBeNull()
+
+    const row2 = rowFor('Geladeira parcela 2')
+    expect(within(row2).getByText('Realizado')).toBeTruthy()
+
+    // Parcelas irmãs continuam "Planejado", com seu próprio valor previsto e sem terem sido tocadas.
+    const row1 = rowFor('Geladeira parcela 1')
+    expect(within(row1).getByText('Planejado')).toBeTruthy()
+    expect(within(row1).getByRole('button', { name: 'Realizar' })).toBeTruthy()
+
+    const row3 = rowFor('Geladeira parcela 3')
+    expect(within(row3).getByText('Planejado')).toBeTruthy()
+    expect(within(row3).getByRole('button', { name: 'Realizar' })).toBeTruthy()
   })
 })

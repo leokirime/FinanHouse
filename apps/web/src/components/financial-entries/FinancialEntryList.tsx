@@ -1,5 +1,5 @@
 import type { Category, FinancialEntry } from '@finanhouse/domain'
-import { buildFinancialEntryRow } from '../../view-models/financial-entries-view-model.ts'
+import { buildFinancialEntryRow, type InstallmentCountsByPlanId } from '../../view-models/financial-entries-view-model.ts'
 import { FinancialEntryActions } from './FinancialEntryActions.tsx'
 import { FinancialEntryStatusBadge } from './FinancialEntryStatusBadge.tsx'
 import './FinancialEntryList.css'
@@ -10,9 +10,11 @@ export interface FinancialEntryListProps {
   onEdit: (entry: FinancialEntry) => void
   onRealize: (entry: FinancialEntry) => void
   onDelete: (entry: FinancialEntry) => void
+  /** Total de parcelas por plano, só para rotulagem visual ("Parcela N/Total") — nunca usado em cálculo (Sessão 12, Bloco 06). */
+  installmentCountsByPlanId?: InstallmentCountsByPlanId
 }
 
-export function FinancialEntryList({ entries, categories, onEdit, onRealize, onDelete }: FinancialEntryListProps) {
+export function FinancialEntryList({ entries, categories, onEdit, onRealize, onDelete, installmentCountsByPlanId }: FinancialEntryListProps) {
   return (
     <div className="fh-card fh-entry-list">
       <table className="fh-entry-list__table">
@@ -32,10 +34,15 @@ export function FinancialEntryList({ entries, categories, onEdit, onRealize, onD
         </thead>
         <tbody>
           {entries.map((entry) => {
-            const row = buildFinancialEntryRow(entry, categories)
+            const row = buildFinancialEntryRow(entry, categories, installmentCountsByPlanId)
             return (
               <tr key={entry.id}>
-                <td data-label="Descrição">{row.description}</td>
+                <td data-label="Descrição">
+                  <span className="fh-entry-list__description">
+                    {row.description}
+                    {row.installmentLabel && <span className="fh-entry-list__installment-label"> · {row.installmentLabel}</span>}
+                  </span>
+                </td>
                 <td data-label="Categoria">{row.categoryName}</td>
                 <td data-label="Tipo">{row.entryType === 'income' ? 'Receita' : 'Despesa'}</td>
                 <td data-label="Status">

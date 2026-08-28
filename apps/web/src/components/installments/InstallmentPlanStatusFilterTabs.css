@@ -1,0 +1,27 @@
+.fh-installment-status-filter {
+  display: flex;
+  gap: var(--fh-space-2);
+  flex-wrap: wrap;
+}
+
+.fh-installment-status-filter__tab {
+  padding: var(--fh-space-2) var(--fh-space-4);
+  border-radius: var(--fh-radius-pill);
+  border: 1px solid var(--fh-border-strong);
+  background: transparent;
+  color: var(--fh-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.fh-installment-status-filter__tab:hover {
+  background: var(--fh-surface);
+  color: var(--fh-text);
+}
+
+/* Seleção nunca depende só de cor — mudam também o fundo e a borda do botão. */
+.fh-installment-status-filter__tab[aria-pressed='true'] {
+  background: var(--fh-purple-soft);
+  border-color: var(--fh-purple-border);
+  color: var(--fh-text);
+}

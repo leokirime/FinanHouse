@@ -54,6 +54,16 @@ export interface FinancialEntryRowViewModel {
   canRevertRealization: boolean
   /** Motivo pelo qual a movimentação não pode ser editada, para exibir na UI (null quando `canEdit` é `true`). */
   editBlockedReason: string | null
+  /**
+   * Rótulo visual "Parcela N/Total" (ou só "Parcela N" quando o total do
+   * plano não está disponível) — `null` para lançamento avulso
+   * (`installmentPlanId`/`installmentNumber` ambos `null`). Puramente
+   * decorativo: nunca persiste, nunca é inferido a partir da descrição, e o
+   * total nunca é recalculado aqui — vem exclusivamente de
+   * `InstallmentPlan.installmentCount` via `installmentCountsByPlanId`
+   * (Sessão 12, Bloco 06).
+   */
+  installmentLabel: string | null
 }
 
 function categoryName(categories: Category[], categoryId: number): string {
@@ -66,7 +76,20 @@ function editBlockedReason(entry: FinancialEntry): string | null {
   return null
 }
 
-export function buildFinancialEntryRow(entry: FinancialEntry, categories: Category[]): FinancialEntryRowViewModel {
+/** `installmentPlanId → installmentCount` — metadado exclusivamente visual (nunca usado em cálculo), tipicamente de `useInstallmentPlans().plans`. */
+export type InstallmentCountsByPlanId = ReadonlyMap<number, number>
+
+function installmentLabel(entry: FinancialEntry, installmentCountsByPlanId?: InstallmentCountsByPlanId): string | null {
+  if (entry.installmentPlanId === null || entry.installmentNumber === null) return null
+  const total = installmentCountsByPlanId?.get(entry.installmentPlanId)
+  return total !== undefined ? `Parcela ${entry.installmentNumber}/${total}` : `Parcela ${entry.installmentNumber}`
+}
+
+export function buildFinancialEntryRow(
+  entry: FinancialEntry,
+  categories: Category[],
+  installmentCountsByPlanId?: InstallmentCountsByPlanId,
+): FinancialEntryRowViewModel {
   const editable = entry.status === 'planned' || entry.status === 'pending'
   return {
     id: entry.id,
@@ -88,6 +111,7 @@ export function buildFinancialEntryRow(entry: FinancialEntry, categories: Catego
     canReactivate: entry.status === 'cancelled',
     canRevertRealization: entry.status === 'realized',
     editBlockedReason: editBlockedReason(entry),
+    installmentLabel: installmentLabel(entry, installmentCountsByPlanId),
   }
 }
 

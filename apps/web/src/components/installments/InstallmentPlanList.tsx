@@ -48,7 +48,14 @@ export function InstallmentPlanList({ plans, categories, entries, selectedPlanId
               <td data-label="1ª competência">{row.firstReferenceMonthLabel}</td>
               <td data-label="Vencimento">Dia {row.dueDay}</td>
               <td data-label="Progresso">
-                <span className="fh-badge">{row.progress.label}</span>
+                <span className="fh-installment-list__progress">
+                  <span className="fh-badge">{row.progress.label}</span>
+                  {row.progress.isCompleted && (
+                    <span className="fh-badge" data-tone="realized">
+                      Concluído
+                    </span>
+                  )}
+                </span>
               </td>
             </tr>
           ))}
