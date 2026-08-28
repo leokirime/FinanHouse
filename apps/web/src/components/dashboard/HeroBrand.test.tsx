@@ -127,7 +127,7 @@ describe('HeroBrand — posicionamento da marca (correção retrospectiva do Blo
   it('a imagem da marca continua a mesma referência de asset (nenhuma edição/geração de imagem)', () => {
     render(<HeroBrand overview={overview} />)
     const image = screen.getByRole('img', { name: 'HouseManager — Casa, evolução e equilíbrio' })
-    expect(image.getAttribute('src')).toMatch(/finanhouse-logo-hero/)
+    expect(image.getAttribute('src')).toMatch(/HouseManager.png/)
   })
 
   it('título, descrição, status e ações continuam presentes após a correção de posição', () => {

@@ -1,5 +1,5 @@
 import { Link, NavLink } from 'react-router'
-import finanhouseLogoHero from '../../../../../assets/images/finanhouse-logo-hero.png'
+import housemanagerLogo from '../../../../../assets/images/HouseManager.png'
 import { Brand } from '../brand/Brand.tsx'
 import './Sidebar.css'
 
@@ -32,7 +32,7 @@ export function Sidebar() {
     <aside className="fh-sidebar" aria-label="Barra lateral">
       <div className="fh-sidebar__brand">
         <Link to="/" className="fh-sidebar__brand-link" aria-label="Ir para a visão geral do HouseManager">
-          <Brand logoSrc={finanhouseLogoHero} size="sidebar" />
+          <Brand logoSrc={housemanagerLogo} size="sidebar" />
         </Link>
       </div>
       <nav className="fh-sidebar__nav" aria-label="Áreas do HouseManager">

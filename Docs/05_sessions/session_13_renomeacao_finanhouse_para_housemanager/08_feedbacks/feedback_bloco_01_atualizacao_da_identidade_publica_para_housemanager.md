@@ -114,7 +114,7 @@ _Nenhuma._
 
 ### P3 — Melhoria Recomendada
 
-- Asset `assets/images/finanhouse-logo-hero.png` exibe graficamente a palavra "Finanhouse" dentro da própria imagem (confirmado por inspeção visual) — precisa ser substituído por uma versão "HouseManager" numa rodada futura de design/branding. Até lá, a marca institucional (Sidebar, Hero do Dashboard, Login) continua usando essa imagem com o nome antigo desenhado nela, mesmo com todo o texto ao redor (alt, headings, aria-labels) já em "HouseManager".
+- _Resolvida em 2026-08-27 (ver Adendo, seção 19): asset `assets/images/finanhouse-logo-hero.png` exibia graficamente a palavra "Finanhouse" dentro da própria imagem. O proprietário forneceu o asset oficial `HouseManager.png`, já substituído nos três pontos de uso público (Sidebar, Hero do Dashboard, Login)._
 
 ### P4 — Opcional
 
@@ -142,7 +142,7 @@ Nenhum risco técnico ativo. O único ponto de atenção (asset visual do logo) 
 
 ## 17. Próximo Bloco Recomendado
 
-Nenhum bloco adicional planejado para esta sessão (Bloco 01 é o único). Após revisão/aprovação do proprietário e eventual versionamento, retomar a Sessão 12 (Bloco 06, pausado e intocado no diretório original) ou avaliar uma rodada futura de design para substituir o asset do logo (P3).
+Nenhum bloco adicional planejado para esta sessão (Bloco 01 é o único). Após revisão/aprovação do proprietário e eventual versionamento, retomar a Sessão 12 (Bloco 06, pausado e intocado no diretório original).
 
 ## 18. Commit Semântico Sugerido
 
@@ -151,3 +151,21 @@ feat(identidade): renomear identidade publica de finanhouse para housemanager
 ```
 
 _Lembrete: este commit não é executado automaticamente — exige confirmação explícita do usuário._
+
+## 19. Adendo — Resolução da pendência visual do logo (2026-08-27)
+
+Não é uma reabertura do Bloco 01 — registro complementar (branch `fix/session-13-logo-housemanager`, mesma base `main`) resolvendo a P3 deixada em aberto acima.
+
+**O que mudou:** o proprietário do projeto forneceu diretamente o arquivo `assets/images/HouseManager.png` (PNG 1536×1024, RGBA com transparência real — mesmas dimensões do asset legado, mesma composição ícone-de-casa + wordmark + slogan "Casa, evolução e equilíbrio", agora sem o erro de digitação que o slogan legado aparentava ter). Usado exatamente como fornecido — nenhuma imagem foi gerada, editada, recortada, redimensionada fora de CSS ou redesenhada via código.
+
+**Onde foi trocado:** `apps/web/src/components/dashboard/HeroBrand.tsx`, `apps/web/src/components/layout/Sidebar.tsx`, `apps/web/src/pages/LoginPage.tsx` — só o `import`/`src` do asset (variável renomeada de `finanhouseLogoHero` para `housemanagerLogo`, refletindo a realidade). Nenhuma mudança estrutural de componente foi necessária: nenhuma das três ocorrências renderiza um texto "HouseManager" visível ao lado da imagem (Sidebar só a imagem dentro de um link; Hero mostra o nome do mês, não a marca; Login mantém a imagem `aria-hidden`/`alt=""` com uma frase de efeito diferente ao lado) — portanto a troca não duplicou o wordmark em nenhum contexto. Nenhuma alteração de CSS foi necessária (mesmas dimensões do arquivo antigo, mesmo `object-fit: contain` já em uso).
+
+**Asset legado:** `assets/images/finanhouse-logo-hero.png` não é mais referenciado por nenhum componente de produção — mantido fisicamente no repositório (histórico/compatibilidade), não excluído nesta rodada.
+
+**Documentação atualizada:** `Docs/02_architecture/decisoes_tecnicas.md` (DT-20, Status de resolução), `Docs/07_design_system/identidade_visual.md` (descrição do asset atual + resolução das pendências P4 do slogan), `apps/web/README.md` (parágrafo da logo). Também corrigido, nesta mesma rodada, um cabeçalho `> Projeto:` que havia ficado com "FinanHouse" em 13 documentos de `Docs/06_quality_gates/` e `Docs/07_design_system/` — não cobertos pela varredura original do Bloco 01 (gap identificado e fechado, não uma nova decisão de escopo).
+
+**Testes:** `apps/web/src/App.test.tsx`, `apps/web/src/components/dashboard/HeroBrand.test.tsx`, `apps/web/src/components/layout/Sidebar.test.tsx` — as 3 asserções que verificavam `src` conter `finanhouse-logo-hero` passaram a verificar `HouseManager.png`.
+
+**Resultado:** P3 (asset visual pendente) passa a **RESOLVIDA**. Nenhum identificador técnico, infraestrutura, endpoint ou banco foi tocado.
+
+**Aprovação visual do proprietário do projeto (2026-08-27):** a nova identidade `HouseManager.png` foi testada visualmente e aprovada nos três pontos de uso público — Login (painel visual esquerdo), Sidebar (marca institucional no topo) e Hero/Dashboard (canto superior esquerdo do card da Visão Geral). Nenhuma duplicação de wordmark/slogan observada em nenhum dos três contextos. Autorizado a integrar em `main` nesta mesma rodada.
