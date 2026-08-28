@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import type { FastifyInstance } from 'fastify'
+import { DatabaseConnectionError } from '../../infrastructure/repositories/drizzle/persistence-errors.js'
 import { buildTestApp, buildTestRepositories, type TestRepositories } from '../test-support/build-test-app.js'
 
 const HOUSEHOLD_ID = 10
@@ -221,6 +222,19 @@ describe('rotas de parcelamentos (RS-01, Sessão 12, Bloco 04)', () => {
       const response = await app.inject({ method: 'GET', url: `/api/v1/households/${HOUSEHOLD_ID}/installment-plans` })
       expect(response.statusCode).toBe(200)
       expect(response.json().data).toEqual([])
+    })
+
+    it('erro de conexão do repositório vira 503 sanitizado, nunca 500 opaco com mensagem bruta (Bloco 07, smoke de segurança)', async () => {
+      const repositories = buildAuthedRepositories()
+      repositories.installmentPlans.findByHousehold = async () => {
+        throw new DatabaseConnectionError('Falha de conexão: host inacessível.')
+      }
+      app = buildTestApp({ repositories })
+
+      const response = await app.inject({ method: 'GET', url: `/api/v1/households/${HOUSEHOLD_ID}/installment-plans` })
+      expect(response.statusCode).toBe(503)
+      expect(response.json().error.code).toBe('DEPENDENCY_UNAVAILABLE')
+      expect(JSON.stringify(response.json())).not.toMatch(/SQL|stack|Aiven|mysql:\/\//i)
     })
   })
 
