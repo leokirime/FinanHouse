@@ -78,7 +78,7 @@ describe('Sidebar', () => {
   it('renderiza a marca institucional (imagem real) no topo, antes dos itens de navegação', () => {
     const { container } = renderWithProviders(<Sidebar />)
     const image = screen.getByRole('img', { name: 'HouseManager' })
-    expect(image.getAttribute('src')).toMatch(/finanhouse-logo-hero/)
+    expect(image.getAttribute('src')).toMatch(/HouseManager.png/)
 
     // Ordem no DOM: a marca (dentro de .fh-sidebar__brand) vem antes de .fh-sidebar__nav.
     const brandBlock = container.querySelector('.fh-sidebar__brand')

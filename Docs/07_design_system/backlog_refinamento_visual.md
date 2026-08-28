@@ -1,6 +1,6 @@
 # Backlog de refinamento visual
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 ## Estado do Bloco 06
 

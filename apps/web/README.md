@@ -70,6 +70,6 @@ Todas as páginas usam `useReadyFinance()` (`hooks/use-finance.ts`) — só mont
 
 Ver `Docs/03_contracts/contrato_frontend_backend.md` (consumo da API), `Docs/03_contracts/contrato_api_http.md` (contrato de rotas do Bloco 16), `Docs/02_architecture/decisoes_tecnicas.md` (DT-12) e `Docs/07_design_system/` (tokens/componentes/acessibilidade/responsividade).
 
-A logo oficial do Finanhouse (`assets/images/finanhouse-logo-hero.png`, fora deste workspace) é importada via mecanismo de assets do Vite — não copiar o arquivo para dentro de `apps/web`. Ocorre duas vezes: sidebar (institucional) e hero do dashboard (decorativa) — mesmo arquivo, componente `Brand.tsx` com `size` diferente em cada contexto.
+A logo oficial do HouseManager (`assets/images/HouseManager.png`, fora deste workspace) é importada via mecanismo de assets do Vite — não copiar o arquivo para dentro de `apps/web`. Ocorre três vezes: sidebar (institucional), hero do dashboard (decorativa) e painel visual do login (decorativa) — mesmo arquivo, componente `Brand.tsx` com `size` diferente na sidebar e `<img>` direto nos demais contextos. O asset legado (`finanhouse-logo-hero.png`) permanece fisicamente no repositório, mas não é mais referenciado por nenhum componente.
 
 `react-router` está fixado em `8.3.0` (sem `^`) — migrado de `react-router-dom@7.18.1` antes da integração do Bloco 07 à `main`, eliminando a vulnerabilidade alta então documentada (decisão de segurança registrada em `Docs/02_architecture/decisoes_tecnicas.md`, DT-03, que supera a DT-02).

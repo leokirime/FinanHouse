@@ -1,6 +1,6 @@
 # Componentes de UI
 
-> Projeto: FinanHouse · Atualizado em: 2026-07-25
+> Projeto: HouseManager · Atualizado em: 2026-07-25
 
 > Antes de criar um componente novo, verifique aqui se um equivalente já existe. Duplicar componentes com variações pequenas é a forma mais comum de o design system degradar.
 

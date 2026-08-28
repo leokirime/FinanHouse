@@ -1,5 +1,5 @@
 import { useId, useRef, useState, type FormEvent } from 'react'
-import finanhouseLogoHero from '../../../../assets/images/finanhouse-logo-hero.png'
+import housemanagerLogo from '../../../../assets/images/HouseManager.png'
 import { useAuth } from '../hooks/use-auth.ts'
 import './LoginPage.css'
 
@@ -76,7 +76,7 @@ export function LoginPage() {
     <div className="fh-login-page">
       <div className="fh-login-page__visual" aria-hidden="true">
         <div className="fh-login-page__glow" />
-        <img src={finanhouseLogoHero} alt="" className="fh-login-page__logo" />
+        <img src={housemanagerLogo} alt="" className="fh-login-page__logo" />
         <p className="fh-login-page__tagline">Organize as finanças da sua casa com clareza e tranquilidade.</p>
       </div>
 

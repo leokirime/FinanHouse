@@ -1,4 +1,4 @@
-import finanhouseLogoHero from '../../../../../assets/images/finanhouse-logo-hero.png'
+import housemanagerLogo from '../../../../../assets/images/HouseManager.png'
 import type { PeriodOverviewViewModel } from '../../view-models/dashboard-view-model.ts'
 import './HeroBrand.css'
 
@@ -12,7 +12,7 @@ export function HeroBrand({ overview }: HeroBrandProps) {
   return (
     <section className="fh-card fh-card--elevated fh-hero" aria-labelledby="hero-heading">
       <img
-        src={finanhouseLogoHero}
+        src={housemanagerLogo}
         alt="HouseManager — Casa, evolução e equilíbrio"
         className="fh-hero__logo"
       />

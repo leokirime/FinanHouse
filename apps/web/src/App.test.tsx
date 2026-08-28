@@ -36,7 +36,7 @@ describe('App', () => {
     renderWithProviders(<App />)
     // Sidebar: ocorrência institucional permanente, imagem real (não mais modo tipográfico).
     const sidebarImage = screen.getByRole('img', { name: 'HouseManager' })
-    expect(sidebarImage.getAttribute('src')).toMatch(/finanhouse-logo-hero/)
+    expect(sidebarImage.getAttribute('src')).toMatch(/HouseManager.png/)
     // Hero: ocorrência decorativa, imagem real com o slogan completo no alt.
     const heroImage = screen.getByRole('img', { name: 'HouseManager — Casa, evolução e equilíbrio' })
     expect(heroImage.tagName).toBe('IMG')
