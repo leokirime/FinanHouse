@@ -773,4 +773,34 @@ describe('InstallmentPlansPage — realizar parcela a partir do detalhe do parce
     await waitFor(() => expect(screen.getByRole('button', { name: 'Marcar parcela 1 de 2 como paga' })).toBeTruthy())
     expect(screen.getByRole('button', { name: 'Marcar parcela 2 de 2 como paga' })).toBeTruthy()
   })
+
+  /**
+   * Hotfix visual pós-Bloco 06 (2026-08-28): a ação já existia e funcionava
+   * (RealizeEntryDialog/dispatch REALIZE intactos); a única mudança é
+   * estrutural/CSS — a classe que alinha o botão ao fim da linha via
+   * `margin-left: auto` (sem posicionamento absoluto). Não testa pixels.
+   */
+  it('hotfix visual: o botão "Marcar como pago" carrega a classe que o alinha ao fim da linha, como último elemento do item', async () => {
+    const base = createTestFinanceState()
+    const planId = 11
+    const entries = [installmentEntry(planId, 1, 'planned')]
+    const financeState: FinanceReadyState = { ...base, entries: [...base.entries, ...entries] }
+    const planDtoValue = { ...planDto(planId, 'Placa de vídeo'), installmentCount: 1 }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string | URL) => {
+        const path = new URL(String(url)).pathname
+        if (path.endsWith('/installment-plans')) return jsonResponse({ data: [planDtoValue] })
+        return jsonResponse({ data: { plan: planDtoValue, installments: [installmentDetailDto(planId, 1, 'planned', FIXTURE_CURRENT_PERIOD_ID, 7)] } })
+      }),
+    )
+    renderWithProviders(<InstallmentPlansPage />, { initialEntries: ['/movimentacoes/parcelamentos'], financeState })
+
+    await waitFor(() => expect(screen.getByText('Placa de vídeo')).toBeTruthy())
+    fireEvent.click(screen.getByRole('button', { name: 'Placa de vídeo' }))
+
+    const payButton = await screen.findByRole('button', { name: /Marcar parcela 1 de 1 como paga/ })
+    expect(payButton.classList.contains('fh-installment-detail__pay-button')).toBe(true)
+    expect(payButton.parentElement?.lastElementChild).toBe(payButton)
+  })
 })

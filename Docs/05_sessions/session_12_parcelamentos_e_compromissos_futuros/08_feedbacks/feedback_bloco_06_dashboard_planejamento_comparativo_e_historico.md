@@ -229,3 +229,22 @@ feat(installments): permitir realizar parcela a partir do detalhe do parcelament
 ```
 
 _Aprovado e autorizado explicitamente pelo usuário em 2026-08-28 (ver seção 16) — commit, push da feature e merge `--no-ff` na `main` executados nesta rodada._
+
+## 19. Adendo — Hotfix Visual Pós-Integração (2026-08-28)
+
+**Não é uma reabertura do Bloco 06** — o bloco permanece encerrado e integrado na `main` (`906ae49f2c90fe3c5a03c96ef5ae1cc9c9c8bdd5`). Este adendo apenas documenta um ajuste visual aplicado depois da integração, em branch e worktree isolados (`fix/installments-payment-button-layout`, `C:\Users\leoki\HouseManager-PaymentButton-Fix`).
+
+**Errata de validação:** na rodada anterior, o usuário havia relatado que o botão "Marcar como pago" não parecia estar disponível no detalhe de uma parcela de competência futura. Após atualizar a página, o usuário confirmou que o botão **estava presente e funcional o tempo todo** — a observação anterior refletia uma página desatualizada no navegador, não uma lacuna real. A integração Parcelamentos ↔ Lançamentos descrita na seção 27 está correta e não precisou de nenhuma correção funcional.
+
+**Correção real identificada:** puramente visual — o botão ficava excessivamente próximo do badge de status, sem alinhamento claro dentro da linha da parcela.
+
+**Ajuste aplicado:**
+- `InstallmentPlanDetail.tsx`: nova classe `fh-installment-detail__pay-button` no botão já existente (nenhuma alteração de `onClick`, `aria-label`, `onRealize` ou qualquer lógica).
+- `InstallmentPlanDetail.css`: `margin-left: auto` no botão (empurra a ação para o fim da linha, no modo flex-row já existente, sem posicionamento absoluto nem offsets); estilo "ghost" com borda/texto na cor roxa da marca (`--fh-purple-border`/`--fh-purple-strong`), hover com `--fh-purple-soft` — mesmos tokens já usados em `InstallmentPlanStatusFilterTabs.css`; `align-self: flex-end` explícito dentro da media query mobile existente (`max-width: 480px`), onde o item já virava coluna.
+- Nenhuma paleta nova, nenhum hardcode de cor — só tokens já existentes.
+
+**Nenhuma alteração de regra de negócio, API, persistência ou arquitetura:** `canRealize`, `RealizeEntryDialog`, o endpoint de realização, `periodId`, `actualAmount`, `realizationDate`, `installmentPlanId`, `installmentNumber`, o progresso e os filtros "Em andamento/Concluídos/Todos" permanecem exatamente como estavam — confirmado por leitura de código antes da alteração e por nenhum teste de lógica ter sido tocado (apenas um teste estrutural novo, sobre a classe CSS/posição do botão, foi adicionado).
+
+**Antecipação de parcelamento continua fora de escopo** — não implementada, não esboçada nesta correção.
+
+**Validação:** suíte completa executada após o ajuste, sem regressão (ver commit do hotfix para os números exatos). `git diff --check` limpo; nenhum segredo, `.env.local`, migration ou acesso ao Aiven.

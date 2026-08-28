@@ -43,6 +43,7 @@ export function InstallmentPlanDetail({ plan, installments, onClose, onRealize }
             {row.canRealize && (
               <button
                 type="button"
+                className="fh-installment-detail__pay-button"
                 aria-label={`Marcar parcela ${row.installmentNumber ?? '—'} de ${row.totalCount} como paga`}
                 onClick={() => onRealize(installmentsById.get(row.id)!)}
               >
