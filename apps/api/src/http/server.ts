@@ -30,10 +30,22 @@ const ENV_LOCAL_PATH = path.resolve(__dirname, '../../.env.local')
 
 const DEFAULT_PORT = 3000
 
-function loadLocalEnv(): void {
+/**
+ * Fora de produção, `.env.local` é a única fonte de configuração local —
+ * ausente, é quase sempre um esquecimento real do desenvolvedor, então
+ * continua fatal. Em produção (Render/qualquer PaaS), a plataforma injeta as
+ * variáveis diretamente em `process.env` — não existe nem é esperado nenhum
+ * arquivo `.env.local` no sistema de arquivos do deploy, então sua ausência
+ * nunca é um erro (Sessão 14, Bloco 02). A validação de que as variáveis
+ * necessárias *de fato* estão presentes continua sendo responsabilidade dos
+ * resolvers específicos (`resolveDatabaseConfig`, `resolveBindHost`,
+ * `resolveCorsAllowedOrigins`), chamados logo em seguida.
+ */
+function loadLocalEnv(runtimeMode: HttpRuntimeMode): void {
   try {
     process.loadEnvFile(ENV_LOCAL_PATH)
   } catch {
+    if (runtimeMode === 'production') return
     console.error(`Arquivo de credenciais não encontrado: ${ENV_LOCAL_PATH}`)
     process.exit(1)
   }
@@ -71,9 +83,11 @@ export interface RunningHttpServer {
 }
 
 export async function startHttpServer(): Promise<RunningHttpServer> {
-  loadLocalEnv()
-
+  // NODE_ENV nunca vem de `.env.local` (evitaria um ciclo: precisaríamos do
+  // arquivo para saber se o arquivo é opcional) — sempre lido diretamente do
+  // ambiente do processo, já injetado pela plataforma/script antes de iniciar.
   const runtimeMode = resolveRuntimeMode()
+  loadLocalEnv(runtimeMode)
 
   // Falha antes de qualquer conexão de banco — uma configuração HTTP inválida
   // (bind/CORS) não deveria gastar uma tentativa de conexão com o Aiven antes

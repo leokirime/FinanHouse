@@ -244,4 +244,50 @@ describe('http/server.ts — startHttpServer() (comportamental, com dependência
       expect(exitSpy).not.toHaveBeenCalled()
     })
   })
+
+  /**
+   * Sessão 14, Bloco 02 — achado real durante a validação de compatibilidade
+   * com Render/PaaS: `.env.local` nunca existe num deploy real (a plataforma
+   * injeta as variáveis diretamente em `process.env`). Antes desta correção,
+   * `loadLocalEnv()` tratava a ausência do arquivo como fatal em QUALQUER
+   * modo, o que faria o processo morrer imediatamente em produção mesmo com
+   * `HTTP_HOST`/`CORS_ALLOWED_ORIGINS`/banco todos corretamente configurados
+   * via variáveis de ambiente da plataforma.
+   */
+  describe('.env.local ausente — comportamento depende do runtimeMode (Sessão 14, Bloco 02)', () => {
+    it('development: .env.local ausente continua fatal, com mensagem clara (comportamento local preservado)', async () => {
+      const { exitSpy, errorSpy, createHttpAppMock } = mockCommonDependencies({
+        connectWithRetryResult: { ok: true, attempts: 1 },
+      })
+      vi.spyOn(process, 'loadEnvFile').mockImplementation(() => {
+        throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' })
+      })
+
+      const { startHttpServer } = await import('./server.js')
+      await expect(startHttpServer()).rejects.toThrow(ProcessExitCalled)
+
+      expect(createHttpAppMock).not.toHaveBeenCalled()
+      expect(exitSpy).toHaveBeenCalledWith(1)
+      const loggedMessage = errorSpy.mock.calls.map((call) => call.join(' ')).join('\n')
+      expect(loggedMessage).toContain('Arquivo de credenciais não encontrado')
+    })
+
+    it('production: .env.local ausente NÃO é fatal — a plataforma (Render/PaaS) já injetou as variáveis diretamente em process.env', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.stubEnv('HTTP_HOST', '0.0.0.0')
+      vi.stubEnv('CORS_ALLOWED_ORIGINS', 'https://app.housemanager.example')
+      const { exitSpy, listenMock } = mockCommonDependencies({
+        connectWithRetryResult: { ok: true, attempts: 1 },
+      })
+      vi.spyOn(process, 'loadEnvFile').mockImplementation(() => {
+        throw Object.assign(new Error('ENOENT'), { code: 'ENOENT' })
+      })
+
+      const { startHttpServer } = await import('./server.js')
+      await startHttpServer()
+
+      expect(listenMock).toHaveBeenCalledWith({ port: 3000, host: '0.0.0.0' })
+      expect(exitSpy).not.toHaveBeenCalled()
+    })
+  })
 })
