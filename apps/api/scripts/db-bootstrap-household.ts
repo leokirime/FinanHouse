@@ -1,22 +1,25 @@
 /**
- * Bootstrap estrutural PERMANENTE do household inicial do FinanHouse contra
- * `finanhouse_dev` (Aiven) — Bloco 17. Diferente do smoke-test transacional
- * (Blocos 13/14/16), este script **não faz rollback**: cria, em uma única
- * transação com `COMMIT`, o usuário proprietário, o household, os dois
- * membros e as sete categorias estruturais que o frontend real precisa para
- * funcionar contra a API HTTP (Bloco 16) — sem esses dados, não há
- * `householdId` válido para configurar `apps/web/.env.local`.
+ * Bootstrap estrutural PERMANENTE do household inicial do FinanHouse — Bloco
+ * 17, estendido na Sessão 14/Bloco 03 (FASE D.1) para reconhecer
+ * `finanhouse_prod` como alvo oficial além de `finanhouse_dev`. Diferente do
+ * smoke-test transacional (Blocos 13/14/16), este script **não faz
+ * rollback**: cria, em uma única transação com `COMMIT`, o usuário
+ * proprietário, o household, os dois membros e as sete categorias
+ * estruturais que o frontend real precisa para funcionar contra a API HTTP
+ * (Bloco 16) — sem esses dados, não há `householdId` válido para configurar
+ * `apps/web/.env.local`/`VITE_FINANHOUSE_HOUSEHOLD_ID`.
  *
  * NÃO é executado automaticamente. Exige simultaneamente:
  *   1. `apps/api/.env.local` preenchido com credenciais reais do Aiven;
- *   2. DATABASE_PROVIDER=aiven, DATABASE_ENV=development, DATABASE_NAME=finanhouse_dev;
- *   3. exatamente as migrations 0000 e 0001 já aplicadas;
- *   4. nenhum household já existente em `finanhouse_dev`;
+ *   2. DATABASE_PROVIDER=aiven, e (DATABASE_ENV=development + DATABASE_NAME=finanhouse_dev) OU (DATABASE_ENV=production + DATABASE_NAME=finanhouse_prod);
+ *   3. o banco alvo com exatamente as migrations do journal oficial (`database/migrations/meta/_journal.json`) já aplicadas — nem menos (desatualizado), nem mais (inconsistente);
+ *   4. nenhum household já existente no banco alvo;
  *   5. `FINANHOUSE_BOOTSTRAP_OWNER_NAME`/`_OWNER_EMAIL`/`_PARTNER_NAME`/`_PARTNER_EMAIL`/`_HOUSEHOLD_NAME` preenchidos;
  *   6. `CONFIRM_HOUSEHOLD_BOOTSTRAP=true` definido explicitamente no ambiente;
  *   7. autorização explícita do proprietário do projeto para esta execução.
  *
  * Uso: CONFIRM_HOUSEHOLD_BOOTSTRAP=true npm run db:bootstrap:household
+ * Contra produção: DATABASE_ENV=production DATABASE_NAME=finanhouse_prod CONFIRM_HOUSEHOLD_BOOTSTRAP=true npm run db:bootstrap:household
  *
  * Não cria movimentações, competências, orçamentos nem dados aleatórios.
  * Não existe porta/repositório para `users`/`households` (DT-10) — assim
@@ -35,14 +38,16 @@ import { MIGRATIONS_TABLE_NAME } from '../src/db/schema-audit.js'
 import { categories, households, householdMembers, users } from '../src/db/schema/index.js'
 import {
   assertBootstrapEnvironmentAllowed,
-  assertBootstrapMigrationsExact,
+  assertBootstrapMigrationsMatchJournal,
   assertNoExistingHousehold,
   BootstrapGuardError,
 } from '../src/db/household-bootstrap-guard.js'
 import { BootstrapInputError, resolveBootstrapInput } from '../src/db/household-bootstrap-input.js'
+import { MigrationsJournalError, readExpectedMigrationCount } from '../src/db/migrations-journal.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const ENV_LOCAL_PATH = path.resolve(__dirname, '../.env.local')
+const MIGRATIONS_JOURNAL_PATH = path.resolve(__dirname, '../../../database/migrations/meta/_journal.json')
 
 /** Mesmas sete categorias estruturais que alimentavam o modo demonstrativo (Bloco 07) — agora criadas como dados reais, nunca fictícios em runtime. */
 const STRUCTURAL_CATEGORIES: Array<{ name: string; entryType: 'income' | 'expense' }> = [
@@ -106,6 +111,15 @@ async function main(): Promise<void> {
     process.exit(1)
   }
 
+  let expectedMigrationCount: number
+  try {
+    expectedMigrationCount = readExpectedMigrationCount(MIGRATIONS_JOURNAL_PATH)
+  } catch (error) {
+    const message = error instanceof MigrationsJournalError ? error.message : 'Journal de migrations inválido.'
+    console.error(`\n${message}`)
+    process.exit(1)
+  }
+
   console.log(`Provider: ${config.provider}`)
   console.log(`Ambiente: ${config.environment}`)
   console.log(`Banco: ${config.database}`)
@@ -129,8 +143,8 @@ async function main(): Promise<void> {
     }
 
     const [migrationsRows] = (await connection.query(`SELECT \`hash\` FROM \`${MIGRATIONS_TABLE_NAME}\``)) as [Array<{ hash: string }>, unknown]
-    assertBootstrapMigrationsExact({ migrationsRows })
-    console.log(`Migrations registradas: ${migrationsRows.length}`)
+    assertBootstrapMigrationsMatchJournal({ appliedCount: migrationsRows.length, expectedCount: expectedMigrationCount })
+    console.log(`Migrations aplicadas: ${migrationsRows.length} (journal oficial espera: ${expectedMigrationCount})`)
 
     const [householdCountRows] = (await connection.query('SELECT COUNT(*) AS total FROM `households`')) as [Array<{ total: number }>, unknown]
     const householdCountBefore = Number(householdCountRows[0]?.total ?? 0)

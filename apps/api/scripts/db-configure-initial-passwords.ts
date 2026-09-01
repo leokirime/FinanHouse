@@ -1,17 +1,18 @@
 /**
  * Configuração PERMANENTE das senhas iniciais dos dois usuários já
- * existentes em `finanhouse_dev` (criados pelo bootstrap estrutural do
- * Bloco 17) — Bloco 19, DT-14. Nunca cria usuário: localiza exatamente os
- * dois usuários pelos e-mails já configurados localmente
- * (`FINANHOUSE_BOOTSTRAP_OWNER_EMAIL`/`_PARTNER_EMAIL`) e grava apenas o
- * hash Argon2id da senha (`@node-rs/argon2`) — a senha em texto puro nunca é
- * persistida, nunca é impressa, nunca aparece em log.
+ * existentes (criados pelo bootstrap estrutural do Bloco 17) — Bloco 19,
+ * DT-14, estendido na Sessão 14/Bloco 03 (FASE D.1) para reconhecer
+ * `finanhouse_prod` como alvo oficial além de `finanhouse_dev`. Nunca cria
+ * usuário: localiza exatamente os dois usuários pelos e-mails já
+ * configurados localmente (`FINANHOUSE_BOOTSTRAP_OWNER_EMAIL`/`_PARTNER_EMAIL`)
+ * e grava apenas o hash Argon2id da senha (`@node-rs/argon2`) — a senha em
+ * texto puro nunca é persistida, nunca é impressa, nunca aparece em log.
  *
  * NÃO é executado automaticamente. Exige simultaneamente:
  *   1. `apps/api/.env.local` preenchido com credenciais reais do Aiven;
- *   2. DATABASE_PROVIDER=aiven, DATABASE_ENV=development, DATABASE_NAME=finanhouse_dev;
- *   3. migration `0003_auth_sessions.sql` já aplicada (coluna `password_hash` existente);
- *   4. `FINANHOUSE_BOOTSTRAP_OWNER_EMAIL`/`_PARTNER_EMAIL` preenchidos (mesmos do bootstrap);
+ *   2. DATABASE_PROVIDER=aiven, e (DATABASE_ENV=development + DATABASE_NAME=finanhouse_dev) OU (DATABASE_ENV=production + DATABASE_NAME=finanhouse_prod);
+ *   3. migration `0003_auth_sessions.sql` já aplicada no banco alvo (coluna `password_hash` existente);
+ *   4. `FINANHOUSE_BOOTSTRAP_OWNER_EMAIL`/`_PARTNER_EMAIL` preenchidos (mesmos do bootstrap, já existentes no banco alvo);
  *   5. `FINANHOUSE_INITIAL_PASSWORD_OWNER`/`_PARTNER` preenchidos (mínimo 8 caracteres, nunca iguais);
  *   6. `CONFIRM_INITIAL_PASSWORDS=true` definido explicitamente no ambiente;
  *   7. autorização explícita do proprietário do projeto para esta execução
@@ -22,6 +23,7 @@
  * esteja definido — uma autorização estritamente separada da primeira.
  *
  * Uso: CONFIRM_INITIAL_PASSWORDS=true npm run db:configure:initial-passwords
+ * Contra produção: DATABASE_ENV=production DATABASE_NAME=finanhouse_prod CONFIRM_INITIAL_PASSWORDS=true npm run db:configure:initial-passwords
  *
  * Nunca imprime e-mail, senha ou hash — apenas contagens e flags booleanas.
  */
