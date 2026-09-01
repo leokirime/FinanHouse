@@ -260,6 +260,136 @@ GET https://finanhouse.onrender.com/ready → HTTP 200
 
 **Classificações finais da FASE C (configuração):**
 - `VERCEL_PROXY_CONFIGURED` (rewrite real adicionado ao código, testado, validado).
-- `VERCEL_DEPLOY_NOT_YET_TRIGGERED` (depende do push/merge para `main`, ainda não autorizado neste ponto do relatório — ver seção "Versionamento" da resposta ao usuário).
+- `VERCEL_DEPLOY_NOT_YET_TRIGGERED` (no momento em que esta seção foi escrita — commit/push/merge ainda não tinham sido autorizados).
 
 Nenhuma alteração em Render, Aiven, cookie, ou variáveis de ambiente do backend nesta rodada. Nenhum bootstrap, nenhum dado real inserido.
+
+**Atualização:** usuário autorizou explicitamente commit/push/merge nesta mesma rodada (ver commit `6f3a0e6` e merge `732a065`, já publicados em `origin/main`). Redeploy da Vercel confirmado automaticamente pelo push — verificado por este agente com chamadas HTTP reais: `GET https://finan-house-web.vercel.app/api/v1/auth/session` → `401` `{"error":{"code":"UNAUTHENTICATED","message":"Sessão ausente."}}` (JSON real da API via proxy, não fallback SPA) e `GET https://finan-house-web.vercel.app/movimentacoes` → `200 text/html` (fallback intacto). **FASE C efetivamente `VERCEL_PROXY_LIVE`.**
+
+## 21. Executado — Evidência (FASE D — Bootstrap Controlado de Produção)
+
+**Status da FASE D: `PROD_BOOTSTRAP_BLOCKED`.**
+
+### Backup — gate confirmado pelo usuário
+
+O usuário verificou manualmente o painel Aiven em 2026-09-01 e reportou evidência visual: backups ativos; último backup ≈ 6 horas atrás; cópia mais antiga atualmente exibida ≈ 2 dias atrás; backups completos visíveis em 30/08, 31/08 e 01/09/2026; ≈ 830 MB armazenados; painel indica que logs de transação são armazenados junto aos backups e que há suporte a restauração em ponto no tempo. Registrado apenas o que foi efetivamente observado — **nenhuma política de retenção contratual foi inferida ou inventada** além da janela atualmente exibida (2 dias).
+
+**Classificação: `BACKUP_CONFIRMED`.**
+
+### Verificação de compatibilidade do mecanismo oficial (antes de qualquer escrita)
+
+Por exigência explícita do usuário, antes de usar qualquer script do diretório `C:\Users\leoki\FinanHouse` (checkout em branch histórica) para produção, os seguintes arquivos foram comparados byte a byte com a versão atual em `origin/main`/worktree do Bloco 03 — **todos idênticos**:
+`apps/api/scripts/db-bootstrap-household.ts`, `apps/api/scripts/db-configure-initial-passwords.ts`, `apps/api/src/db/household-bootstrap-guard.ts`, `apps/api/src/db/household-bootstrap-input.ts`, `apps/api/src/db/initial-passwords-input.ts`, `apps/api/src/config/database-config.ts`, `package-lock.json`, `database/migrations/` (diretório inteiro).
+
+Não havia, portanto, nenhum problema de "código desatualizado" — o bloqueio encontrado é estrutural e existe igualmente em `origin/main`.
+
+### Bloqueio real encontrado (lido no código, depois confirmado empiricamente)
+
+`apps/api/src/db/household-bootstrap-guard.ts` (`assertBootstrapEnvironmentAllowed`) e `apps/api/src/db/initial-passwords-guard.ts` (`assertInitialPasswordsEnvironmentAllowed`) **exigem literalmente `DATABASE_ENV === 'development'` e `DATABASE_NAME === 'finanhouse_dev'`** — qualquer outro valor lança `BootstrapGuardError`/`InitialPasswordsGuardError` antes de qualquer tentativa de conexão. Adicionalmente, `assertBootstrapMigrationsExact` exige **exatamente 2** migrations aplicadas (`0000`/`0001`) — `finanhouse_prod` tem 5 aplicadas (confirmado na FASE B), o que reprovaria o guard mesmo se o primeiro bloqueio não existisse. Essas são guardas deliberadas, escritas na época (Bloco 17/19) em que o projeto só conhecia `finanhouse_dev` — nunca atualizadas para reconhecer um ambiente de produção.
+
+**Confirmação empírica (segura — o guard roda antes de `mysql.createConnection`, portanto nenhuma tentativa de rede/conexão ocorreu):**
+```
+$ DATABASE_ENV=production DATABASE_NAME=finanhouse_prod CONFIRM_HOUSEHOLD_BOOTSTRAP=true npm run db:bootstrap:household
+db:bootstrap:household só pode ser executado com DATABASE_ENV=development.
+
+$ DATABASE_ENV=production DATABASE_NAME=finanhouse_prod CONFIRM_INITIAL_PASSWORDS=true npm run db:configure:initial-passwords
+db:configure:initial-passwords só pode ser executado com DATABASE_ENV=development.
+```
+
+**Por que este agente não contornou o guard:** editar/enfraquecer `household-bootstrap-guard.ts`/`initial-passwords-guard.ts` para aceitar produção seria uma alteração de código de segurança em produção, decidida e testada de improviso durante uma rodada operacional — exatamente o tipo de ação que as regras deste bloco (e desta sessão inteira) proíbem ("não improvisar", "usar somente o mecanismo oficial"). Trata-se de uma decisão de produto/arquitetura (estender os guards para reconhecer `production`/`finanhouse_prod`, e tornar a contagem de migrations dinâmica em vez de fixa em 2) que precisa ser explicitamente autorizada e implementada test-first, como qualquer outra mudança de código deste projeto — não deve ser tratada como parte do bootstrap operacional em si.
+
+### O que foi confirmado com segurança, sem bloqueio (somente leitura)
+
+- Todas as 7 variáveis de bootstrap/senha (`FINANHOUSE_BOOTSTRAP_HOUSEHOLD_NAME`, `_OWNER_NAME`, `_OWNER_EMAIL`, `_PARTNER_NAME`, `_PARTNER_EMAIL`, `FINANHOUSE_INITIAL_PASSWORD_OWNER`, `_PARTNER`) estão **CONFIGURADAS** localmente em `apps/api/.env.local` (nomes verificados, nenhum valor lido/impresso) — quando o bloqueio acima for resolvido, a execução real não teria pendência de variável faltante.
+- Pré-condição de `finanhouse_prod` (somente contagens, sem dado pessoal): `households=0`, `users=0`, `household_members=0`, `categories=0`, `financial_entries=0`, `monthly_periods=0`, `category_budgets=0`, `installment_plans=0`, `auth_sessions=0`, `migrations_applied=5` — banco permanece limpo, pronto para bootstrap assim que o mecanismo oficial for capaz de apontar para produção.
+- `finanhouse_dev` reconfirmado intacto: 10 tabelas, 5 migrations aplicadas — nenhuma escrita realizada nele nesta rodada.
+- Reconfirmado nesta rodada, sem nenhuma alteração: `GET https://finanhouse.onrender.com/health` → 200; `GET https://finanhouse.onrender.com/ready` → 200, `ready:true`, `tlsActive:true`; `GET https://finan-house-web.vercel.app/api/v1/auth/session` (sem sessão) → 401 JSON real via proxy.
+
+### O que NÃO foi feito por causa do bloqueio
+
+Bootstrap estrutural não executado. Configuração de senhas não executada (depende do bootstrap ter criado os 2 usuários primeiro). Smoke HTTP autenticado (login/session/household/logout) não executado — não há usuário nem `householdId` real ainda. `VITE_FINANHOUSE_HOUSEHOLD_ID` não determinado — não há `householdId` para reportar.
+
+**Classificações finais da FASE D:**
+- `BACKUP_CONFIRMED`
+- `PROD_BOOTSTRAP_BLOCKED`
+- `INITIAL_PASSWORDS_BLOCKED`
+- `PROD_HTTP_SMOKE_NOT_RUN`
+- `VERCEL_HOUSEHOLD_ID_MANUAL_ACTION_REQUIRED` (não aplicável ainda — não existe `householdId` para configurar)
+- `BLOCO_03_NOT_READY`
+
+**Próximo passo explícito:** decisão do usuário sobre como estender os guards oficiais (`household-bootstrap-guard.ts`/`initial-passwords-guard.ts`/`assertBootstrapMigrationsExact`) para reconhecerem `production`/`finanhouse_prod` de forma segura e testada — só depois disso o bootstrap real pode ser executado pelo mecanismo oficial. Nenhum código de guard foi alterado nesta rodada.
+
+Nenhum código-fonte alterado nesta rodada (fora dos scripts diagnósticos temporários, removidos), nenhum commit/push/merge realizado nesta rodada, nenhuma escrita em `finanhouse_prod` ou `finanhouse_dev`, nenhum bootstrap, nenhuma senha configurada, nenhum dado real inserido.
+
+## 22. Executado — Evidência (FASE D.1 — Compatibilização Segura dos Guards com Produção)
+
+**Status: `PRODUCTION_BOOTSTRAP_GUARDS_READY`.** Bootstrap real **não executado** nesta rodada — rodada exclusivamente de correção de código, test-first, sem nenhuma conexão real ao Aiven.
+
+### Causa original (recapitulada da FASE D)
+
+`assertBootstrapEnvironmentAllowed`/`assertInitialPasswordsEnvironmentAllowed` exigiam, hardcoded, `DATABASE_ENV === 'development'` e `DATABASE_NAME === 'finanhouse_dev'` — qualquer outro par era recusado antes de qualquer conexão. `assertBootstrapMigrationsExact` exigia um número fixo de 2 migrations, obsoleto desde que o projeto passou a ter 5.
+
+### Política nova
+
+Ambas as guardas passaram a reconhecer exatamente dois pares autorizados, via mapa fechado (`BOOTSTRAP_ALLOWED_TARGETS`/`INITIAL_PASSWORDS_ALLOWED_TARGETS`) — nunca uma lógica permissiva do tipo "se produção, aceita qualquer banco":
+- `development` → exige `finanhouse_dev`
+- `production` → exige `finanhouse_prod`
+
+Qualquer ambiente fora do mapa (`staging`, desconhecido, etc.), qualquer par cruzado (`production`+`finanhouse_dev`, `development`+`finanhouse_prod`) e qualquer `defaultdb` continuam sendo recusados — o comportamento fail-closed foi preservado e testado explicitamente, nunca apenas assumido. `resolveDatabaseConfig`/`database-config.ts` **não foi tocado** — continua sendo a primeira linha de defesa (já rejeitava esses pares antes mesmo de chegar ao guard); os guards de bootstrap agora reafirmam a mesma fronteira de forma independente, como defesa em profundidade coerente, não redundante-frágil.
+
+**Migrations:** o número fixo `2` foi removido. `assertBootstrapMigrationsExact({ migrationsRows })` virou `assertBootstrapMigrationsMatchJournal({ appliedCount, expectedCount })` — uma comparação pura entre a contagem aplicada no banco alvo e a contagem real lida de `database/migrations/meta/_journal.json` no momento da execução (`readExpectedMigrationCount()` em `db-bootstrap-household.ts`). Hoje o journal tem 5 entradas, então a checagem exige 5 — mas o código não sabe nem precisa saber esse número: se uma migration `0005` for adicionada amanhã, a checagem passa a exigir 6 automaticamente, sem tocar em nenhum guard. Menos que o esperado (schema desatualizado) e mais que o esperado (estado inconsistente) continuam sendo rejeitados simetricamente.
+
+### Test-first
+
+`apps/api/src/db/household-bootstrap-guard.test.ts` e `apps/api/src/db/initial-passwords-guard.test.ts` foram reescritos ANTES da implementação — rodados contra o código antigo, 6 dos novos casos falharam exatamente como esperado (aprovação de `production`/`finanhouse_prod`, que o código antigo rejeitava; e chamada de `assertBootstrapMigrationsMatchJournal`, que ainda nem existia) — confirmando que os testes realmente exercitavam o gap antes de qualquer implementação. Depois da implementação, os 30 testes dos dois arquivos passam (14 + 16). Casos cobertos, para cada guard: `development`+`finanhouse_dev` aprovado; `production`+`finanhouse_prod` aprovado; `production`+`finanhouse_dev` recusado; `development`+`finanhouse_prod` recusado; `defaultdb` recusado em qualquer ambiente; ambiente desconhecido recusado; provider≠aiven recusado; confirmação ausente recusada. Para migrations: igual aprova (testado com 5 e também com 6, para provar que não é um valor fixo disfarçado); menor recusa; maior recusa. `assertUsersFoundExactly`/`assertNoUnauthorizedOverwrite`/`CONFIRM_PASSWORD_OVERWRITE` **não foram tocados** — testes preexistentes continuam intactos e passando, overwrite continua exigindo autorização separada. Nenhum teste novo conecta ao Aiven — todos os guards continuam puros (sem I/O).
+
+### Scripts oficiais
+
+`apps/api/scripts/db-bootstrap-household.ts`: docstring atualizada para descrever os dois pares válidos; import trocado para `assertBootstrapMigrationsMatchJournal`; nova função local `readExpectedMigrationCount()` lê `database/migrations/meta/_journal.json` (mesmo arquivo que `db-migrate.ts` já usa como pasta de migrations) e passa `expectedCount` real para o guard. Nenhuma mensagem de log nova imprime host/usuário/senha/CA — apenas contagens, como antes.
+
+`apps/api/scripts/db-configure-initial-passwords.ts`: apenas docstring atualizada (os dois pares válidos, exemplo de uso contra produção) — nenhuma mudança de lógica, pois este script nunca teve checagem de migrations e já delegava toda a decisão de ambiente ao guard.
+
+`apps/api/src/config/database-config.ts`: **não alterado.**
+
+### Nenhuma conexão real nesta rodada
+
+Nenhum `mysql.createConnection`/pool foi aberto contra Aiven (dev ou prod) nesta rodada — a correção é inteiramente coberta por testes unitários puros. `CONFIRM_HOUSEHOLD_BOOTSTRAP=true`/`CONFIRM_INITIAL_PASSWORDS=true` **não foram executados** contra nenhum banco real nesta rodada.
+
+### Validação
+
+Build, `verify:runtime`, lint, typecheck, `typecheck:api-scripts` — todos OK. Testes: API **711** (704 + 7 novos: +4 no bootstrap-guard, +3 no initial-passwords-guard) / Web 470 (inalterado) / Domain 214 (inalterado) — **total 1395**, aumento explicado inteiramente por testes novos, nenhuma redução. `drizzle-kit check` → "Everything's fine". `ddae-engine validate`/`audit` → OK, 0 P1/P2.
+
+### Segurança do diff
+
+`git diff --check` sem erros de whitespace. Diff revisado manualmente por padrões de segredo (`DATABASE_PASSWORD`, e-mail real, `BEGIN CERTIFICATE`, `mysql://`, `Bearer`, senha literal) — nenhum encontrado; apenas nomes de variáveis/funções, mensagens de erro genéricas e texto de documentação.
+
+**Classificações finais da FASE D.1:**
+- `PRODUCTION_BOOTSTRAP_GUARDS_READY`
+- `BOOTSTRAP_NOT_EXECUTED`
+- `INITIAL_PASSWORDS_NOT_EXECUTED`
+- `NO_PROD_DATA_WRITTEN`
+- `NO_DEV_DATA_WRITTEN`
+
+**Próximo passo explícito:** revisão humana desta correção; após aprovação, commit/push/merge para `main` (ainda não realizados nesta rodada); só então, em uma rodada separada, executar o bootstrap real contra `finanhouse_prod` usando o mecanismo oficial já compatibilizado.
+
+### Gate adicional — prova da resolução real do journal (antes do versionamento)
+
+O usuário apontou uma lacuna correta: o relatório da FASE D.1 provava a função pura (`appliedCount` vs `expectedCount`), mas não provava que `readExpectedMigrationCount()` de fato localiza e lê `database/migrations/meta/_journal.json` no contexto real em que `db-bootstrap-household.ts` roda.
+
+**Extração mínima:** `readExpectedMigrationCount()` foi extraída do script para um módulo novo e testável, `apps/api/src/db/migrations-journal.ts` (exporta `MigrationsJournalError` e `readExpectedMigrationCount(journalPath: string): number`) — nenhum refactor amplo, só o suficiente para tornar a função importável por um teste sem executar o script (importar o próprio script rodaria `main()` e abriria conexão real). O script agora importa essa função e resolve o caminho do journal ANTES de abrir qualquer conexão (`readExpectedMigrationCount(MIGRATIONS_JOURNAL_PATH)` movido para antes de `mysql.createConnection`, ao lado das outras validações de configuração que já falhavam cedo).
+
+**Teste novo:** `apps/api/src/db/migrations-journal.test.ts` (6 casos):
+1. Calcula o diretório do script (`apps/api/scripts`) por aritmética de caminho a partir do próprio teste, aplica a MESMA expressão relativa que o script usa (`../../../database/migrations/meta/_journal.json`) e confirma que o resultado é **byte-idêntico** a uma segunda rota, totalmente independente, até o mesmo arquivo — prova que a resolução de caminho usada pelo script real aponta exatamente para o journal real do repositório, não para uma cópia ou coincidência de nome.
+2. Confirma que `readExpectedMigrationCount()` no caminho real retorna `journal.entries.length` — comparado dinamicamente contra uma leitura independente do mesmo arquivo (nunca contra o literal `5` sozinho; o `5` só aparece como uma asserção adicional que documenta o valor atual, não como fonte da lógica).
+3–5. Arquivo ausente, JSON inválido e `entries` malformado — todos com arquivos temporários locais (`mkdtempSync`/`os.tmpdir()`), nunca o journal real — todos falham fechado com `MigrationsJournalError`.
+6. Confirma que a mensagem de erro nunca contém o caminho completo do arquivo temporário (sanitização).
+
+Nenhum teste conecta ao Aiven, nenhum usa `.env.local`, nenhum executa bootstrap, nenhum escreve em banco.
+
+**Revalidação completa dos guards:** os 30 testes de `household-bootstrap-guard.test.ts`/`initial-passwords-guard.test.ts` (FASE D.1) + os 6 novos de `migrations-journal.test.ts` — 36 no total — rodados juntos, todos passando, cobrindo exatamente a lista de casos pedida (pares válidos, pares cruzados, `defaultdb`, provider inválido, ambiente desconhecido, confirmações, overwrite, migrations iguais/menor/maior).
+
+**Validação:** build, `verify:runtime`, lint, typecheck, `typecheck:api-scripts` — OK. Testes: API 711→**717** (+6, só o novo arquivo de teste do journal) / Web 470 / Domain 214 — **total 1401**, aumento inteiramente por testes novos. `drizzle-kit check` OK. `ddae validate`/`audit` OK, 0 P1/P2. Diff (10 arquivos: 6 modificados na FASE D.1 + 2 novos do journal + 2 docs) revisado — nenhum segredo.
+
+**Nenhuma conexão real ao Aiven nesta rodada** (nem para o gate do journal, nem para nada mais) — tudo coberto por testes locais/puros.
+
+**Status: gate aprovado. Pronto para commit/push/merge.**

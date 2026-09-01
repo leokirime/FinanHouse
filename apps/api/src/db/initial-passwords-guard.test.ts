@@ -7,34 +7,43 @@ import {
 } from './initial-passwords-guard.js'
 
 describe('assertInitialPasswordsEnvironmentAllowed', () => {
-  it('aprova aiven + development + finanhouse_dev + confirmação', () => {
-    expect(() =>
-      assertInitialPasswordsEnvironmentAllowed({ provider: 'aiven', environment: 'development', database: 'finanhouse_dev', confirmFlag: 'true' }),
-    ).not.toThrow()
+  const dev = { provider: 'aiven', environment: 'development', database: 'finanhouse_dev', confirmFlag: 'true' }
+  const prod = { provider: 'aiven', environment: 'production', database: 'finanhouse_prod', confirmFlag: 'true' }
+
+  it('aprova development + finanhouse_dev + confirmação', () => {
+    expect(() => assertInitialPasswordsEnvironmentAllowed(dev)).not.toThrow()
+  })
+
+  it('aprova production + finanhouse_prod + confirmação (Sessão 14, Bloco 03, FASE D.1)', () => {
+    expect(() => assertInitialPasswordsEnvironmentAllowed(prod)).not.toThrow()
   })
 
   it('recusa provider diferente de aiven', () => {
-    expect(() =>
-      assertInitialPasswordsEnvironmentAllowed({ provider: 'clever-cloud', environment: 'development', database: 'finanhouse_dev', confirmFlag: 'true' }),
-    ).toThrow(InitialPasswordsGuardError)
+    expect(() => assertInitialPasswordsEnvironmentAllowed({ ...dev, provider: 'clever-cloud' })).toThrow(InitialPasswordsGuardError)
   })
 
-  it('recusa ambiente diferente de development', () => {
-    expect(() =>
-      assertInitialPasswordsEnvironmentAllowed({ provider: 'aiven', environment: 'production', database: 'finanhouse_dev', confirmFlag: 'true' }),
-    ).toThrow(InitialPasswordsGuardError)
+  it('recusa production + finanhouse_dev (par cruzado — nunca o banco do outro ambiente)', () => {
+    expect(() => assertInitialPasswordsEnvironmentAllowed({ ...prod, database: 'finanhouse_dev' })).toThrow(InitialPasswordsGuardError)
   })
 
-  it('recusa banco diferente de finanhouse_dev', () => {
-    expect(() =>
-      assertInitialPasswordsEnvironmentAllowed({ provider: 'aiven', environment: 'development', database: 'finanhouse_prod', confirmFlag: 'true' }),
-    ).toThrow(InitialPasswordsGuardError)
+  it('recusa development + finanhouse_prod (par cruzado — nunca o banco do outro ambiente)', () => {
+    expect(() => assertInitialPasswordsEnvironmentAllowed({ ...dev, database: 'finanhouse_prod' })).toThrow(InitialPasswordsGuardError)
+  })
+
+  it('recusa defaultdb em qualquer ambiente', () => {
+    expect(() => assertInitialPasswordsEnvironmentAllowed({ ...dev, database: 'defaultdb' })).toThrow(InitialPasswordsGuardError)
+    expect(() => assertInitialPasswordsEnvironmentAllowed({ ...prod, database: 'defaultdb' })).toThrow(InitialPasswordsGuardError)
+  })
+
+  it('recusa ambiente desconhecido (nem development, nem production)', () => {
+    expect(() => assertInitialPasswordsEnvironmentAllowed({ ...dev, environment: 'staging', database: 'finanhouse_staging' })).toThrow(
+      InitialPasswordsGuardError,
+    )
   })
 
   it('recusa sem CONFIRM_INITIAL_PASSWORDS=true', () => {
-    expect(() =>
-      assertInitialPasswordsEnvironmentAllowed({ provider: 'aiven', environment: 'development', database: 'finanhouse_dev', confirmFlag: undefined }),
-    ).toThrow(InitialPasswordsGuardError)
+    expect(() => assertInitialPasswordsEnvironmentAllowed({ ...dev, confirmFlag: undefined })).toThrow(InitialPasswordsGuardError)
+    expect(() => assertInitialPasswordsEnvironmentAllowed({ ...prod, confirmFlag: undefined })).toThrow(InitialPasswordsGuardError)
   })
 })
 

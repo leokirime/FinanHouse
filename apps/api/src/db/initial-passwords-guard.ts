@@ -14,16 +14,34 @@ export interface InitialPasswordsEnvironmentInput {
   confirmFlag: string | undefined
 }
 
-/** Exige simultaneamente Aiven, development, finanhouse_dev e confirmação explícita — nenhuma das quatro sozinha autoriza. */
+/** Únicos pares (ambiente, banco) autorizados — mesma fronteira de `household-bootstrap-guard.ts`, reafirmada aqui de forma independente como defesa em profundidade. */
+const INITIAL_PASSWORDS_ALLOWED_TARGETS: Readonly<Record<string, string>> = {
+  development: 'finanhouse_dev',
+  production: 'finanhouse_prod',
+}
+
+/**
+ * Exige Aiven, um par (ambiente, banco) explicitamente autorizado (Sessão
+ * 14, Bloco 03, FASE D.1 — `production`/`finanhouse_prod` passou a ser alvo
+ * oficial, ao lado de `development`/`finanhouse_dev`) e confirmação
+ * explícita — nenhuma condição sozinha autoriza. Fail-closed: ambiente fora
+ * do mapa ou banco que não seja exatamente o par esperado (incluindo
+ * `defaultdb` ou o banco do outro ambiente) é recusado.
+ */
 export function assertInitialPasswordsEnvironmentAllowed(input: InitialPasswordsEnvironmentInput): void {
   if (input.provider !== 'aiven') {
     throw new InitialPasswordsGuardError('db:configure:initial-passwords só pode ser executado com DATABASE_PROVIDER=aiven.')
   }
-  if (input.environment !== 'development') {
-    throw new InitialPasswordsGuardError('db:configure:initial-passwords só pode ser executado com DATABASE_ENV=development.')
+  const expectedDatabase = INITIAL_PASSWORDS_ALLOWED_TARGETS[input.environment]
+  if (!expectedDatabase) {
+    throw new InitialPasswordsGuardError(
+      'db:configure:initial-passwords só pode ser executado com DATABASE_ENV=development (+ finanhouse_dev) ou DATABASE_ENV=production (+ finanhouse_prod).',
+    )
   }
-  if (input.database !== 'finanhouse_dev') {
-    throw new InitialPasswordsGuardError('db:configure:initial-passwords só pode ser executado com DATABASE_NAME=finanhouse_dev.')
+  if (input.database !== expectedDatabase) {
+    throw new InitialPasswordsGuardError(
+      `db:configure:initial-passwords: DATABASE_ENV="${input.environment}" exige DATABASE_NAME="${expectedDatabase}" — nunca o banco de outro ambiente.`,
+    )
   }
   if (input.confirmFlag !== 'true') {
     throw new InitialPasswordsGuardError('CONFIRM_INITIAL_PASSWORDS=true é obrigatório para configurar as senhas iniciais.')
